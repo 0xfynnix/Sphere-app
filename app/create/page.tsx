@@ -4,23 +4,24 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ImageIcon, Wand2 } from 'lucide-react';
 import { ImageUpload } from "@/components/common/ImageUpload"
 
 export default function CreatePage() {
-  const [activeTab, setActiveTab] = useState('traditional');
+  const [, setActiveTab] = useState('traditional');
   const [text, setText] = useState('');
-  const [image, setImage] = useState<File | null>(null);
+  const [, setImage] = useState<File | null>(null);
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
+  const handleImageChange = (file: File | null) => {
+    if (file) {
+      setImage(file);
+    }else{
+      setImage(null);
     }
   };
 
@@ -78,8 +79,9 @@ export default function CreatePage() {
                 <Label htmlFor="image">Image (Optional)</Label>
                 <ImageUpload 
                   onImageChange={(file) => {
-                    // 处理选择的图片文件
-                    console.log(file)
+                    
+                      handleImageChange(file)
+                    
                   }} 
                 />
               </div>
