@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/common/Sidebar";
 import { ClerkProvider } from '@clerk/nextjs';
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +31,13 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <Sidebar />
-          <main className="ml-64 p-8">
-            {children}
-          </main>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <Sidebar />
+            <main className="ml-64 p-8">
+              {children}
+            </main>
+          </Suspense>
         </body>
       </html>
     </ClerkProvider>

@@ -1,11 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
-export default function MyPage() {
+function MyPageContent() {
   const userStats = {
     totalEarnings: 1250.5,
     reputation: 42,
@@ -163,5 +164,13 @@ export default function MyPage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function MyPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MyPageContent />
+    </Suspense>
   );
 } 
