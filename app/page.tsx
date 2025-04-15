@@ -1,103 +1,206 @@
-import Image from "next/image";
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, Heart, MessageCircle, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRef } from 'react';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 400;
+      scrollContainerRef.current.scrollLeft += direction === 'left' ? -scrollAmount : scrollAmount;
+    }
+  };
+
+  const feedPosts = [
+    {
+      id: 1,
+      author: "Alice",
+      title: "My First Digital Art Collection",
+      content: "Just launched my first NFT collection!",
+      likes: 42,
+      rewards: 24,
+      image: "/sample-art.jpg"
+    },
+    {
+      id: 2,
+      author: "Bob",
+      title: "Web3 Development Tutorial",
+      content: "Building decentralized applications",
+      likes: 128,
+      rewards: 56,
+      image: "/sample-code.jpg"
+    },
+    {
+      id: 3,
+      author: "Charlie",
+      title: "Photography Series",
+      content: "Urban life through my lens",
+      likes: 89,
+      rewards: 31,
+      image: "/sample-photo.jpg"
+    },
+    {
+      id: 4,
+      author: "David",
+      title: "AI Art Exploration",
+      content: "Experimenting with AI tools",
+      likes: 156,
+      rewards: 42,
+      image: "/sample-ai.jpg"
+    }
+  ];
+
+  const popularPosts = [
+    {
+      id: 5,
+      author: "Charlie",
+      title: "Digital Photography Series",
+      content: "Capturing the essence of urban life through my lens. Each photo tells a unique story.",
+      likes: 289,
+      rewards: 85,
+      image: "/sample-photo.jpg",
+      rank: 1
+    },
+    {
+      id: 6,
+      author: "David",
+      title: "The Future of Web3",
+      content: "An in-depth analysis of where blockchain technology is heading...",
+      likes: 245,
+      rewards: 72,
+      image: "/sample-blog.jpg",
+      rank: 2
+    },
+    {
+      id: 7,
+      author: "Eva",
+      title: "Abstract Art Collection",
+      content: "Exploring colors and emotions through digital medium...",
+      likes: 192,
+      rewards: 64,
+      image: "/sample-art-2.jpg",
+      rank: 3
+    }
+  ].sort((a, b) => b.rewards - a.rewards);
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-12">
+      {/* Feed Section */}
+      <div>
+        <Tabs defaultValue="for-you" className="w-full">
+          <div className="flex items-center justify-between mb-6">
+            <TabsList>
+              <TabsTrigger value="for-you">For You</TabsTrigger>
+              <TabsTrigger value="following">Following</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="for-you" className="relative">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-white shadow-md"
+                onClick={() => scroll('left')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </div>
+            <div 
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto space-x-4 pb-4 px-4 scroll-smooth scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {feedPosts.map((post) => (
+                <Card key={post.id} className="flex-none w-[300px]">
+                  <div className="p-4">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 mr-2"></div>
+                      <div>
+                        <h3 className="font-semibold text-sm">{post.author}</h3>
+                        <p className="text-xs text-gray-500">2h ago</p>
+                      </div>
+                    </div>
+                    <h2 className="font-semibold mb-2">{post.title}</h2>
+                    <p className="text-sm text-gray-600 mb-3">{post.content}</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex space-x-3">
+                        <Button variant="ghost" size="sm" className="flex items-center px-2">
+                          <Heart className="mr-1 h-4 w-4" />
+                          {post.likes}
+                        </Button>
+                        <Button variant="ghost" size="sm" className="flex items-center px-2">
+                          <MessageCircle className="mr-1 h-4 w-4" />
+                          Comment
+                        </Button>
+                      </div>
+                      <div className="flex items-center text-amber-500">
+                        <Flame className="mr-1 h-4 w-4" />
+                        <span className="font-medium">{post.rewards}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-white shadow-md"
+                onClick={() => scroll('right')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="following" className="relative">
+            <div className="text-center py-8 text-gray-500">
+              Follow creators to see their content here
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Popular This Week Section */}
+      <div>
+        <div className="flex items-center mb-6">
+          <TrendingUp className="h-5 w-5 mr-2 text-blue-500" />
+          <h2 className="text-xl font-bold">Popular This Week</h2>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="space-y-4">
+          {popularPosts.map((post) => (
+            <Card key={post.id} className="p-4">
+              <div className="flex items-start">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold mr-4">
+                  {post.rank}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <h3 className="font-semibold mr-2">{post.author}</h3>
+                    <Badge variant="outline" className="text-xs">Trending</Badge>
+                  </div>
+                  <h4 className="font-medium mb-1">{post.title}</h4>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <div className="flex items-center text-amber-500">
+                      <Flame className="h-4 w-4 mr-1" />
+                      <span className="font-medium">{post.rewards}</span>
+                      <span className="ml-1 text-gray-500">rewards</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
