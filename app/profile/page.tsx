@@ -1,30 +1,49 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
+import { useUser } from "@clerk/nextjs";
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { logger } from "@/lib/utils";
+import { useEffect } from "react";
 
 export default function Profile() {
+  const { user, isLoaded, isSignedIn } = useUser();
+
+  useEffect(() => {
+    logger.debug('Profile - User state changed', { isLoaded, isSignedIn, user });
+  }, [isLoaded, isSignedIn, user]);
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isSignedIn) {
+    return <div>Please sign in to view your profile.</div>;
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
+          <img 
+            src={user.imageUrl} 
+            alt={user.fullName || 'Profile picture'} 
+            className="w-20 h-20 rounded-full object-cover"
+          />
           <div>
-            <h1 className="text-3xl font-bold">John Doe</h1>
-            <p className="text-gray-500">@johndoe</p>
+            <h1 className="text-3xl font-bold">{user.fullName || 'Anonymous'}</h1>
+            <p className="text-gray-500">@user.sui</p>
           </div>
         </div>
-        <p className="text-gray-600">
-          Web3 enthusiast and content creator. Building the future of decentralized content.
-        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="p-6 hover:shadow-lg transition-shadow">
           <h3 className="text-sm font-semibold mb-2">Your Balance</h3>
           <p className="text-2xl font-bold">0 SUI</p>
-          <p className="text-xs text-gray-500">Sphere Token</p>
+
           <div className="mt-4 flex gap-2">
             <Button size="sm" className="flex-1">Send</Button>
             <Button size="sm" className="flex-1">Receive</Button>
