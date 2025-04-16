@@ -1,11 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-
-interface UserData {
-  clerkId: string;
-  email?: string;
-}
 
 // 定义公共路由
 const isPublicRoute = createRouteMatcher([
@@ -38,42 +32,7 @@ export default clerkMiddleware(async (auth, request) => {
   // 如果是受保护的路由，需要验证登录状态
   if (isProtectedRoute(request)) {
     try {
-      const clerkUser = await auth.protect();
-      
-      // 同步用户数据
-      if (clerkUser.userId) {
-        try {
-          const user = await prisma.user.findUnique({
-            where: { clerkId: clerkUser.userId }
-          });
-
-          if (!user) {
-            // 创建用户，邮箱是可选的
-            const userData: UserData = {
-              clerkId: clerkUser.userId
-            };
-            
-            // 如果有邮箱，就添加到用户数据中
-            const email = clerkUser.sessionClaims?.email as string;
-            if (email) {
-              userData.email = email;
-            }
-            
-            // 创建用户并同时创建空的 Profile
-            await prisma.user.create({
-              data: {
-                ...userData,
-                profile: {
-                  create: {} // 创建空的 Profile
-                }
-              }
-            });
-          }
-        } catch (error) {
-          console.error("Error syncing user:", error);
-        }
-      }
-      
+      await auth.protect();
       return NextResponse.next();
     } catch (error) {
       console.error("Auth protection error:", error);
@@ -82,7 +41,7 @@ export default clerkMiddleware(async (auth, request) => {
     }
   }
 }, { 
-  debug: process.env.NODE_ENV === 'development'
+  debug: false
 });
 
 export const config = {

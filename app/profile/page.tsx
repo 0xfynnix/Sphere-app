@@ -5,23 +5,29 @@ import { useUser } from "@clerk/nextjs";
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { userApi } from '@/lib/api/requests';
 import { logger } from "@/lib/utils";
-import { useEffect } from "react";
 
 export default function Profile() {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser();
+  
+  const { data: userData, isLoading: isUserLoading } = useQuery({
+    queryKey: ['user'],
+    queryFn: userApi.get,
+    enabled: isClerkLoaded && isSignedIn,
+  });
 
-  useEffect(() => {
-    logger.debug('Profile - User state changed', { isLoaded, isSignedIn, user });
-  }, [isLoaded, isSignedIn, user]);
-
-  if (!isLoaded) {
+  if (!isClerkLoaded || isUserLoading) {
     return <div>Loading...</div>;
   }
 
   if (!isSignedIn) {
     return <div>Please sign in to view your profile.</div>;
   }
+
+  const profile = userData?.data?.user?.profile;
+  logger.debug('Profile', { profile });
 
   return (
     <div className="max-w-4xl mx-auto">
