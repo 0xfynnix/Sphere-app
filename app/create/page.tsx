@@ -7,21 +7,46 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ImageIcon, Wand2 } from 'lucide-react';
-import { ImageUpload } from "@/components/common/ImageUpload"
+import { ImageUpload } from "@/components/common/ImageUpload";
+import { uploadToStorage } from '@/lib/storage';
+import { toast } from 'sonner';
 
 export default function CreatePage() {
   const [, setActiveTab] = useState('traditional');
   const [text, setText] = useState('');
-  const [, setImage] = useState<File | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
 
-  const handleImageChange = (file: File | null) => {
+  const handleImageChange = async (file: File | null) => {
     if (file) {
-      setImage(file);
-    }else{
+      try {
+        setIsUploading(true);
+        
+        // 显示上传提示
+        const toastId = toast.loading('Uploading image to Walrus decentralized storage...');
+        
+        // 上传到 Walrus
+        const result = await uploadToStorage(file);
+        setImageUrl(result.url);
+        setImage(file);
+        
+        // 更新提示
+        toast.success('Image uploaded successfully!', {
+          id: toastId
+        });
+      } catch (error) {
+        console.error('Failed to upload image:', error);
+        toast.error(error instanceof Error ? error.message : 'Failed to upload image');
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
       setImage(null);
+      setImageUrl('');
     }
   };
 
@@ -33,9 +58,27 @@ export default function CreatePage() {
     setIsGenerating(false);
   };
 
-  const handlePublish = () => {
-    // Handle publishing logic
-    console.log('Publishing content...');
+  const handlePublish = async () => {
+    if (isUploading) {
+      toast.error('Please wait for image upload to complete');
+      return;
+    }
+
+    if (image && !imageUrl) {
+      toast.error('Image is still uploading');
+      return;
+    }
+
+    // 准备发布数据
+    const postData = {
+      text,
+      imageUrl,
+      // ... 其他数据
+    };
+    
+    // 调用发布 API
+    console.log('Publishing with IPFS image:', postData);
+    toast.success('Content published successfully!');
   };
 
   return (
@@ -78,16 +121,26 @@ export default function CreatePage() {
               <div>
                 <Label htmlFor="image">Image (Optional)</Label>
                 <ImageUpload 
-                  onImageChange={(file) => {
-                    
-                      handleImageChange(file)
-                    
-                  }} 
+                  onImageChange={handleImageChange}
+                  disabled={isUploading}
                 />
+                {isUploading && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Uploading to IPFS...
+                  </p>
+                )}
+                {imageUrl && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Image uploaded: {imageUrl}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={handlePublish}>
+                <Button 
+                  onClick={handlePublish}
+                  disabled={isUploading}
+                >
                   Publish
                 </Button>
               </div>
@@ -136,7 +189,7 @@ export default function CreatePage() {
               <div className="flex justify-end">
                 <Button 
                   onClick={handlePublish}
-                  disabled={!generatedContent}
+                  disabled={!generatedContent || isUploading}
                 >
                   Publish
                 </Button>

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 
 interface ImageUploadProps {
   onImageChange: (file: File | null) => void
+  disabled?: boolean
   className?: string
   label?: string
   description?: string
@@ -14,6 +15,7 @@ interface ImageUploadProps {
 
 export function ImageUpload({ 
   onImageChange, 
+  disabled = false,
   className,
   label = "",
   description = "Upload a single image (max 1MB)"
@@ -84,6 +86,7 @@ export function ImageUpload({
             onChange={handleFileChange}
             className="hidden"
             id="image-upload"
+            disabled={disabled}
           />
           <Button
             type="button"
