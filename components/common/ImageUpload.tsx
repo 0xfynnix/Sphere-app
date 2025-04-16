@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ImageIcon, X } from "lucide-react"
 import { Label } from "@/components/ui/label"
+import Image from "next/image"
 
 interface ImageUploadProps {
   onImageChange: (file: File | null) => void
@@ -116,7 +117,7 @@ export function ImageUpload({
 
         {preview && (
           <div className="mt-2">
-            <img
+            <Image
               src={preview}
               alt="Preview"
               className="max-h-48 w-auto rounded-md border object-cover shadow-sm"

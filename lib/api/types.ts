@@ -11,22 +11,19 @@ export interface ApiResponse<T> {
 // 用户资料类型
 export interface UserProfileData {
   id: string;
-  name?: string;
-  bio?: string;
-  avatar?: string;
+  name: string | null;
+  bio: string | null;
+  avatar: string | null;
   wallets: string[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 // 用户相关类型
 export interface UserProfile {
   id: string;
   clerkId: string;
-  email?: string;
-  profile?: UserProfileData;
-  createdAt: string;
-  updatedAt: string;
+  email: string | null;
+  profile: UserProfileData | null;
+
 }
 
 // 同步用户响应

@@ -18,7 +18,10 @@ export async function POST(): Promise<NextResponse<SyncUserResponse>> {
     }
 
     const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId }
+      where: { clerkId: userId },
+      include: {
+        profile: true
+      }
     });
 
     if (!dbUser) {
@@ -29,6 +32,9 @@ export async function POST(): Promise<NextResponse<SyncUserResponse>> {
           profile: {
             create: {} // 创建空的 Profile
           }
+        },
+        include: {
+          profile: true
         }
       });
 
