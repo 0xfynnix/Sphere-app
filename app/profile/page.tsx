@@ -8,15 +8,45 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { userApi } from '@/lib/api/requests';
 import { logger } from "@/lib/utils";
+import { ConnectButton, useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
+import { useDubheStore } from '@/store/dubheStore';
+import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 
 export default function Profile() {
   const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser();
+  const account = useCurrentAccount();
+  const { connectionStatus } = useCurrentWallet();
+  const { dubhe, isInitialized, initialize } = useDubheStore();
+  const [balance, setBalance] = useState<string>('0');
   
   const { data: userData, isLoading: isUserLoading } = useQuery({
     queryKey: ['user'],
     queryFn: userApi.get,
     enabled: isClerkLoaded && isSignedIn,
   });
+
+  const getBalance = async (): Promise<void> => {
+    if (!account?.address || !dubhe) return;
+    try {
+      const balance = await dubhe.balanceOf(account.address);
+      setBalance((Number(balance.totalBalance) / 1_000_000_000).toFixed(4));
+    } catch (error) {
+      console.error('Failed to fetch balance:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isInitialized && account?.address) {
+      getBalance();
+    }
+  }, [isInitialized, account?.address]);
+
+  useEffect(() => {
+    if (connectionStatus === 'connected') {
+      initialize();
+    }
+  }, [connectionStatus]);
 
   if (!isClerkLoaded || isUserLoading) {
     return <div>Loading...</div>;
@@ -48,7 +78,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="p-6 hover:shadow-lg transition-shadow">
           <h3 className="text-sm font-semibold mb-2">Your Balance</h3>
-          <p className="text-2xl font-bold">0 SUI</p>
+          <p className="text-2xl font-bold">{balance} SUI</p>
 
           <div className="mt-4 flex gap-2">
             <Button size="sm" className="flex-1">Send</Button>
@@ -76,6 +106,22 @@ export default function Profile() {
         </TabsList>
         <TabsContent value="wallet" className="mt-6">
           <div className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Wallet Connection</h3>
+              <div className="space-y-4">
+                <ConnectButton />
+                {connectionStatus === 'connected' && account && (
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm">
+                      {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                    </span>
+                    <div className="text-sm">
+                      Balance: {balance} SUI
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
               <div className="space-y-4">

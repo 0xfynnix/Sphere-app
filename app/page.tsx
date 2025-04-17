@@ -90,9 +90,9 @@ export default function Home() {
   ].sort((a, b) => b.rewards - a.rewards);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12">
+    <div className="max-w-4xl mx-auto space-y-12">
       {/* Feed Section */}
-      <div>
+      <div className="w-full">
         <Tabs defaultValue="for-you" className="w-full">
           <div className="flex items-center justify-between mb-6">
             <TabsList>
@@ -170,7 +170,7 @@ export default function Home() {
       </div>
 
       {/* Popular This Week Section */}
-      <div>
+      <div className="w-full">
         <div className="flex items-center mb-6">
           <TrendingUp className="h-5 w-5 mr-2 text-blue-500" />
           <h2 className="text-xl font-bold">Popular This Week</h2>

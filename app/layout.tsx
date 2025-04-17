@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/common/Sidebar";
-import { ClerkProvider } from '@clerk/nextjs';
 import { Suspense } from "react";
-import AppProvider from "@/components/providers/AppProvider";
-import DubheProvider from "@/components/providers/DubheProvider";
-import { WalletProvider } from '@suiet/wallet-kit';
-import '@suiet/wallet-kit/style.css';
+import AppProvider from "@/providers/AppProvider";
+
+import '@mysten/dapp-kit/dist/index.css';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,23 +31,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <WalletProvider>
-            <AppProvider>
-              <DubheProvider>
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <AppProvider>
+          
                 <Suspense fallback={<div>Loading...</div>}>
-                  <Sidebar />
-                  <main className="ml-64 p-8">
-                    {children}
-                  </main>
+                  <div className="flex min-h-screen">
+                    <div className="fixed left-0 top-0 h-screen w-64">
+                      <Sidebar />
+                    </div>
+                    <main className="flex-1 pl-72 p-8 overflow-x-hidden">
+                      {children}
+                    </main>
+                  </div>
                 </Suspense>
-              </DubheProvider>
-            </AppProvider>
-          </WalletProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+          
+        </AppProvider>
+      </body>
+    </html>
   );
 }
