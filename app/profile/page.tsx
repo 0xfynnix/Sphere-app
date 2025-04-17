@@ -10,7 +10,7 @@ import { userApi } from '@/lib/api/requests';
 import { logger } from "@/lib/utils";
 import { ConnectButton, useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 import { useDubheStore } from '@/store/dubheStore';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 
 export default function Profile() {
