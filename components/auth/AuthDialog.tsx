@@ -85,7 +85,7 @@ export function AuthDialog() {
         <div className="p-6">
           <Button
             onClick={handleGoogleAuth}
-            className="w-full h-12 flex items-center justify-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors duration-200"
+            className="w-full h-12 flex items-center justify-center gap-3 bg-background border border-input hover:bg-accent hover:text-accent-foreground text-foreground font-medium rounded-lg transition-colors duration-200"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -107,7 +107,7 @@ export function AuthDialog() {
             </svg>
             <span>Continue with Google</span>
           </Button>
-          <p className="mt-4 text-sm text-gray-500 text-center">
+          <p className="mt-4 text-sm text-muted-foreground text-center">
             By continuing, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>
