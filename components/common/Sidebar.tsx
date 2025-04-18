@@ -12,6 +12,7 @@ import { AuthDialog } from '@/components/auth/AuthDialog';
 import { logger } from '@/lib/utils';
 import { useEffect } from 'react';
 import { Badge } from '../ui/badge';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -22,17 +23,20 @@ export default function Sidebar() {
   }, [isSignedIn, user, isLoaded]);
 
   return (
-    <div className="w-64 h-screen bg-gray-100 border-r border-gray-200 fixed left-0 top-0 flex flex-col">
+    <div className="w-64 h-screen bg-sidebar border-r border-sidebar-border fixed left-0 top-0 flex flex-col">
       <div className="p-4 flex-1">
-        <div className="flex items-center mb-8">
-          <Image
-            src="/logo.png"
-            alt="Sphere Logo"
-            width={32}
-            height={32}
-            className="rounded-full mr-2"
-          />
-          <h1 className="text-xl font-bold">Sphere</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <Image
+              src="/logo.png"
+              alt="Sphere Logo"
+              width={32}
+              height={32}
+              className="rounded-full mr-2"
+            />
+            <h1 className="text-xl font-bold text-sidebar-foreground">Sphere</h1>
+          </div>
+          <ThemeToggle />
         </div>
         <nav className="space-y-2">
           <Link href="/">
@@ -40,7 +44,7 @@ export default function Sidebar() {
               variant={pathname === '/' ? 'default' : 'ghost'}
               className={cn(
                 "w-full justify-start transition-colors",
-                pathname === '/' ? "bg-blue-500 hover:bg-blue-600" : "hover:bg-gray-200"
+                pathname === '/' ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
               )}
             >
               <Home className="mr-2 h-4 w-4" />
@@ -53,7 +57,7 @@ export default function Sidebar() {
                 variant={pathname === '/my-page' ? 'default' : 'ghost'}
                 className={cn(
                   "w-full justify-start transition-colors",
-                  pathname === '/my-page' ? "bg-blue-500 hover:bg-blue-600" : "hover:bg-gray-200"
+                  pathname === '/my-page' ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
                 )}
               >
                 <User className="mr-2 h-4 w-4" />
@@ -86,7 +90,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-sidebar-border">
         {isSignedIn ? (
           <>
             <Link href="/profile">
@@ -94,8 +98,8 @@ export default function Sidebar() {
                 variant="ghost"
                 className={cn(
                   "w-full justify-start transition-colors h-12",
-                  "hover:bg-gray-200",
-                  pathname === '/profile' && "bg-gray-200"
+                  "hover:bg-sidebar-accent",
+                  pathname === '/profile' && "bg-sidebar-accent"
                 )}
               >
                 <img
@@ -107,10 +111,10 @@ export default function Sidebar() {
                 />
                 <div className="flex flex-col items-start">
                   <div className="flex items-center space-x-2">
-                    <span className="font-medium">{user?.firstName}</span>
+                    <span className="font-medium text-sidebar-foreground">{user?.firstName}</span>
                     <Badge variant="outline" className="text-xs">Artist</Badge>
                   </div>
-                  <span className="text-xs text-gray-500">@user.sui</span>
+                  <span className="text-xs text-sidebar-accent-foreground">@user.sui</span>
                 </div>
               </Button>
             </Link>
@@ -118,7 +122,7 @@ export default function Sidebar() {
               <SignOutButton>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                  className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout

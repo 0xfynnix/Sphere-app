@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/common/Sidebar";
 import { Suspense } from "react";
 import AppProvider from "@/providers/AppProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 import '@mysten/dapp-kit/dist/index.css';
 
@@ -31,23 +32,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <AppProvider>
-          
-                <Suspense fallback={<div>Loading...</div>}>
-                  <div className="flex min-h-screen">
-                    <div className="fixed left-0 top-0 h-screen w-64">
-                      <Sidebar />
-                    </div>
-                    <main className="flex-1 pl-72 p-8 overflow-x-hidden">
-                      {children}
-                    </main>
+        <ThemeProvider>
+          <AppProvider>
+            <Suspense fallback={<div>Loading...</div>}>
+              <div className="flex min-h-screen">
+                  <div className="fixed left-0 top-0 h-screen w-64">
+                    <Sidebar />
                   </div>
-                </Suspense>
-          
-        </AppProvider>
-      </body>
-    </html>
+                  <main className="flex-1 pl-72 p-8 overflow-x-hidden">
+                    {children}
+                  </main>
+                </div>
+              </Suspense>
+            </AppProvider>
+          </ThemeProvider>
+        </body>
+      </html>
   );
 }

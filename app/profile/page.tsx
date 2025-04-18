@@ -69,31 +69,31 @@ export default function Profile() {
             className="w-20 h-20 rounded-full object-cover"
           />
           <div>
-            <h1 className="text-3xl font-bold">{user.fullName || 'Anonymous'}</h1>
-            <p className="text-gray-500">@user.sui</p>
+            <h1 className="text-3xl font-bold text-foreground">{user.fullName || 'Anonymous'}</h1>
+            <p className="text-muted-foreground">@user.sui</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2">Your Balance</h3>
-          <p className="text-2xl font-bold">{balance} SUI</p>
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Your Balance</h3>
+          <p className="text-2xl font-bold text-foreground">{balance} SUI</p>
 
           <div className="mt-4 flex gap-2">
-            <Button size="sm" className="flex-1">Send</Button>
-            <Button size="sm" className="flex-1">Receive</Button>
+            <Button size="sm" className="flex-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground">Send</Button>
+            <Button size="sm" className="flex-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground">Receive</Button>
           </div>
         </Card>
         <Card className="p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2">Content Created</h3>
-          <p className="text-2xl font-bold">12</p>
-          <p className="text-xs text-gray-500">Total Posts</p>
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Content Created</h3>
+          <p className="text-2xl font-bold text-foreground">12</p>
+          <p className="text-xs text-muted-foreground">Total Posts</p>
         </Card>
         <Card className="p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2">Followers</h3>
-          <p className="text-2xl font-bold">256</p>
-          <p className="text-xs text-gray-500">Community Members</p>
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Followers</h3>
+          <p className="text-2xl font-bold text-foreground">256</p>
+          <p className="text-xs text-muted-foreground">Community Members</p>
         </Card>
       </div>
 
@@ -107,15 +107,15 @@ export default function Profile() {
         <TabsContent value="wallet" className="mt-6">
           <div className="space-y-6">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Wallet Connection</h3>
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Wallet Connection</h3>
               <div className="space-y-4">
                 <ConnectButton />
                 {connectionStatus === 'connected' && account && (
                   <div className="flex items-center space-x-4">
-                    <span className="text-sm">
+                    <span className="text-sm text-foreground">
                       {account.address.slice(0, 6)}...{account.address.slice(-4)}
                     </span>
-                    <div className="text-sm">
+                    <div className="text-sm text-foreground">
                       Balance: {balance} SUI
                     </div>
                   </div>
@@ -123,26 +123,26 @@ export default function Profile() {
               </div>
             </Card>
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Transaction History</h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
-                    <p className="font-medium">Content Creation Reward</p>
-                    <p className="text-sm text-gray-500">2 hours ago</p>
+                    <p className="font-medium text-foreground">Content Creation Reward</p>
+                    <p className="text-sm text-muted-foreground">2 hours ago</p>
                   </div>
                   <p className="text-green-500 font-semibold">+5.2 SUI</p>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
-                    <p className="font-medium">Content Purchase</p>
-                    <p className="text-sm text-gray-500">1 day ago</p>
+                    <p className="font-medium text-foreground">Content Purchase</p>
+                    <p className="text-sm text-muted-foreground">1 day ago</p>
                   </div>
                   <p className="text-red-500 font-semibold">-2.5 SUI</p>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
-                    <p className="font-medium">Community Reward</p>
-                    <p className="text-sm text-gray-500">3 days ago</p>
+                    <p className="font-medium text-foreground">Community Reward</p>
+                    <p className="text-sm text-muted-foreground">3 days ago</p>
                   </div>
                   <p className="text-green-500 font-semibold">+1.8 SUI</p>
                 </div>
@@ -153,19 +153,19 @@ export default function Profile() {
         <TabsContent value="content" className="mt-6">
           <div className="space-y-4">
             {/* Content items will go here */}
-            <p className="text-gray-500">No content yet.</p>
+            <p className="text-muted-foreground">No content yet.</p>
           </div>
         </TabsContent>
         <TabsContent value="activity" className="mt-6">
           <div className="space-y-4">
             {/* Activity items will go here */}
-            <p className="text-gray-500">No recent activity.</p>
+            <p className="text-muted-foreground">No recent activity.</p>
           </div>
         </TabsContent>
         <TabsContent value="settings" className="mt-6">
           <div className="space-y-4">
             {/* Settings will go here */}
-            <p className="text-gray-500">Settings coming soon.</p>
+            <p className="text-muted-foreground">Settings coming soon.</p>
           </div>
         </TabsContent>
       </Tabs>

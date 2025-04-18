@@ -104,7 +104,7 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.3 0.15 300);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
@@ -119,4 +119,33 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Sui DApp Kit theme overrides */
+.dapp-kit-connect-button {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.dapp-kit-connect-button:hover {
+  background-color: var(--secondary-hover) !important;
+}
+
+.dapp-kit-connect-button:active {
+  background-color: var(--secondary-active) !important;
+}
+
+.dark .dapp-kit-connect-button {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.dark .dapp-kit-connect-button:hover {
+  background-color: var(--secondary-hover) !important;
+}
+
+.dark .dapp-kit-connect-button:active {
+  background-color: var(--secondary-active) !important;
 }

@@ -106,7 +106,7 @@ export default function Home() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full bg-white shadow-md"
+                className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-md hover:bg-accent border border-border"
                 onClick={() => scroll('left')}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -121,14 +121,14 @@ export default function Home() {
                 <Card key={post.id} className="flex-none w-[300px]">
                   <div className="p-4">
                     <div className="flex items-center mb-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 mr-2"></div>
+                      <div className="w-8 h-8 rounded-full bg-muted mr-2"></div>
                       <div>
-                        <h3 className="font-semibold text-sm">{post.author}</h3>
-                        <p className="text-xs text-gray-500">2h ago</p>
+                        <h3 className="font-semibold text-sm text-foreground">{post.author}</h3>
+                        <p className="text-xs text-muted-foreground">2h ago</p>
                       </div>
                     </div>
-                    <h2 className="font-semibold mb-2">{post.title}</h2>
-                    <p className="text-sm text-gray-600 mb-3">{post.content}</p>
+                    <h2 className="font-semibold mb-2 text-foreground">{post.title}</h2>
+                    <p className="text-sm text-muted-foreground mb-3">{post.content}</p>
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex space-x-3">
                         <Button variant="ghost" size="sm" className="flex items-center px-2">
@@ -153,7 +153,7 @@ export default function Home() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full bg-white shadow-md"
+                className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-md hover:bg-accent border border-border"
                 onClick={() => scroll('right')}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -162,7 +162,7 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="following" className="relative">
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               Follow creators to see their content here
             </div>
           </TabsContent>
@@ -172,27 +172,27 @@ export default function Home() {
       {/* Popular This Week Section */}
       <div className="w-full">
         <div className="flex items-center mb-6">
-          <TrendingUp className="h-5 w-5 mr-2 text-blue-500" />
-          <h2 className="text-xl font-bold">Popular This Week</h2>
+          <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+          <h2 className="text-xl font-bold text-foreground">Popular This Week</h2>
         </div>
         <div className="space-y-4">
           {popularPosts.map((post) => (
             <Card key={post.id} className="p-4">
               <div className="flex items-start">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold mr-4">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold mr-4">
                   {post.rank}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center mb-2">
-                    <h3 className="font-semibold mr-2">{post.author}</h3>
+                    <h3 className="font-semibold mr-2 text-foreground">{post.author}</h3>
                     <Badge variant="outline" className="text-xs">Trending</Badge>
                   </div>
-                  <h4 className="font-medium mb-1">{post.title}</h4>
-                  <div className="flex items-center text-sm text-gray-500">
+                  <h4 className="font-medium mb-1 text-foreground">{post.title}</h4>
+                  <div className="flex items-center text-sm text-muted-foreground">
                     <div className="flex items-center text-amber-500">
                       <Flame className="h-4 w-4 mr-1" />
                       <span className="font-medium">{post.rewards}</span>
-                      <span className="ml-1 text-gray-500">rewards</span>
+                      <span className="ml-1 text-muted-foreground">rewards</span>
                     </div>
                   </div>
                 </div>

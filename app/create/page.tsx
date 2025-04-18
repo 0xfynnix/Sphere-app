@@ -84,8 +84,8 @@ export default function CreatePage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Create Content</h1>
-        <p className="text-gray-600">Choose your preferred way to create content</p>
+        <h1 className="text-3xl font-bold mb-2 text-foreground">Create Content</h1>
+        <p className="text-muted-foreground">Choose your preferred way to create content</p>
       </div>
 
       <Tabs defaultValue="traditional" className="w-full" onValueChange={setActiveTab}>
@@ -113,7 +113,7 @@ export default function CreatePage() {
                   onChange={(e) => setText(e.target.value)}
                   className="mt-1"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {text.length}/250 characters
                 </p>
               </div>
@@ -125,12 +125,12 @@ export default function CreatePage() {
                   disabled={isUploading}
                 />
                 {isUploading && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Uploading to IPFS...
                   </p>
                 )}
                 {imageUrl && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Image uploaded: {imageUrl}
                   </p>
                 )}
@@ -162,10 +162,10 @@ export default function CreatePage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div>
-                  <p className="font-medium">Cost: 0.5 SUI</p>
-                  <p className="text-sm text-gray-500">Pay with your wallet</p>
+                  <p className="font-medium text-foreground">Cost: 0.5 SUI</p>
+                  <p className="text-sm text-muted-foreground">Pay with your wallet</p>
                 </div>
                 <Button 
                   onClick={handleGenerate}
@@ -199,7 +199,7 @@ export default function CreatePage() {
         </TabsContent>
       </Tabs>
 
-      <div className="mt-8 text-sm text-gray-500">
+      <div className="mt-8 text-sm text-muted-foreground">
         <p>Note: All content will be registered on-chain with a unique ID and timestamp.</p>
         <p>Copyright information will be permanently stored on the blockchain.</p>
       </div>
