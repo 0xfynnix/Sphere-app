@@ -80,7 +80,7 @@ export default function Header() {
       {/* 菜单内容 */}
       <div 
         className={cn(
-          "header-menu fixed top-16 right-0 bottom-0 w-64 bg-sidebar/95 backdrop-blur-sm",
+          "header-menu fixed top-0 right-0 bottom-0 w-64 bg-sidebar/95 backdrop-blur-sm",
           "transform transition-all duration-300 ease-in-out",
           "md:hidden z-50",
           "border-l border-sidebar-border/50",
@@ -89,6 +89,27 @@ export default function Header() {
         )}
       >
         <div className="h-full overflow-y-auto">
+          <div className="p-4 border-b border-sidebar-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Image
+                  src="/logo.png"
+                  alt="Sphere Logo"
+                  width={32}
+                  height={32}
+                  className="rounded-full mr-2"
+                />
+                <h1 className="text-xl font-bold text-sidebar-foreground">Sphere</h1>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
           <nav className="space-y-1 p-4">
             <Link href="/" onClick={() => setIsMenuOpen(false)}>
               <Button

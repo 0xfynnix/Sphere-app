@@ -17,7 +17,19 @@ export default function AppProvider({
 
   return (
     <ThemeProvider>
-      <ClerkProvider>
+      <ClerkProvider
+        appearance={{
+          layout: {
+            logoPlacement: "inside",
+            socialButtonsVariant: "iconButton",
+            showOptionalFields: false,
+          },
+          elements: {
+            formButtonPrimary: "bg-primary hover:bg-primary/90 text-primary-foreground",
+            socialButtonsBlockButton: "w-full h-12 flex items-center justify-center gap-3 bg-background border border-input hover:bg-accent hover:text-accent-foreground text-foreground font-medium rounded-lg transition-colors duration-200",
+          },
+        }}
+      >
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider
             networks={{ testnet: { url: getFullnodeUrl("testnet") } }}
