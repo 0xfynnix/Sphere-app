@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Home, User, PlusCircle, LogOut } from 'lucide-react';
@@ -13,14 +13,20 @@ import { logger } from '@/lib/utils';
 import { useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { ThemeToggle } from './ThemeToggle';
+// import { useRouter } from 'next/navigation';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isSignedIn, user, isLoaded } = useUser();
+  // const router = useRouter();
 
   useEffect(() => {
     logger.debug('Sidebar - Authentication state changed', { isSignedIn, user, isLoaded });
   }, [isSignedIn, user, isLoaded]);
+
+  // 检查是否是从侧边栏进入的用户页面
+  const isUserPageFromSidebar = pathname.startsWith('/user') && searchParams.get('source') === 'sidebar';
 
   return (
     <div className="w-64 h-screen bg-sidebar border-r border-sidebar-border fixed left-0 top-0 flex flex-col">
@@ -52,12 +58,12 @@ export default function Sidebar() {
             </Button>
           </Link>
           {isSignedIn && (
-            <Link href="/my-page">
+            <Link href="/user?source=sidebar">
               <Button
-                variant={pathname === '/my-page' ? 'default' : 'ghost'}
+                variant={isUserPageFromSidebar ? 'default' : 'ghost'}
                 className={cn(
                   "w-full justify-start transition-colors",
-                  pathname === '/my-page' ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
+                  isUserPageFromSidebar ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
                 )}
               >
                 <User className="mr-2 h-4 w-4" />

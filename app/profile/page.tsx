@@ -11,7 +11,8 @@ import { logger } from "@/lib/utils";
 import { ConnectButton, useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 import { useDubheStore } from '@/store/dubheStore';
 // import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 export default function Profile() {
   const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser();
@@ -26,7 +27,7 @@ export default function Profile() {
     enabled: isClerkLoaded && isSignedIn,
   });
 
-  const getBalance = async (): Promise<void> => {
+  const getBalance = useCallback(async (): Promise<void> => {
     if (!account?.address || !dubhe) return;
     try {
       const balance = await dubhe.balanceOf(account.address);
@@ -34,22 +35,22 @@ export default function Profile() {
     } catch (error) {
       console.error('Failed to fetch balance:', error);
     }
-  };
+  }, [account?.address, dubhe]);
 
   useEffect(() => {
     if (isInitialized && account?.address) {
       getBalance();
     }
-  }, [isInitialized, account?.address]);
+  }, [isInitialized, account?.address, getBalance]);
 
   useEffect(() => {
     if (connectionStatus === 'connected') {
       initialize();
     }
-  }, [connectionStatus]);
+  }, [connectionStatus, initialize]);
 
   if (!isClerkLoaded || isUserLoading) {
-    return <div>Loading...</div>;
+    return <LoadingSpinner />;
   }
 
   if (!isSignedIn) {

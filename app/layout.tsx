@@ -5,6 +5,7 @@ import Sidebar from "@/components/common/Sidebar";
 import { Suspense } from "react";
 import AppProvider from "@/providers/AppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 import '@mysten/dapp-kit/dist/index.css';
 
@@ -36,7 +37,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider>
           <AppProvider>
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<LoadingSpinner />}>
               <div className="flex min-h-screen">
                   <div className="fixed left-0 top-0 h-screen w-64">
                     <Sidebar />

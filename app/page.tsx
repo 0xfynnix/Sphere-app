@@ -6,8 +6,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Heart, MessageCircle, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -21,6 +23,7 @@ export default function Home() {
     {
       id: 1,
       author: "Alice",
+      authorId: "alice123",
       title: "My First Digital Art Collection",
       content: "Just launched my first NFT collection!",
       likes: 42,
@@ -30,6 +33,7 @@ export default function Home() {
     {
       id: 2,
       author: "Bob",
+      authorId: "bob456",
       title: "Web3 Development Tutorial",
       content: "Building decentralized applications",
       likes: 128,
@@ -39,6 +43,7 @@ export default function Home() {
     {
       id: 3,
       author: "Charlie",
+      authorId: "charlie789",
       title: "Photography Series",
       content: "Urban life through my lens",
       likes: 89,
@@ -48,6 +53,7 @@ export default function Home() {
     {
       id: 4,
       author: "David",
+      authorId: "david012",
       title: "AI Art Exploration",
       content: "Experimenting with AI tools",
       likes: 156,
@@ -60,6 +66,7 @@ export default function Home() {
     {
       id: 5,
       author: "Charlie",
+      authorId: "charlie789",
       title: "Digital Photography Series",
       content: "Capturing the essence of urban life through my lens. Each photo tells a unique story.",
       likes: 289,
@@ -70,6 +77,7 @@ export default function Home() {
     {
       id: 6,
       author: "David",
+      authorId: "david012",
       title: "The Future of Web3",
       content: "An in-depth analysis of where blockchain technology is heading...",
       likes: 245,
@@ -80,6 +88,7 @@ export default function Home() {
     {
       id: 7,
       author: "Eva",
+      authorId: "eva345",
       title: "Abstract Art Collection",
       content: "Exploring colors and emotions through digital medium...",
       likes: 192,
@@ -118,9 +127,19 @@ export default function Home() {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {feedPosts.map((post) => (
-                <Card key={post.id} className="flex-none w-[300px]">
+                <Card 
+                  key={post.id} 
+                  className="flex-none w-[300px] cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => router.push(`/posts/${post.id}`)}
+                >
                   <div className="p-4">
-                    <div className="flex items-center mb-3">
+                    <div 
+                      className="flex items-center mb-3 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/user/${post.authorId}`);
+                      }}
+                    >
                       <div className="w-8 h-8 rounded-full bg-muted mr-2"></div>
                       <div>
                         <h3 className="font-semibold text-sm text-foreground">{post.author}</h3>
@@ -171,19 +190,40 @@ export default function Home() {
 
       {/* Popular This Week Section */}
       <div className="w-full">
-        <div className="flex items-center mb-6">
-          <TrendingUp className="h-5 w-5 mr-2 text-primary" />
-          <h2 className="text-xl font-bold text-foreground">Popular This Week</h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Popular This Week</h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => router.push('/rankings/weekly')}
+          >
+            View All
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
         <div className="space-y-4">
           {popularPosts.map((post) => (
-            <Card key={post.id} className="p-4">
+            <Card 
+              key={post.id} 
+              className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => router.push(`/posts/${post.id}`)}
+            >
               <div className="flex items-start">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold mr-4">
                   {post.rank}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center mb-2">
+                  <div 
+                    className="flex items-center mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/my-page/${post.authorId}`);
+                    }}
+                  >
                     <h3 className="font-semibold mr-2 text-foreground">{post.author}</h3>
                     <Badge variant="outline" className="text-xs">Trending</Badge>
                   </div>
