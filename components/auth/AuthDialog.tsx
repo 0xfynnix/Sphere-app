@@ -54,19 +54,16 @@ export function AuthDialog() {
       setError(null);
       logger.info('AuthDialog - Starting Google authentication');
       
-      // 使用 Next.js 的方式构建 URL
-      const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
-      const host = typeof window !== 'undefined' ? window.location.host : '';
-      const baseUrl = `${protocol}//${host}`;
-      const redirectUrl = `${baseUrl}/sso-callback`;
-      const redirectUrlComplete = baseUrl;
+      // 使用更简单的方式处理重定向
+      const redirectUrl = '/sso-callback';
+      const redirectUrlComplete = '/';
 
       // 尝试登录，启用自动注册
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl,
         redirectUrlComplete,
-        continueSignUp: true, // 启用自动注册
+        continueSignUp: true,
       });
       
       // 认证成功后会自动关闭对话框并刷新页面
