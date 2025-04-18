@@ -101,6 +101,9 @@ export function AuthDialog() {
               }
             }}
           />
+          <p className="mt-4 text-sm text-muted-foreground text-center">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
         </div>
       </DialogContent>
     </Dialog>

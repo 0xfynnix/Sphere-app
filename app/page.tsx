@@ -99,7 +99,7 @@ export default function Home() {
   ].sort((a, b) => b.rewards - a.rewards);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12">
+    <div className="max-w-7xl mx-auto space-y-12">
       {/* Feed Section */}
       <div className="w-full">
         <Tabs defaultValue="for-you" className="w-full">
