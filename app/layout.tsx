@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/common/Sidebar";
+import Header from "@/components/common/Header";
 import { Suspense } from "react";
 import AppProvider from "@/providers/AppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+// import { cn } from '@/lib/utils';
 
 import '@mysten/dapp-kit/dist/index.css';
 
@@ -38,18 +40,26 @@ export default function RootLayout({
         <ThemeProvider>
           <AppProvider>
             <Suspense fallback={<LoadingSpinner />}>
-              <div className="flex min-h-screen">
-                  <div className="fixed left-0 top-0 h-screen w-64">
-                    <Sidebar />
-                  </div>
-                  <main className="flex-1 pl-72 p-8 overflow-x-hidden">
-                    {children}
-                  </main>
+              <div className="flex flex-col md:flex-row min-h-screen">
+                {/* Desktop Sidebar */}
+                <div className="hidden md:block fixed left-0 top-0 h-screen w-64">
+                  <Sidebar />
                 </div>
-              </Suspense>
-            </AppProvider>
-          </ThemeProvider>
-        </body>
-      </html>
+                
+                {/* Mobile Header */}
+                <div className="block md:hidden w-full">
+                  <Header />
+                </div>
+
+                {/* Main Content */}
+                <main className="flex-1 p-4 overflow-x-hidden md:pl-68 pt-16 md:pt-4">
+                  {children}
+                </main>
+              </div>
+            </Suspense>
+          </AppProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

@@ -4,17 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 // import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Flame, ArrowLeft, Settings, Share2, Edit2 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Heart, MessageCircle, Flame, Settings, Share2, Edit2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { use } from 'react';
 
 export default function UserProfile({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   const { id } = use(params);
 
   // 检查是否是从侧边栏进入
-  const isFromSidebar = searchParams.get('source') === 'sidebar';
+  // const isFromSidebar = searchParams.get('source') === 'sidebar';
 
   // 模拟当前用户ID，实际应用中应该从用户认证信息中获取
   const currentUserId = "alice123";
@@ -63,8 +63,8 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {!isFromSidebar && (
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* {!isFromSidebar && (
         <Button
           variant="ghost"
           className="mb-4 -ml-2"
@@ -73,7 +73,7 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-      )}
+      )} */}
 
       {/* Cover Image */}
       <div className="relative h-48 sm:h-64 w-full rounded-xl overflow-hidden bg-muted">

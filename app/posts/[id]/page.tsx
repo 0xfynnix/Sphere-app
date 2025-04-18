@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Flame, ArrowLeft, Gift } from 'lucide-react';
+import { Heart, MessageCircle, Flame, Gift } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
 import { useState } from 'react';
@@ -50,14 +50,14 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <Button
+      {/* <Button
         variant="ghost"
         className="mb-4"
         onClick={() => router.back()}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
-      </Button>
+      </Button> */}
 
       <Card className="p-6">
         <div className="space-y-6">
