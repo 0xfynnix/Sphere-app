@@ -81,7 +81,7 @@ export default function WeeklyRankings() {
         </Button>
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Weekly Rankings</h1>
+          <h1 className="text-2xl font-bold">Weekly Ranking</h1>
         </div>
         <div className="w-10"></div> {/* Spacer for alignment */}
       </div>
