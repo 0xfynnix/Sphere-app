@@ -9,13 +9,23 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique    // Clerk 用户 ID
-  email     String?  // 用户邮箱（可选）
-  profile   Profile? // 用户资料
-  posts     Post[]   // 用户发布的帖子
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  clerkId       String   @unique    // Clerk 用户 ID
+  email         String?  // 用户邮箱（可选）
+  profile       Profile? // 用户资料
+  posts         Post[]   // 用户发布的帖子
+  comments      Comment[] // 用户发表的评论
+  likes         Like[]   // 用户点赞的帖子
+  followers     Follow[] @relation("Following") // 关注该用户的用户
+  following     Follow[] @relation("Follower")  // 该用户关注的用户
+  nfts          NFT[]    // 用户拥有的NFT
+  referredRewards Reward[] @relation("Referrer") // 作为推荐人的打赏记录
+  walletAddress String?  @unique    // 用户钱包地址
+  nftCount      Int      @default(0) // 拥有的NFT数量
+  totalEarnings Float    @default(0) // 总收益（SUI）
+  chainId       String?  // 链上用户ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Profile {
@@ -31,11 +41,128 @@ model Profile {
 }
 
 model Post {
+  id            String   @id @default(cuid())
+  title         String   // 帖子标题
+  content       String   // 帖子内容
+  image         String?  // 帖子图片URL
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  status        PostStatus @default(DRAFT) // 帖子状态
+  category      Category? @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+  tags          Tag[]    @relation("PostToTag")
+  comments      Comment[]
+  likes         Like[]
+  nfts          NFT[]    // 帖子关联的NFT
+  chainId       String?  // 链上帖子ID
+  contentHash   String?  // 内容哈希
+  audienceCount Int      @default(0) // 观众数量
+  totalRewards  Float    @default(0) // 总打赏金额
+  postType      PostType @default(NORMAL) // 帖子类型
+  rewards       Reward[] // 打赏记录
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// 新增：帖子状态枚举
+enum PostStatus {
+  DRAFT     // 草稿
+  PUBLISHED // 已发布
+  ARCHIVED  // 已归档
+  DELETED   // 已删除
+}
+
+// 新增：分类模型
+model Category {
+  id          String   @id @default(cuid())
+  name        String   // 分类名称
+  description String?  // 分类描述
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 新增：标签模型
+model Tag {
   id        String   @id @default(cuid())
-  title     String   // 帖子标题
-  content   String   // 帖子内容
+  name      String   @unique // 标签名称
+  posts     Post[]   @relation("PostToTag")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 新增：评论模型
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   // 评论内容
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  parentId  String?  // 父评论ID，用于回复功能
+  parent    Comment? @relation("CommentToComment", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentToComment")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 新增：点赞模型
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([postId, userId]) // 确保用户对同一帖子只能点赞一次
+}
+
+// 新增：关注模型
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   // 关注者ID
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  followingId String   // 被关注者ID
+  following   User     @relation("Following", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([followerId, followingId]) // 确保用户不能重复关注同一用户
+}
+
+// 新增：帖子类型枚举
+enum PostType {
+  NORMAL    // 普通帖子
+  MEME_LORD // Meme Lord类型
+}
+
+// 新增：NFT模型
+model NFT {
+  id        String   @id @default(cuid())
+  chainId   String?  // 链上NFT ID
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  metadata  String?  // NFT元数据
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 新增：打赏记录模型
+model Reward {
+  id            String   @id @default(cuid())
+  chainId       String?  // 链上打赏记录ID
+  postId        String
+  post          Post     @relation(fields: [postId], references: [id])
+  amount        Float    // 打赏金额
+  authorShare   Float    // 作者分成
+  platformShare Float    // 平台分成
+  referrerShare Float    // 推荐人分成
+  referrerId    String?  // 推荐人ID
+  referrer      User?    @relation("Referrer", fields: [referrerId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 } 
