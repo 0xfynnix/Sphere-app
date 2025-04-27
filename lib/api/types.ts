@@ -20,10 +20,9 @@ export interface UserProfileData {
 // 用户相关类型
 export interface UserProfile {
   id: string;
-  clerkId: string;
+  walletAddress: string;
   email: string | null;
   profile: UserProfileData | null;
-
 }
 
 // 同步用户响应

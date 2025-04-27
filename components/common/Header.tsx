@@ -7,16 +7,16 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Home, User, PlusCircle, LogOut, Menu, X } from 'lucide-react';
-import { useUser, SignOutButton } from '@clerk/nextjs';
-import { AuthDialog } from '@/components/auth/AuthDialog';
+import { AuthDialog } from '../auth/AuthDialog';
 import { ThemeToggle } from './ThemeToggle';
 import { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
+import { useCurrentWallet } from '@mysten/dapp-kit';
 
 export default function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { isSignedIn, user } = useUser();
+  const { currentWallet } = useCurrentWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // 点击菜单外部关闭菜单
@@ -50,6 +50,7 @@ export default function Header() {
         
         <div className="flex items-center space-x-2">
           <ThemeToggle />
+          <AuthDialog />
           <Button
             variant="ghost"
             size="icon"
@@ -99,7 +100,7 @@ export default function Header() {
                   height={32}
                   className="rounded-full mr-2"
                 />
-                <h1 className="text-xl font-bold text-sidebar-foreground">Sphere</h1>
+                <h2 className="text-lg font-semibold text-sidebar-foreground">Sphere</h2>
               </div>
               <Button
                 variant="ghost"
@@ -110,101 +111,51 @@ export default function Header() {
               </Button>
             </div>
           </div>
-          <nav className="space-y-1 p-4">
-            <Link href="/" onClick={() => setIsMenuOpen(false)}>
-              <Button
-                variant={pathname === '/' ? 'default' : 'ghost'}
-                className={cn(
-                  "w-full justify-start transition-colors h-12",
-                  pathname === '/' ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
-                )}
-              >
-                <Home className="mr-3 h-5 w-5" />
-                <span className="text-base">Home</span>
-              </Button>
+
+          <nav className="p-4 space-y-2">
+            <Link
+              href="/"
+              className={cn(
+                "flex items-center px-4 py-2 rounded-lg",
+                "text-sidebar-foreground hover:bg-sidebar-hover",
+                pathname === "/" && "bg-sidebar-hover"
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Home className="h-5 w-5 mr-3" />
+              Home
             </Link>
-            {isSignedIn && (
+
+            {currentWallet && (
               <>
-                <Link href="/user?source=sidebar" onClick={() => setIsMenuOpen(false)}>
-                  <Button
-                    variant={isUserPageFromSidebar ? 'default' : 'ghost'}
-                    className={cn(
-                      "w-full justify-start transition-colors h-12",
-                      isUserPageFromSidebar ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
-                    )}
-                  >
-                    <User className="mr-3 h-5 w-5" />
-                    <span className="text-base">My Page</span>
-                  </Button>
+                <Link
+                  href={`/user/${currentWallet.accounts[0]?.address}`}
+                  className={cn(
+                    "flex items-center px-4 py-2 rounded-lg",
+                    "text-sidebar-foreground hover:bg-sidebar-hover",
+                    pathname.startsWith("/user") && !isUserPageFromSidebar && "bg-sidebar-hover"
+                  )}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User className="h-5 w-5 mr-3" />
+                  Profile
                 </Link>
-                <Link href="/create" onClick={() => setIsMenuOpen(false)}>
-                  <Button
-                    className={cn(
-                      "w-full h-12 mt-2",
-                      "bg-gradient-to-r from-purple-500 to-pink-500 text-white",
-                      "hover:from-purple-600 hover:to-pink-600",
-                      "active:from-purple-700 active:to-pink-700",
-                      "transition-all duration-200",
-                      "shadow-md hover:shadow-lg active:shadow-sm",
-                      "rounded-xl",
-                      "font-semibold"
-                    )}
-                  >
-                    <PlusCircle className="mr-3 h-5 w-5" />
-                    <span className="text-base">Create Content</span>
-                  </Button>
+
+                <Link
+                  href="/create"
+                  className={cn(
+                    "flex items-center px-4 py-2 rounded-lg",
+                    "text-sidebar-foreground hover:bg-sidebar-hover",
+                    pathname === "/create" && "bg-sidebar-hover"
+                  )}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <PlusCircle className="h-5 w-5 mr-3" />
+                  Create
                 </Link>
               </>
             )}
           </nav>
-
-          <div className="p-4 border-t border-sidebar-border">
-            {isSignedIn ? (
-              <>
-                <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start transition-colors h-14",
-                      "hover:bg-sidebar-accent",
-                      pathname === '/profile' && "bg-sidebar-accent"
-                    )}
-                  >
-                    <img
-                      src={user?.imageUrl || "/logo.png"}
-                      alt="User Avatar"
-                      width={40}
-                      height={40}
-                      className="rounded-full mr-3"
-                    />
-                    <div className="flex flex-col items-start">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-base text-sidebar-foreground">{user?.firstName}</span>
-                        <Badge variant="outline" className="text-xs">Artist</Badge>
-                      </div>
-                      <span className="text-sm text-sidebar-accent-foreground">@user.sui</span>
-                    </div>
-                  </Button>
-                </Link>
-                <div className="mt-4">
-                  <SignOutButton>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 h-12"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <LogOut className="mr-3 h-5 w-5" />
-                      <span className="text-base">Logout</span>
-                    </Button>
-                  </SignOutButton>
-                </div>
-              </>
-            ) : (
-              <div className="flex justify-end">
-                <AuthDialog />
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </header>

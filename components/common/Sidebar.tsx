@@ -7,23 +7,21 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Home, User, PlusCircle, LogOut } from 'lucide-react';
-import { useUser, SignOutButton } from '@clerk/nextjs';
-import { AuthDialog } from '@/components/auth/AuthDialog';
+import { AuthDialog } from '../auth/AuthDialog';
 import { logger } from '@/lib/utils';
 import { useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { ThemeToggle } from './ThemeToggle';
-// import { useRouter } from 'next/navigation';
+import { useCurrentWallet } from '@mysten/dapp-kit';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { isSignedIn, user, isLoaded } = useUser();
-  // const router = useRouter();
+  const { currentWallet } = useCurrentWallet();
 
   useEffect(() => {
-    logger.debug('Sidebar - Authentication state changed', { isSignedIn, user, isLoaded });
-  }, [isSignedIn, user, isLoaded]);
+    logger.debug('Sidebar - Wallet state changed', { currentWallet });
+  }, [currentWallet]);
 
   // 检查是否是从侧边栏进入的用户页面
   const isUserPageFromSidebar = pathname.startsWith('/user') && searchParams.get('source') === 'sidebar';
@@ -57,8 +55,8 @@ export default function Sidebar() {
               Home
             </Button>
           </Link>
-          {isSignedIn && (
-            <Link href="/user?source=sidebar">
+          {currentWallet && (
+            <Link href={`/user/${currentWallet.accounts[0]?.address}`}>
               <Button
                 variant={isUserPageFromSidebar ? 'default' : 'ghost'}
                 className={cn(
@@ -73,7 +71,7 @@ export default function Sidebar() {
           )}
         </nav>
 
-        {isSignedIn && (
+        {currentWallet && (
           <div className="my-8">
             <Link href="/create">
               <Button
@@ -97,47 +95,23 @@ export default function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-sidebar-border">
-        {isSignedIn ? (
-          <>
-            <Link href="/profile">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start transition-colors h-12",
-                  "hover:bg-sidebar-accent",
-                  pathname === '/profile' && "bg-sidebar-accent"
-                )}
-              >
-                <img
-                  src={user?.imageUrl || "/logo.png"}
-                  alt="User Avatar"
-                  width={32}
-                  height={32}
-                  className="rounded-full mr-2"
-                />
-                <div className="flex flex-col items-start">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-sidebar-foreground">{user?.firstName}</span>
-                    <Badge variant="outline" className="text-xs">Artist</Badge>
-                  </div>
-                  <span className="text-xs text-sidebar-accent-foreground">@user.sui</span>
-                </div>
-              </Button>
-            </Link>
-            <div className="mt-4">
-              <SignOutButton>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
-              </SignOutButton>
+        {currentWallet ? (
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center">
+                <User className="h-5 w-5 text-sidebar-accent-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium text-sidebar-foreground">Wallet Connected</span>
+                <span className="text-sm text-sidebar-accent-foreground truncate max-w-[150px]">
+                  {currentWallet.accounts[0]?.address}
+                </span>
+              </div>
             </div>
-          </>
+            <AuthDialog />
+          </div>
         ) : (
-          <div className="flex justify-end">
+          <div className="flex justify-center">
             <AuthDialog />
           </div>
         )}

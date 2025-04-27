@@ -4,7 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/common/Sidebar";
 import Header from "@/components/common/Header";
 import { Suspense } from "react";
-import AppProvider from "@/providers/AppProvider";
+import { AppProvider } from "@/providers/AppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 // import { cn } from '@/lib/utils';

@@ -8,9 +8,22 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// 新增：钱包挑战码模型
+model Challenge {
+  id            String   @id @default(cuid())
+  walletAddress String   // 钱包地址
+  challenge     String   // 挑战码
+  expiresAt     DateTime // 过期时间
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([walletAddress])
+  @@index([expiresAt])
+}
+
 model User {
   id            String   @id @default(cuid())
-  clerkId       String   @unique    // Clerk 用户 ID
+  walletAddress String   @unique    // 用户钱包地址
   email         String?  // 用户邮箱（可选）
   profile       Profile? // 用户资料
   posts         Post[]   // 用户发布的帖子
@@ -20,7 +33,6 @@ model User {
   following     Follow[] @relation("Follower")  // 该用户关注的用户
   nfts          NFT[]    // 用户拥有的NFT
   referredRewards Reward[] @relation("Referrer") // 作为推荐人的打赏记录
-  walletAddress String?  @unique    // 用户钱包地址
   nftCount      Int      @default(0) // 拥有的NFT数量
   totalEarnings Float    @default(0) // 总收益（SUI）
   chainId       String?  // 链上用户ID
