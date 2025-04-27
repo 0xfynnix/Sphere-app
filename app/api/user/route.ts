@@ -1,65 +1,64 @@
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { GetUserResponse } from "@/lib/api/types";
+import { getToken } from "next-auth/jwt";
 
-export async function GET(): Promise<NextResponse<GetUserResponse>> {
+export async function GET(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const token = await getToken({ req });
     
-    if (!userId) {
-      return NextResponse.json({
+    if (!token?.sub) {
+      return NextResponse.json<GetUserResponse>({
         success: false,
         error: {
           message: "Unauthorized",
-          code: "UNAUTHORIZED"
-        }
+        },
       }, { status: 401 });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
+    const user = await prisma.user.findUnique({
+      where: {
+        walletAddress: token.sub,
+      },
       include: {
-        profile: true
-      }
+        profile: true,
+      },
     });
 
-    if (!dbUser) {
-      // 创建用户
-      const newUser = await prisma.user.create({
-        data: {
-          clerkId: userId,
-          profile: {
-            create: {} // 创建空的 Profile
-          }
+    if (!user) {
+      return NextResponse.json<GetUserResponse>({
+        success: false,
+        error: {
+          message: "User not found",
         },
-        include: {
-          profile: true
-        }
-      });
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          user: newUser
-        }
-      });
+      }, { status: 404 });
     }
 
-    return NextResponse.json({
+    return NextResponse.json<GetUserResponse>({
       success: true,
       data: {
-        user: dbUser
-      }
+        user: {
+          id: user.id,
+          walletAddress: user.walletAddress,
+          email: user.email,
+          createdAt: user.createdAt.toISOString(),
+          updatedAt: user.updatedAt.toISOString(),
+          profile: {
+            id: user.id,
+            name: user.profile?.name,
+            avatar: user.profile?.avatar,
+            bio: user.profile?.bio,
+          },
+        },
+      },
     });
   } catch (error) {
-    console.error("Error getting user:", error);
-    return NextResponse.json({
+    console.error("Error fetching user:", error);
+    return NextResponse.json<GetUserResponse>({
       success: false,
       error: {
         message: "Internal server error",
-        code: "INTERNAL_SERVER_ERROR"
-      }
+      },
     }, { status: 500 });
   }
 } 

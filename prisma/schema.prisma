@@ -47,7 +47,6 @@ model Profile {
   name      String?  // 用户名称
   bio       String?  // 个人简介
   avatar    String?  // 头像URL
-  wallets   String[] // 钱包地址列表
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

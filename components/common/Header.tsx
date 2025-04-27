@@ -6,11 +6,10 @@ import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Home, User, PlusCircle, LogOut, Menu, X } from 'lucide-react';
+import { Home, User, PlusCircle, Menu, X } from 'lucide-react';
 import { AuthDialog } from '../auth/AuthDialog';
 import { ThemeToggle } from './ThemeToggle';
 import { useState, useEffect } from 'react';
-import { Badge } from '../ui/badge';
 import { useCurrentWallet } from '@mysten/dapp-kit';
 
 export default function Header() {
@@ -50,7 +49,7 @@ export default function Header() {
         
         <div className="flex items-center space-x-2">
           <ThemeToggle />
-          <AuthDialog />
+          <AuthDialog isMobile />
           <Button
             variant="ghost"
             size="icon"
@@ -115,13 +114,13 @@ export default function Header() {
           <nav className="p-4 space-y-2">
             <Link
               href="/"
-              className={cn(
+                className={cn(
                 "flex items-center px-4 py-2 rounded-lg",
                 "text-sidebar-foreground hover:bg-sidebar-hover",
                 pathname === "/" && "bg-sidebar-hover"
-              )}
+                )}
               onClick={() => setIsMenuOpen(false)}
-            >
+              >
               <Home className="h-5 w-5 mr-3" />
               Home
             </Link>
@@ -130,26 +129,26 @@ export default function Header() {
               <>
                 <Link
                   href={`/user/${currentWallet.accounts[0]?.address}`}
-                  className={cn(
+                    className={cn(
                     "flex items-center px-4 py-2 rounded-lg",
                     "text-sidebar-foreground hover:bg-sidebar-hover",
                     pathname.startsWith("/user") && !isUserPageFromSidebar && "bg-sidebar-hover"
-                  )}
+                    )}
                   onClick={() => setIsMenuOpen(false)}
-                >
+                  >
                   <User className="h-5 w-5 mr-3" />
-                  Profile
+                  My Page
                 </Link>
 
                 <Link
                   href="/create"
-                  className={cn(
+                    className={cn(
                     "flex items-center px-4 py-2 rounded-lg",
                     "text-sidebar-foreground hover:bg-sidebar-hover",
                     pathname === "/create" && "bg-sidebar-hover"
                   )}
                   onClick={() => setIsMenuOpen(false)}
-                >
+                  >
                   <PlusCircle className="h-5 w-5 mr-3" />
                   Create
                 </Link>

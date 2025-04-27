@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useUser } from "@clerk/nextjs";
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,22 +9,33 @@ import { userApi } from '@/lib/api/requests';
 import { logger } from "@/lib/utils";
 import { ConnectButton, useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 import { useDubheStore } from '@/store/dubheStore';
-// import { toast } from 'sonner';
 import { useState, useEffect, useCallback } from 'react';
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUserStore } from '@/store/userStore';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
-export default function Profile() {
-  const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser();
+export default function ProfilePage() {
+  const { user } = useUserStore();
   const account = useCurrentAccount();
   const { connectionStatus } = useCurrentWallet();
   const { dubhe, isInitialized, initialize } = useDubheStore();
   const [balance, setBalance] = useState<string>('0');
+  const router = useRouter();
   
   const { data: userData, isLoading: isUserLoading } = useQuery({
     queryKey: ['user'],
     queryFn: userApi.get,
-    enabled: isClerkLoaded && isSignedIn,
+    enabled: !!user,
   });
+
+  useEffect(() => {
+    if (!user) {
+      toast.error('Please connect and login to view your profile');
+      router.push('/');
+    }
+  }, [user, router]);
 
   const getBalance = useCallback(async (): Promise<void> => {
     if (!account?.address || !dubhe) return;
@@ -49,12 +59,8 @@ export default function Profile() {
     }
   }, [connectionStatus, initialize]);
 
-  if (!isClerkLoaded || isUserLoading) {
+  if (!user || isUserLoading) {
     return <LoadingSpinner />;
-  }
-
-  if (!isSignedIn) {
-    return <div>Please sign in to view your profile.</div>;
   }
 
   const profile = userData?.data?.user?.profile;
@@ -64,14 +70,13 @@ export default function Profile() {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <img 
-            src={user.imageUrl} 
-            alt={user.fullName || 'Profile picture'} 
-            className="w-20 h-20 rounded-full object-cover"
-          />
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={user.profile?.avatar || 'no-data'} />
+            <AvatarFallback>{user.profile?.name?.[0] || 'U'}</AvatarFallback>
+          </Avatar>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{user.fullName || 'Anonymous'}</h1>
-            <p className="text-muted-foreground">@user.sui</p>
+            <h1 className="text-3xl font-bold text-foreground">{user.profile?.name || 'Anonymous'}</h1>
+            <p className="text-muted-foreground">@{user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { UserProfile } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // 获取挑战码
 export async function getChallenge(walletAddress: string): Promise<string> {
@@ -20,7 +20,7 @@ export async function getChallenge(walletAddress: string): Promise<string> {
   return data.data.challenge;
 }
 
-// 验证签名并获取用户信息
+// 验证签名
 export async function verifySignature(
   walletAddress: string,
   signature: string,
@@ -43,10 +43,7 @@ export async function verifySignature(
   }
 
   const data = await response.json();
-  return {
-    token: data.data.token,
-    user: data.data.user,
-  };
+  return data.data;
 }
 
 export async function syncWalletUser(walletAddress: string): Promise<UserProfile> {

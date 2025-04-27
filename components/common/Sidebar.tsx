@@ -6,11 +6,10 @@ import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Home, User, PlusCircle, LogOut } from 'lucide-react';
+import { Home, User, PlusCircle } from 'lucide-react';
 import { AuthDialog } from '../auth/AuthDialog';
 import { logger } from '@/lib/utils';
 import { useEffect } from 'react';
-import { Badge } from '../ui/badge';
 import { ThemeToggle } from './ThemeToggle';
 import { useCurrentWallet } from '@mysten/dapp-kit';
 
@@ -95,26 +94,9 @@ export default function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-sidebar-border">
-        {currentWallet ? (
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center">
-                <User className="h-5 w-5 text-sidebar-accent-foreground" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium text-sidebar-foreground">Wallet Connected</span>
-                <span className="text-sm text-sidebar-accent-foreground truncate max-w-[150px]">
-                  {currentWallet.accounts[0]?.address}
-                </span>
-              </div>
-            </div>
-            <AuthDialog />
-          </div>
-        ) : (
           <div className="flex justify-center">
             <AuthDialog />
           </div>
-        )}
       </div>
     </div>
   );
