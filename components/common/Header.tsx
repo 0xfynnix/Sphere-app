@@ -11,12 +11,14 @@ import { AuthDialog } from '../auth/AuthDialog';
 import { ThemeToggle } from './ThemeToggle';
 import { useState, useEffect } from 'react';
 import { useCurrentWallet } from '@mysten/dapp-kit';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 export default function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { currentWallet } = useCurrentWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   // 点击菜单外部关闭菜单
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function Header() {
         
         <div className="flex items-center space-x-2">
           <ThemeToggle />
-          <AuthDialog isMobile />
+          {isMobile && <AuthDialog isMobile />}
           <Button
             variant="ghost"
             size="icon"
