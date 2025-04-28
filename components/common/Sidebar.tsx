@@ -26,7 +26,7 @@ export default function Sidebar() {
   const isUserPageFromSidebar = pathname.startsWith('/user') && searchParams.get('source') === 'sidebar';
 
   return (
-    <div className="w-64 h-screen bg-sidebar border-r border-sidebar-border fixed left-0 top-0 flex flex-col">
+    <div className="w-64 h-screen bg-sidebar backdrop-blur-sm border-r border-sidebar-border fixed left-0 top-0 flex flex-col">
       <div className="p-4 flex-1">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">

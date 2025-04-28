@@ -93,7 +93,7 @@ export function AuthDialog({ isMobile = false }: AuthDialogProps) {
 
   if (user) {
     return (
-      <div className={isMobile ? "flex items-center gap-2" : "flex flex-col items-center justify-center p-6"}>
+      <div className={isMobile ? "flex items-center gap-2" : "flex flex-col items-center justify-center min-w-[200px]"}>
         <div
           className={cn(
             "flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity",
@@ -132,9 +132,9 @@ export function AuthDialog({ isMobile = false }: AuthDialogProps) {
   }
 
   return (
-    <div className={isMobile ? "flex items-center" : "flex flex-col items-center justify-center p-6"}>
+    <div className={isMobile ? "flex items-center" : "flex flex-col items-center justify-center p-6 min-w-[200px]"}>
       {isConnected ? (
-        <div className={isMobile ? "flex items-center" : "flex flex-col items-center space-y-4"}>
+        <div className={isMobile ? "flex items-center" : "flex flex-col items-center space-y-4 w-full"}>
           <Button
             onClick={handleLogin}
             disabled={isLoading}

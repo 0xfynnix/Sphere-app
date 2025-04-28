@@ -12,8 +12,6 @@
     "prisma:push": "prisma db push"
   },
   "dependencies": {
-    "@0xobelisk/sui-client": "^1.1.12",
-    "@0xobelisk/sui-common": "^1.1.11",
     "@hookform/resolvers": "^5.0.1",
     "@mysten/dapp-kit": "^0.16.0",
     "@mysten/sui": "^1.27.1",

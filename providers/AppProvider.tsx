@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState, createContext, useContext } from "react";
 import { SuiClientProvider, WalletProvider } from "@mysten/dapp-kit";
-import { getFullnodeUrl } from "@0xobelisk/sui-client";
+import { getFullnodeUrl } from "@mysten/sui/client";
 import { ThemeProvider } from "./ThemeProvider";
 import { UserProfile } from '@/lib/api/types';
 
