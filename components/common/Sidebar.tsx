@@ -8,19 +8,13 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Home, User, PlusCircle } from 'lucide-react';
 import { AuthDialog } from '../auth/AuthDialog';
-import { logger } from '@/lib/utils';
-import { useEffect } from 'react';
 import { ThemeToggle } from './ThemeToggle';
-import { useCurrentWallet } from '@mysten/dapp-kit';
+import { useUserStore } from '@/store/userStore';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { currentWallet } = useCurrentWallet();
-
-  useEffect(() => {
-    logger.debug('Sidebar - Wallet state changed', { currentWallet });
-  }, [currentWallet]);
+  const { user } = useUserStore();
 
   // 检查是否是从侧边栏进入的用户页面
   const isUserPageFromSidebar = pathname.startsWith('/user') && searchParams.get('source') === 'sidebar';
@@ -54,8 +48,8 @@ export default function Sidebar() {
               Home
             </Button>
           </Link>
-          {currentWallet && (
-            <Link href={`/user/${currentWallet.accounts[0]?.address}`}>
+          { user && (
+            <Link href={`/user/${user.walletAddress}`}>
               <Button
                 variant={isUserPageFromSidebar ? 'default' : 'ghost'}
                 className={cn(
@@ -70,7 +64,7 @@ export default function Sidebar() {
           )}
         </nav>
 
-        {currentWallet && (
+         {user && (
           <div className="my-8">
             <Link href="/create">
               <Button

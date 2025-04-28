@@ -29,6 +29,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.7.4",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.488.0",

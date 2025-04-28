@@ -7,59 +7,34 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { userApi } from '@/lib/api/requests';
 import { logger } from "@/lib/utils";
-import { ConnectButton, useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
-import { useDubheStore } from '@/store/dubheStore';
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUserStore } from '@/store/userStore';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { User } from 'lucide-react';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const { user } = useUserStore();
-  const account = useCurrentAccount();
-  const { connectionStatus } = useCurrentWallet();
-  const { dubhe, isInitialized, initialize } = useDubheStore();
-  const [balance, setBalance] = useState<string>('0');
   const router = useRouter();
   
-  const { data: userData, isLoading: isUserLoading } = useQuery({
+  const { data: userData, isLoading: isUserLoading, isError: isUserError } = useQuery({
     queryKey: ['user'],
     queryFn: userApi.get,
-    enabled: !!user,
+    // enabled: !!user,
   });
 
   useEffect(() => {
-    if (!user) {
+    if (isUserError) {
       toast.error('Please connect and login to view your profile');
       router.push('/');
     }
-  }, [user, router]);
+  }, [isUserError, router]);
 
-  const getBalance = useCallback(async (): Promise<void> => {
-    if (!account?.address || !dubhe) return;
-    try {
-      const balance = await dubhe.balanceOf(account.address);
-      setBalance((Number(balance.totalBalance) / 1_000_000_000).toFixed(4));
-    } catch (error) {
-      console.error('Failed to fetch balance:', error);
-    }
-  }, [account?.address, dubhe]);
-
-  useEffect(() => {
-    if (isInitialized && account?.address) {
-      getBalance();
-    }
-  }, [isInitialized, account?.address, getBalance]);
-
-  useEffect(() => {
-    if (connectionStatus === 'connected') {
-      initialize();
-    }
-  }, [connectionStatus, initialize]);
-
-  if (!user || isUserLoading) {
+  
+  if (isUserLoading) {
     return <LoadingSpinner />;
   }
 
@@ -71,65 +46,56 @@ export default function ProfilePage() {
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={user.profile?.avatar || 'no-data'} />
-            <AvatarFallback>{user.profile?.name?.[0] || 'U'}</AvatarFallback>
+            {user?.profile?.avatar ? (
+              <AvatarImage src={user.profile.avatar} />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-muted">
+                <User className="h-10 w-10 text-muted-foreground" />
+              </div>
+            )}
+            {user?.profile?.avatar && <AvatarFallback>{user.profile?.name?.[0] || 'U'}</AvatarFallback>}
           </Avatar>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{user.profile?.name || 'Anonymous'}</h1>
-            <p className="text-muted-foreground">@{user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}</p>
+            <h1 className="text-3xl font-bold text-foreground">{user?.profile?.name || 'Anonymous'}</h1>
+            <p className="text-muted-foreground">@{user?.walletAddress.slice(0, 6)}...{user?.walletAddress.slice(-4)}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">Your Balance</h3>
-          <p className="text-2xl font-bold text-foreground">{balance} SUI</p>
-
-          <div className="mt-4 flex gap-2">
-            <Button size="sm" className="flex-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground">Send</Button>
-            <Button size="sm" className="flex-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground">Receive</Button>
-          </div>
-        </Card>
-        <Card className="p-6 hover:shadow-lg transition-shadow">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
           <h3 className="text-sm font-semibold mb-2 text-foreground">Content Created</h3>
-          <p className="text-2xl font-bold text-foreground">12</p>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">12</p>
           <p className="text-xs text-muted-foreground">Total Posts</p>
         </Card>
-        <Card className="p-6 hover:shadow-lg transition-shadow">
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
           <h3 className="text-sm font-semibold mb-2 text-foreground">Followers</h3>
-          <p className="text-2xl font-bold text-foreground">256</p>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">256</p>
           <p className="text-xs text-muted-foreground">Community Members</p>
+        </Card>
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Total Received Rewards</h3>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">8.5 SUI</p>
+          <p className="text-xs text-muted-foreground">From Community</p>
+        </Card>
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Total Given Rewards</h3>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">2.5 SUI</p>
+          <p className="text-xs text-muted-foreground">To Community</p>
         </Card>
       </div>
 
       <Tabs defaultValue="wallet" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="wallet">Wallet</TabsTrigger>
+          <TabsTrigger value="wallet">Transaction</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="nfts">NFTs</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         <TabsContent value="wallet" className="mt-6">
           <div className="space-y-6">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Wallet Connection</h3>
-              <div className="space-y-4">
-                <ConnectButton />
-                {connectionStatus === 'connected' && account && (
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-foreground">
-                      {account.address.slice(0, 6)}...{account.address.slice(-4)}
-                    </span>
-                    <div className="text-sm text-foreground">
-                      Balance: {balance} SUI
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Transaction History</h3>
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Transaction History On Sphere</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
@@ -158,14 +124,120 @@ export default function ProfilePage() {
         </TabsContent>
         <TabsContent value="content" className="mt-6">
           <div className="space-y-4">
-            {/* Content items will go here */}
             <p className="text-muted-foreground">No content yet.</p>
           </div>
         </TabsContent>
-        <TabsContent value="activity" className="mt-6">
-          <div className="space-y-4">
-            {/* Activity items will go here */}
-            <p className="text-muted-foreground">No recent activity.</p>
+        <TabsContent value="nfts" className="mt-6">
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-foreground">My NFTs</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Total: 2</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <Card className="p-4 hover:shadow-lg transition-shadow">
+                <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
+                  <Image 
+                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
+                    alt="NFT" 
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  />
+                </div>
+                <h3 className="font-semibold text-foreground">Sphere Creator #1</h3>
+                <p className="text-sm text-muted-foreground">Minted on 2024-03-20</p>
+                <div className="mt-2">
+                  <Button variant="outline" size="sm">View Details</Button>
+                </div>
+              </Card>
+              <Card className="p-4 hover:shadow-lg transition-shadow">
+                <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
+                  <Image 
+                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
+                    alt="NFT" 
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  />
+                </div>
+                <h3 className="font-semibold text-foreground">Sphere Creator #2</h3>
+                <p className="text-sm text-muted-foreground">Minted on 2024-03-21</p>
+                <div className="mt-2">
+                  <Button variant="outline" size="sm">View Details</Button>
+                </div>
+              </Card>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing 1-2 of 2 items
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled>
+                  Next
+                </Button>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-foreground">Mintable NFTs</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Available: 2</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <Card className="p-4 hover:shadow-lg transition-shadow">
+                  <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
+                    <Image 
+                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
+                      alt="NFT" 
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    />
+                  </div>
+                  <h3 className="font-semibold text-foreground">Sphere Creator #3</h3>
+                  <p className="text-sm text-muted-foreground">Limited Edition</p>
+                  <div className="mt-2">
+                    <Button size="sm">Mint Now</Button>
+                  </div>
+                </Card>
+                <Card className="p-4 hover:shadow-lg transition-shadow">
+                  <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
+                    <Image 
+                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
+                      alt="NFT" 
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    />
+                  </div>
+                  <h3 className="font-semibold text-foreground">Sphere Creator #4</h3>
+                  <p className="text-sm text-muted-foreground">Limited Edition</p>
+                  <div className="mt-2">
+                    <Button size="sm">Mint Now</Button>
+                  </div>
+                </Card>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing 1-2 of 2 items
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm" disabled>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="settings" className="mt-6">

@@ -10,10 +10,11 @@ import {
 } from "@mysten/dapp-kit";
 import { getChallenge, verifySignature } from "@/lib/api/wallet";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogOut, User } from "lucide-react";
+import { Loader2, LogOut, User, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/userStore";
+import { useNotificationStore } from "@/store/notificationStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -25,6 +26,7 @@ export function AuthDialog({ isMobile = false }: AuthDialogProps) {
   const { currentWallet, connectionStatus, isConnected } = useCurrentWallet();
   const account = useCurrentAccount();
   const { user, setUser, setToken, logout } = useUserStore();
+  const { unreadCount } = useNotificationStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
@@ -94,32 +96,45 @@ export function AuthDialog({ isMobile = false }: AuthDialogProps) {
   if (user) {
     return (
       <div className={isMobile ? "flex items-center gap-2" : "flex flex-col items-center justify-center min-w-[200px]"}>
-        <div
-          className={cn(
-            "flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity",
-            isMobile ? "mb-0" : "mb-4"
-          )}
-          onClick={handleProfileClick}
-        >
-          <Avatar className={isMobile ? "h-8 w-8" : ""}>
-            {user.profile?.avatar && <AvatarImage src={user.profile.avatar} />}
-            <AvatarFallback>
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                <User className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              "flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity",
+              isMobile ? "mb-0" : "mb-4"
+            )}
+            onClick={handleProfileClick}
+          >
+            <Avatar className={isMobile ? "h-8 w-8" : ""}>
+              {user.profile?.avatar && <AvatarImage src={user.profile.avatar} />}
+              <AvatarFallback>
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </AvatarFallback>
+            </Avatar>
+            {!isMobile && (
+              <div>
+                <h3 className="font-semibold">
+                  {user.profile?.name || "Anonymous"}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {user.walletAddress?.slice(0, 6)}...
+                  {user.walletAddress?.slice(-4)}
+                </p>
               </div>
-            </AvatarFallback>
-          </Avatar>
-          {!isMobile && (
-            <div>
-              <h3 className="font-semibold">
-                {user.profile?.name || "Anonymous"}
-              </h3>
-              <p className="text-sm text-gray-500">
-                {user.walletAddress?.slice(0, 6)}...
-                {user.walletAddress?.slice(-4)}
-              </p>
-            </div>
-          )}
+            )}
+          </div>
+          <div 
+            className="relative cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => router.push('/notifications')}
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </div>
         </div>
         {!isMobile && (
           <Button variant="outline" onClick={handleLogout} className="w-full">

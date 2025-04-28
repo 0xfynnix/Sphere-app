@@ -146,7 +146,7 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
       <Tabs defaultValue="posts" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="rewards">Rewards</TabsTrigger>
+          <TabsTrigger value="nfts">NFTs</TabsTrigger>
           <TabsTrigger value="collections">Collections</TabsTrigger>
         </TabsList>
 
@@ -185,9 +185,9 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
           ))}
         </TabsContent>
 
-        <TabsContent value="rewards" className="pt-6">
+        <TabsContent value="nfts" className="pt-6">
           <div className="text-center py-12 text-muted-foreground">
-            No rewards yet
+            No NFTs yet
           </div>
         </TabsContent>
 
