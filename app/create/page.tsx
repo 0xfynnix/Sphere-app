@@ -112,7 +112,7 @@ export default function CreatePage() {
         throw new Error(error.error || 'Failed to publish content');
       }
 
-      const result = await response.json();
+      // const result = await response.json();
     toast.success('Content published successfully!');
       
       // 重置表单
