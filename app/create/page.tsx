@@ -8,8 +8,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ImageIcon, Wand2 } from 'lucide-react';
 import { ImageUpload } from "@/components/common/ImageUpload";
-import { uploadToStorage } from '@/lib/storage';
+import { uploadImage } from '@/lib/walrus';
 import { toast } from 'sonner';
+
+// 数据库记录接口
+interface ImageRecord {
+  id: string;
+  blobId: string;
+  url: string;
+  expiryDate: Date;
+  createdAt: Date;
+}
 
 export default function CreatePage() {
   const [, setActiveTab] = useState('traditional');
@@ -29,8 +38,27 @@ export default function CreatePage() {
         // 显示上传提示
         const toastId = toast.loading('Uploading image to Walrus decentralized storage...');
         
-        // 上传到 Walrus
-        const result = await uploadToStorage(file);
+        // 上传到 Walrus，使用最大存储时间
+        const result = await uploadImage(file, { permanent: true });
+        
+        // 保存到数据库
+        const imageRecord: ImageRecord = {
+          id: crypto.randomUUID(),
+          blobId: result.blobId,
+          url: result.url,
+          expiryDate: new Date(Date.now() + 53 * 24 * 60 * 60 * 1000), // 53个epoch的到期时间
+          createdAt: new Date()
+        };
+        
+        // 调用API保存记录
+        await fetch('/api/images', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(imageRecord),
+        });
+        
         setImageUrl(result.url);
         setImage(file);
         
@@ -64,21 +92,37 @@ export default function CreatePage() {
       return;
     }
 
-    if (image && !imageUrl) {
-      toast.error('Image is still uploading');
+    if (!text || !image) {
+      toast.error('Please fill in the content and select an image');
       return;
     }
 
-    // 准备发布数据
-    const postData = {
-      text,
-      imageUrl,
-      // ... 其他数据
-    };
-    
-    // 调用发布 API
-    console.log('Publishing with IPFS image:', postData);
+    try {
+      const formData = new FormData();
+      formData.append('text', text);
+      formData.append('image', image);
+
+      const response = await fetch('/api/content', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to publish content');
+      }
+
+      const result = await response.json();
     toast.success('Content published successfully!');
+      
+      // 重置表单
+      setText('');
+      setImage(null);
+      setImageUrl('');
+    } catch (error) {
+      console.error('Failed to publish content:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to publish content');
+    }
   };
 
   return (

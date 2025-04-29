@@ -8,7 +8,6 @@ import { AppProvider } from "@/providers/AppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Toaster } from 'sonner';
-// import { cn } from '@/lib/utils';
 
 import '@mysten/dapp-kit/dist/index.css';
 

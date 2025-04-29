@@ -1,15 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { GetUserResponse } from "@/lib/api/types";
-import jwt from 'jsonwebtoken';
 
-// JWT 密钥
-const JWT_SECRET = process.env.JWT_SECRET || 'sphere-secret-key';
-
-export async function GET(req: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const address = request.headers.get('x-user-address');
+    
+    if (!address) {
       return NextResponse.json<GetUserResponse>({
         success: false,
         error: {
@@ -18,21 +15,9 @@ export async function GET(req: NextRequest) {
       }, { status: 401 });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { walletAddress: string };
-    
-    if (!decoded?.walletAddress) {
-      return NextResponse.json<GetUserResponse>({
-        success: false,
-        error: {
-          message: "Invalid token",
-        },
-      }, { status: 401 });
-    }
-
     const user = await prisma.user.findUnique({
       where: {
-        walletAddress: decoded.walletAddress,
+        walletAddress: address,
       },
       include: {
         profile: true,

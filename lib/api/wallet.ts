@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // 获取挑战码
 export async function getChallenge(walletAddress: string): Promise<string> {
-  const response = await fetch(`${API_BASE_URL}/wallet/challenge`, {
+  const response = await fetch(`${API_BASE_URL}/login/challenge`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ export async function verifySignature(
   signature: string,
   challenge: string
 ): Promise<{ token: string; user: UserProfile }> {
-  const response = await fetch(`${API_BASE_URL}/wallet/verify`, {
+  const response = await fetch(`${API_BASE_URL}/login/verify`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export async function verifySignature(
 }
 
 export async function syncWalletUser(walletAddress: string): Promise<UserProfile> {
-  const response = await fetch(`${API_BASE_URL}/wallet/sync`, {
+  const response = await fetch(`${API_BASE_URL}/login/sync`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export async function syncWalletUser(walletAddress: string): Promise<UserProfile
 }
 
 export async function getUserByWallet(walletAddress: string): Promise<UserProfile> {
-  const response = await fetch(`${API_BASE_URL}/wallet/${walletAddress}`);
+  const response = await fetch(`${API_BASE_URL}/login/user/${walletAddress}`);
 
   if (!response.ok) {
     throw new Error('Failed to get user by wallet');

@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -36,6 +39,7 @@ model User {
   nftCount      Int      @default(0) // 拥有的NFT数量
   totalEarnings Float    @default(0) // 总收益（SUI）
   chainId       String?  // 链上用户ID
+  isAdmin       Boolean  @default(false) // 是否是管理员
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -55,7 +59,6 @@ model Post {
   id            String   @id @default(cuid())
   title         String   // 帖子标题
   content       String   // 帖子内容
-  image         String?  // 帖子图片URL
   userId        String
   user          User     @relation(fields: [userId], references: [id])
   status        PostStatus @default(DRAFT) // 帖子状态
@@ -71,6 +74,7 @@ model Post {
   totalRewards  Float    @default(0) // 总打赏金额
   postType      PostType @default(NORMAL) // 帖子类型
   rewards       Reward[] // 打赏记录
+  walrusImages  WalrusImage[] // 帖子关联的图片
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -81,6 +85,8 @@ enum PostStatus {
   PUBLISHED // 已发布
   ARCHIVED  // 已归档
   DELETED   // 已删除
+  PENDING   // 待处理
+  FAILED    // 失败
 }
 
 // 新增：分类模型
@@ -176,4 +182,17 @@ model Reward {
   referrer      User?    @relation("Referrer", fields: [referrerId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model WalrusImage {
+  id         String   @id @default(uuid())
+  blobId     String   @unique
+  url        String
+  expiryDate DateTime
+  postId     String?
+  post       Post?    @relation(fields: [postId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([expiryDate])
+  @@index([postId])
 } 

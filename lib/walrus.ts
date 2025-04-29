@@ -20,7 +20,12 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 export interface UploadResult {
   url: string;
-  cid: string;
+  blobId: string;
+}
+
+export interface UploadOptions {
+  epochs?: number; // 存储的epoch数量，默认3个epoch
+  permanent?: boolean; // 是否永久存储，如果为true则使用最大epochs
 }
 
 // 压缩图片
@@ -45,7 +50,7 @@ async function compressImage(file: File): Promise<File> {
   });
 }
 
-export async function uploadToStorage(file: File): Promise<UploadResult> {
+export async function uploadImage(file: File, options: UploadOptions = {}): Promise<UploadResult> {
   // 验证文件大小
   if (file.size > MAX_FILE_SIZE) {
     throw new Error('File too large. Maximum size is 5MB');
@@ -64,22 +69,39 @@ export async function uploadToStorage(file: File): Promise<UploadResult> {
     const arrayBuffer = await compressedFile.arrayBuffer();
     const blob = new Uint8Array(arrayBuffer);
     
+    // 确定存储时间
+    const epochs = options.permanent ? 53 : (options.epochs || 3);
+    
     // 上传到 Walrus
     const keypair = Ed25519Keypair.fromSecretKey(Buffer.from(process.env.WALRUS_SIGNER_PRIVATE_KEY!, 'hex'));
     const { blobId } = await walrusClient.writeBlob({
       blob,
       deletable: false,
-      epochs: 3, // 存储 3 个 epoch
+      epochs,
       signer: keypair,
     });
     
-    // 返回存储 URL 和 CID
+    // 返回存储 URL 和 blob ID
     return {
       url: `https://walrus.app/blob/${blobId}`,
-      cid: blobId
+      blobId
     };
   } catch (error) {
     console.error('Error uploading to Walrus:', error);
     throw new Error('Failed to upload to Walrus');
+  }
+}
+
+export async function getImageUrl(blobId: string): Promise<string> {
+  return `https://walrus.app/blob/${blobId}`;
+}
+
+export async function checkImageAvailability(blobId: string): Promise<boolean> {
+  try {
+    const result = await walrusClient.readBlob({ blobId });
+    return result !== null;
+  } catch (error) {
+    console.error('Error checking image availability:', error);
+    return false;
   }
 } 
