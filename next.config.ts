@@ -19,27 +19,51 @@ const nextConfig: NextConfig = {
       path: false,
     };
 
-    // 复制 WASM 文件到构建目录
-    config.plugins.push(
-      new CopyPlugin({
-        patterns: [
-          {
-            from: path.join(
-              __dirname,
-              'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
-            ),
-            to: path.join(__dirname, '.next/server/chunks/'),
-          },
-          {
-            from: path.join(
-              __dirname,
-              'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
-            ),
-            to: path.join(__dirname, '.next/server/vendor-chunks/'),
-          },
-        ],
-      })
-    );
+    // 在 Vercel 环境中，我们需要确保 WASM 文件被正确复制
+    if (process.env.VERCEL) {
+      config.plugins.push(
+        new CopyPlugin({
+          patterns: [
+            {
+              from: path.join(
+                __dirname,
+                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
+              ),
+              to: path.join(__dirname, '.next/server/chunks/'),
+            },
+            {
+              from: path.join(
+                __dirname,
+                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
+              ),
+              to: path.join(__dirname, '.next/server/vendor-chunks/'),
+            },
+          ],
+        })
+      );
+    } else {
+      // 在本地开发环境中，我们也需要复制 WASM 文件
+      config.plugins.push(
+        new CopyPlugin({
+          patterns: [
+            {
+              from: path.join(
+                __dirname,
+                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
+              ),
+              to: path.join(__dirname, '.next/server/chunks/'),
+            },
+            {
+              from: path.join(
+                __dirname,
+                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
+              ),
+              to: path.join(__dirname, '.next/server/vendor-chunks/'),
+            },
+          ],
+        })
+      );
+    }
     
     return config;
   },
