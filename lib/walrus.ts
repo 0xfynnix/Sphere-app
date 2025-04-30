@@ -1,6 +1,8 @@
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { WalrusClient } from '@mysten/walrus';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
+import sharp from 'sharp';
 
 // 初始化 Sui 客户端
 const suiClient = new SuiClient({
@@ -30,24 +32,30 @@ export interface UploadOptions {
 
 // 压缩图片
 async function compressImage(file: File): Promise<File> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          resolve(new File([blob!], file.name, { type: 'image/webp' }));
-        }, 'image/webp', 0.8);
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
+  // 将 File 转换为 Buffer
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // 使用 sharp 压缩图片
+  const compressedBuffer = await sharp(buffer)
+    .resize(1200, 1200, { // 限制最大尺寸
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .webp({ quality: 80 }) // 转换为 webp 格式，质量 80%
+    .toBuffer();
+
+  // 创建新的 File 对象
+  return new File([compressedBuffer], file.name, { type: 'image/webp' });
+}
+
+function getEd25519PrivateKey(suiPrivateKey: string): Uint8Array {
+  const { schema, secretKey } = decodeSuiPrivateKey(suiPrivateKey);
+  if (schema !== 'ED25519') {
+    throw new Error('Invalid key schema. Expected ED25519');
+  }
+  
+  return secretKey;
 }
 
 export async function uploadImage(file: File, options: UploadOptions = {}): Promise<UploadResult> {
@@ -62,6 +70,9 @@ export async function uploadImage(file: File, options: UploadOptions = {}): Prom
   }
 
   try {
+    const privateKey = getEd25519PrivateKey(process.env.WALRUS_SIGNER_PRIVATE_KEY!);
+    const keypair = Ed25519Keypair.fromSecretKey(privateKey);
+    
     // 压缩图片
     const compressedFile = await compressImage(file);
     
@@ -73,7 +84,6 @@ export async function uploadImage(file: File, options: UploadOptions = {}): Prom
     const epochs = options.permanent ? 53 : (options.epochs || 3);
     
     // 上传到 Walrus
-    const keypair = Ed25519Keypair.fromSecretKey(Buffer.from(process.env.WALRUS_SIGNER_PRIVATE_KEY!, 'hex'));
     const { blobId } = await walrusClient.writeBlob({
       blob,
       deletable: false,
@@ -81,10 +91,10 @@ export async function uploadImage(file: File, options: UploadOptions = {}): Prom
       signer: keypair,
     });
     
-    // 返回存储 URL 和 blob ID
+    // 返回 blob ID
     return {
-      url: `https://walrus.app/blob/${blobId}`,
-      blobId
+      blobId,
+      url: blobId // 使用 blobId 作为临时标识
     };
   } catch (error) {
     console.error('Error uploading to Walrus:', error);
@@ -92,16 +102,22 @@ export async function uploadImage(file: File, options: UploadOptions = {}): Prom
   }
 }
 
-export async function getImageUrl(blobId: string): Promise<string> {
-  return `https://walrus.app/blob/${blobId}`;
+export async function getImageData(blobId: string): Promise<Uint8Array | null> {
+  try {
+    const result = await walrusClient.readBlob({ blobId });
+    return result;
+  } catch (error) {
+    console.error('Error reading image data:', error);
+    return null;
+  }
 }
 
 export async function checkImageAvailability(blobId: string): Promise<boolean> {
   try {
-    const result = await walrusClient.readBlob({ blobId });
-    return result !== null;
+    await walrusClient.readBlob({ blobId });
+    return true;
   } catch (error) {
     console.error('Error checking image availability:', error);
     return false;
   }
-} 
+}

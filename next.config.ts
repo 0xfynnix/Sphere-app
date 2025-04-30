@@ -20,16 +20,23 @@ const nextConfig: NextConfig = {
         path: false,
       };
 
-      // 复制 WASM 文件
+      // 复制 WASM 文件到两个目录
       config.plugins.push(
         new CopyPlugin({
           patterns: [
             {
               from: path.join(
                 __dirname,
-                'node_modules/.pnpm/@mysten+walrus-wasm@0.0.6/node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
+                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
               ),
               to: path.join(__dirname, '.next/server/chunks/'),
+            },
+            {
+              from: path.join(
+                __dirname,
+                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
+              ),
+              to: path.join(__dirname, '.next/server/vendor-chunks/'),
             },
           ],
         })

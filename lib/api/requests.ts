@@ -31,13 +31,20 @@ export async function request<T>(
   const token = useUserStore.getState().token;
   
   try {
+    // 如果是 FormData，不要设置 Content-Type，让浏览器自动设置
+    const headers: Record<string, string> = {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...options.headers as Record<string, string>,
+    };
+
+    // 如果不是 FormData，则设置默认的 Content-Type
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        ...options.headers,
-      },
+      headers,
     });
 
     const data = await response.json();
