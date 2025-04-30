@@ -22,47 +22,32 @@ const nextConfig: NextConfig = {
       path: false,
     };
 
-    // 在 Vercel 环境中，我们需要确保 WASM 文件被正确复制
-    if (process.env.VERCEL) {
-      config.plugins.push(
-        new CopyPlugin({
-          patterns: [
-            {
-              from: path.join(
-                __dirname,
-                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
-              ),
-              to: path.join(__dirname, '.next/server/chunks/'),
-            },
-            {
-              from: path.join(
-                __dirname,
-                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
-              ),
-              to: path.join(__dirname, '.next/server/vendor-chunks/'),
-            },
-          ],
-        })
+    // 复制 WASM 文件到构建目录
+    if (isServer) {
+      const wasmPath = path.join(
+        __dirname,
+        'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
       );
-    } else {
-      // 在本地开发环境中，我们也需要复制 WASM 文件
+
       config.plugins.push(
         new CopyPlugin({
           patterns: [
             {
-              from: path.join(
-                __dirname,
-                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
-              ),
+              from: wasmPath,
               to: path.join(__dirname, '.next/server/chunks/'),
+              force: true, // 强制覆盖已存在的文件
+              info: {
+                minimized: true // 标记为已优化
+              }
             },
             {
-              from: path.join(
-                __dirname,
-                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
-              ),
+              from: wasmPath,
               to: path.join(__dirname, '.next/server/vendor-chunks/'),
-            },
+              force: true,
+              info: {
+                minimized: true
+              }
+            }
           ],
         })
       );

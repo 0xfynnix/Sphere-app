@@ -2,11 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "functions": {
-    "app/api/**/*.ts": {
-      "runtime": "edge@1.0.0"
-    }
-  },
   "routes": [
     {
       "src": "/api/(.*)",
