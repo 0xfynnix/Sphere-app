@@ -4,7 +4,7 @@
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
-      "runtime": "edge"
+      "runtime": "edge@1.0.0"
     }
   },
   "routes": [
