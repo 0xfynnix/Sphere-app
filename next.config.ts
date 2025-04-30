@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['images.unsplash.com'],
   },
+  experimental: {
+    serverComponentsExternalPackages: ['@mysten/walrus-wasm'],
+  },
   webpack: (config, { isServer }) => {
     config.experiments = {
       asyncWebAssembly: true,
