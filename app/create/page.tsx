@@ -8,74 +8,24 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ImageIcon, Wand2 } from 'lucide-react';
 import { ImageUpload } from "@/components/common/ImageUpload";
-import { uploadImage } from '@/lib/walrus';
 import { toast } from 'sonner';
+import { useCreateContent } from '@/lib/api/hooks';
 
-// 数据库记录接口
-interface ImageRecord {
-  id: string;
-  blobId: string;
-  url: string;
-  expiryDate: Date;
-  createdAt: Date;
-}
 
 export default function CreatePage() {
   const [, setActiveTab] = useState('traditional');
   const [text, setText] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
-  const [isUploading, setIsUploading] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
 
-  const handleImageChange = async (file: File | null) => {
-    if (file) {
-      try {
-        setIsUploading(true);
-        
-        // 显示上传提示
-        const toastId = toast.loading('Uploading image to Walrus decentralized storage...');
-        
-        // 上传到 Walrus，使用最大存储时间
-        const result = await uploadImage(file, { permanent: true });
-        
-        // 保存到数据库
-        const imageRecord: ImageRecord = {
-          id: crypto.randomUUID(),
-          blobId: result.blobId,
-          url: result.url,
-          expiryDate: new Date(Date.now() + 53 * 24 * 60 * 60 * 1000), // 53个epoch的到期时间
-          createdAt: new Date()
-        };
-        
-        // 调用API保存记录
-        await fetch('/api/images', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(imageRecord),
-        });
-        
-        setImageUrl(result.url);
-        setImage(file);
-        
-        // 更新提示
-        toast.success('Image uploaded successfully!', {
-          id: toastId
-        });
-      } catch (error) {
-        console.error('Failed to upload image:', error);
-        toast.error(error instanceof Error ? error.message : 'Failed to upload image');
-      } finally {
-        setIsUploading(false);
-      }
-    } else {
-      setImage(null);
-      setImageUrl('');
-    }
+  const createContent = useCreateContent();
+
+  const handleImageChange = (file: File | null) => {
+    setImage(file);
+    setImageUrl(file?.name || '');
   };
 
   const handleGenerate = async () => {
@@ -87,11 +37,6 @@ export default function CreatePage() {
   };
 
   const handlePublish = async () => {
-    if (isUploading) {
-      toast.error('Please wait for image upload to complete');
-      return;
-    }
-
     if (!text || !image) {
       toast.error('Please fill in the content and select an image');
       return;
@@ -102,23 +47,14 @@ export default function CreatePage() {
       formData.append('text', text);
       formData.append('image', image);
 
-      const response = await fetch('/api/content', {
-        method: 'POST',
-        body: formData,
+      await createContent.mutateAsync(formData, {
+        onSuccess: () => {
+          toast.success('Content published successfully!');
+          setText('');
+          setImage(null);
+          setImageUrl('');
+        },
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to publish content');
-      }
-
-      // const result = await response.json();
-    toast.success('Content published successfully!');
-      
-      // 重置表单
-      setText('');
-      setImage(null);
-      setImageUrl('');
     } catch (error) {
       console.error('Failed to publish content:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to publish content');
@@ -166,16 +102,11 @@ export default function CreatePage() {
                 <Label htmlFor="image">Image (Optional)</Label>
                 <ImageUpload 
                   onImageChange={handleImageChange}
-                  disabled={isUploading}
+                  disabled={createContent.isPending}
                 />
-                {isUploading && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Uploading to IPFS...
-                  </p>
-                )}
                 {imageUrl && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Image uploaded: {imageUrl}
+                    Selected image: {imageUrl}
                   </p>
                 )}
               </div>
@@ -183,9 +114,9 @@ export default function CreatePage() {
               <div className="flex justify-end">
                 <Button 
                   onClick={handlePublish}
-                  disabled={isUploading}
+                  disabled={createContent.isPending}
                 >
-                  Publish
+                  {createContent.isPending ? 'Publishing...' : 'Publish'}
                 </Button>
               </div>
             </div>
@@ -233,9 +164,9 @@ export default function CreatePage() {
               <div className="flex justify-end">
                 <Button 
                   onClick={handlePublish}
-                  disabled={!generatedContent || isUploading}
+                  disabled={!generatedContent || createContent.isPending}
                 >
-                  Publish
+                  {createContent.isPending ? 'Publishing...' : 'Publish'}
                 </Button>
               </div>
             </div>

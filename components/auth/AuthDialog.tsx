@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   useCurrentWallet,
-  useCurrentAccount,
   ConnectButton,
   useSignPersonalMessage,
   useDisconnectWallet,
 } from "@mysten/dapp-kit";
-import { getChallenge, verifySignature } from "@/lib/api/wallet";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogOut, User, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,76 +15,62 @@ import { useUserStore } from "@/store/userStore";
 import { useNotificationStore } from "@/store/notificationStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useWalletLogin } from "@/lib/api/hooks";
 
 interface AuthDialogProps {
   isMobile?: boolean;
 }
 
 export function AuthDialog({ isMobile = false }: AuthDialogProps) {
-  const { currentWallet, connectionStatus, isConnected } = useCurrentWallet();
-  const account = useCurrentAccount();
-  const { user, setUser, setToken, logout } = useUserStore();
+  const { currentWallet, isConnected } = useCurrentWallet();
+  const { user, logout } = useUserStore();
   const { unreadCount } = useNotificationStore();
-  const [isLoading, setIsLoading] = useState(false);
 
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const { mutate: disconnect } = useDisconnectWallet();
-  const router = useRouter();
 
   useEffect(() => {
     console.log("currentWallet", currentWallet);
     if (currentWallet) {
-      handleLogin();
+      handleConnect();
     }
   }, [currentWallet]);
 
-  const handleLogin = async () => {
+
+  const router = useRouter();
+  
+  const { login, isLoading: isLoginLoading } = useWalletLogin();
+
+  const handleConnect = async () => {
     try {
-      setIsLoading(true);
-      
-      if (connectionStatus !== "connected") {
-        toast.error("Failed to connect wallet:", {
-          description: "Please connect your wallet to continue",
-        });
-        return;
+      if (!currentWallet) {
+        throw new Error('No wallet connected');
       }
 
-      if (!account?.address) {
-        throw new Error("No wallet account found");
-      }
+      const address = currentWallet.accounts[0].address;
 
-      const walletAddress = account.address;
-      
-      // 1. 获取挑战码
-      const challenge = await getChallenge(walletAddress);
-      
-      // 2. 使用钱包签名挑战码
-      const { signature } = await signPersonalMessage({
-        message: new TextEncoder().encode(challenge),
+      // 使用 login 函数处理登录流程
+      const result = await login(address, async (message) => {
+        const { signature } = await signPersonalMessage({ message });
+        return { signature };
       });
       
-      // 3. 验证签名并获取用户信息
-      const { token, user } = await verifySignature(
-        walletAddress,
-        signature,
-        challenge
-      );
-      
-      // 4. 存储 token 和用户信息
-      setToken(token);
-      setUser(user);
+      if (result.success) {
+        toast.success('Login successful');
+      } else {
+        // 显示错误信息
+        toast.error(result.error);
+      }
     } catch (error) {
-      toast.error("Failed to connect wallet:", {
-        description: (error as Error).message,
-      });
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to connect wallet:', error);
+      toast.error('Failed to connect wallet');
     }
   };
 
   const handleLogout = () => {
     logout();
     disconnect();
+    router.push("/");
   };
 
   const handleProfileClick = () => {
@@ -151,15 +135,15 @@ export function AuthDialog({ isMobile = false }: AuthDialogProps) {
       {isConnected ? (
         <div className={isMobile ? "flex items-center" : "flex flex-col items-center space-y-4 w-full"}>
           <Button
-            onClick={handleLogin}
-            disabled={isLoading}
+            onClick={handleConnect}
+            disabled={isLoginLoading}
             className={isMobile ? "h-8 px-3" : "w-full"}
             size={isMobile ? "sm" : "default"}
           >
-            {isLoading ? (
+            {isLoginLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            {isLoading ? "Logging in..." : "Retry Login"}
+            {isLoginLoading ? "Logging in..." : "Retry Login"}
           </Button>
         </div>
       ) : (

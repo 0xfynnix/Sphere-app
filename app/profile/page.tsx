@@ -4,8 +4,6 @@
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { useQuery } from '@tanstack/react-query';
-import { userApi } from '@/lib/api/requests';
 import { logger } from "@/lib/utils";
 import { useEffect } from 'react';
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
@@ -15,16 +13,13 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { User } from 'lucide-react';
 import Image from 'next/image';
+import { useUser } from '@/lib/api/hooks';
 
 export default function ProfilePage() {
   const { user } = useUserStore();
   const router = useRouter();
   
-  const { data: userData, isLoading: isUserLoading, isError: isUserError } = useQuery({
-    queryKey: ['user'],
-    queryFn: userApi.get,
-    // enabled: !!user,
-  });
+  const { data: userData, isLoading: isUserLoading, isError: isUserError } = useUser();
 
   useEffect(() => {
     if (isUserError) {

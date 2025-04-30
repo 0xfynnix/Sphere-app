@@ -1,10 +1,29 @@
-import { SyncUserResponse, GetUserResponse } from './types';
 import { useUserStore } from '@/store/userStore';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
+// API endpoints
+export const API_ENDPOINTS = {
+  // Auth endpoints
+  AUTH: {
+    SYNC: '/api/auth/sync',
+    USER: '/api/user',
+  },
+  // Login endpoints
+  LOGIN: {
+    CHALLENGE: '/api/login/challenge',
+    VERIFY: '/api/login/verify',
+    SYNC: '/api/login/sync',
+    USER: (walletAddress: string) => `/api/login/user/${walletAddress}`,
+  },
+  // Content endpoints
+  CONTENT: {
+    CREATE: '/api/content',
+  },
+} as const;
+
 // 统一的请求处理函数
-async function request<T>(
+export async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -35,20 +54,3 @@ async function request<T>(
     throw new Error('Unknown error occurred');
   }
 }
-
-// 用户相关 API
-export const userApi = {
-  // 同步用户数据
-  sync: async (): Promise<SyncUserResponse> => {
-    return request<SyncUserResponse>('/api/auth/sync', {
-      method: 'POST',
-    });
-  },
-
-  // 获取用户数据
-  get: async (): Promise<GetUserResponse> => {
-    return request<GetUserResponse>('/api/user', {
-      method: 'GET',
-    });
-  },
-}; 

@@ -120,6 +120,8 @@ export function ImageUpload({
             <Image
               src={preview}
               alt="Preview"
+              width={300}
+              height={200}
               className="max-h-48 w-auto rounded-md border object-cover shadow-sm"
             />
           </div>

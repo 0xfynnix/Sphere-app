@@ -1,75 +1,38 @@
+import { request } from './requests';
+import { API_ENDPOINTS } from './requests';
 import { UserProfile } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+export const walletApi = {
+  // 获取挑战码
+  getChallenge: async (walletAddress: string) => {
+    return request<{ data: { challenge: string } }>(API_ENDPOINTS.LOGIN.CHALLENGE, {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress }),
+    });
+  },
 
-// 获取挑战码
-export async function getChallenge(walletAddress: string): Promise<string> {
-  const response = await fetch(`${API_BASE_URL}/login/challenge`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ walletAddress }),
-  });
+  // 验证签名
+  verifySignature: async (data: {
+    walletAddress: string;
+    signature: string;
+    challenge: string;
+  }) => {
+    return request<{ data: { token: string; user: UserProfile } }>(API_ENDPOINTS.LOGIN.VERIFY, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 
-  if (!response.ok) {
-    throw new Error('Failed to get challenge');
-  }
+  // 同步钱包用户
+  syncUser: async (walletAddress: string) => {
+    return request<{ data: { user: UserProfile } }>(API_ENDPOINTS.LOGIN.SYNC, {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress }),
+    });
+  },
 
-  const data = await response.json();
-  return data.data.challenge;
-}
-
-// 验证签名
-export async function verifySignature(
-  walletAddress: string,
-  signature: string,
-  challenge: string
-): Promise<{ token: string; user: UserProfile }> {
-  const response = await fetch(`${API_BASE_URL}/login/verify`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      walletAddress,
-      signature,
-      challenge,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to verify signature');
-  }
-
-  const data = await response.json();
-  return data.data;
-}
-
-export async function syncWalletUser(walletAddress: string): Promise<UserProfile> {
-  const response = await fetch(`${API_BASE_URL}/login/sync`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ walletAddress }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to sync wallet user');
-  }
-
-  const data = await response.json();
-  return data.data.user;
-}
-
-export async function getUserByWallet(walletAddress: string): Promise<UserProfile> {
-  const response = await fetch(`${API_BASE_URL}/login/user/${walletAddress}`);
-
-  if (!response.ok) {
-    throw new Error('Failed to get user by wallet');
-  }
-
-  const data = await response.json();
-  return data.data.user;
-} 
+  // 获取钱包用户
+  getUser: async (walletAddress: string) => {
+    return request<{ data: { user: UserProfile } }>(API_ENDPOINTS.LOGIN.USER(walletAddress));
+  },
+}; 
