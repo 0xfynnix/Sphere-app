@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
       layers: true,
     };
     
-    // 确保 WASM 文件被正确处理
     if (isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -20,7 +19,7 @@ const nextConfig: NextConfig = {
         path: false,
       };
 
-      // 复制 WASM 文件到两个目录
+      // 修改复制配置，复制到多个可能的位置
       config.plugins.push(
         new CopyPlugin({
           patterns: [
@@ -29,18 +28,38 @@ const nextConfig: NextConfig = {
                 __dirname,
                 'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
               ),
-              to: path.join(__dirname, '.next/server/chunks/'),
+              to: path.join(__dirname, '.next/server/chunks/walrus_wasm_bg.wasm'),
             },
             {
               from: path.join(
                 __dirname,
                 'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
               ),
-              to: path.join(__dirname, '.next/server/vendor-chunks/'),
+              to: path.join(__dirname, '.next/server/walrus_wasm_bg.wasm'),
+            },
+            {
+              from: path.join(
+                __dirname,
+                'node_modules/@mysten/walrus-wasm/walrus_wasm_bg.wasm'
+              ),
+              to: path.join(__dirname, 'public/walrus_wasm_bg.wasm'),
             },
           ],
         })
       );
+
+      // 强制修改模块的路径解析
+      config.module.rules.push({
+        test: /walrus_wasm_bg\.wasm$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            name: '[name].[ext]',
+            outputPath: 'server/chunks/',
+            publicPath: '/_next/server/chunks/',
+          },
+        },
+      });
     }
     
     return config;
