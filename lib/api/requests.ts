@@ -20,6 +20,12 @@ export const API_ENDPOINTS = {
   CONTENT: {
     CREATE: '/api/content',
   },
+  // Post endpoints
+  POSTS: {
+    GET: (id: string) => `/api/posts/${id}`,
+    COMMENT: (id: string) => `/api/posts/${id}/comments`,
+    LIKE: (id: string) => `/api/posts/${id}/like`,
+  },
 } as const;
 
 // 统一的请求处理函数

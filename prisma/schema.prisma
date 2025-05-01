@@ -74,7 +74,9 @@ model Post {
   totalRewards  Float    @default(0) // 总打赏金额
   postType      PostType @default(NORMAL) // 帖子类型
   rewards       Reward[] // 打赏记录
-  walrusImages  WalrusImage[] // 帖子关联的图片
+  walrusImages  WalrusImage[] // 帖子关联的 Walrus 图片
+  vercelBlobImages VercelBlobImage[] // 帖子关联的 Vercel Blob 图片
+  filebaseImages FilebaseImage[] // 帖子关联的 Filebase IPFS 图片
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -194,5 +196,27 @@ model WalrusImage {
   createdAt  DateTime @default(now())
 
   @@index([expiryDate])
+  @@index([postId])
+}
+
+model VercelBlobImage {
+  id         String   @id @default(uuid())
+  pathname   String   @unique
+  url        String
+  postId     String?
+  post       Post?    @relation(fields: [postId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([postId])
+}
+
+model FilebaseImage {
+  id         String   @id @default(uuid())
+  cid        String   @unique
+  url        String
+  postId     String?
+  post       Post?    @relation(fields: [postId], references: [id])
+  createdAt  DateTime @default(now())
+
   @@index([postId])
 } 

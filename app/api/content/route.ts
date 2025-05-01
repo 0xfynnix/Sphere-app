@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uploadImage } from '@/lib/walrus';
 import { PostStatus } from '@prisma/client';
+import { uploadImage } from '@/lib/imageUpload';
 
 export async function POST(request: Request) {
   try {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 上传图片到 Walrus
+    // 上传图片
     const uploadResult = await uploadImage(image, { permanent: true });
     
     // 创建数据库记录
@@ -45,13 +45,29 @@ export async function POST(request: Request) {
         content: text,
         title: text.substring(0, 100),
         userId: user.id,
-        walrusImages: {
-          create: {
-            url: uploadResult.url,
-            blobId: uploadResult.blobId,
-            expiryDate: new Date(Date.now() + 53 * 24 * 60 * 60 * 1000), // 53个epoch
+        ...(uploadResult.blobId ? {
+          walrusImages: {
+            create: {
+              url: uploadResult.url,
+              blobId: uploadResult.blobId,
+              expiryDate: new Date(Date.now() + 53 * 24 * 60 * 60 * 1000), // 53个epoch
+            },
           },
-        },
+        } : uploadResult.pathname ? {
+          vercelBlobImages: {
+            create: {
+              url: uploadResult.url,
+              pathname: uploadResult.pathname,
+            },
+          },
+        } : {
+          filebaseImages: {
+            create: {
+              url: uploadResult.url,
+              cid: uploadResult.cid!,
+            },
+          },
+        }),
         status: PostStatus.PUBLISHED,
       }
     });

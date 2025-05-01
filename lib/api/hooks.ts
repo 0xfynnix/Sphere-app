@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from './auth';
 import { walletApi } from './wallet';
-import { contentApi } from './content';
-import { SyncUserResponse, GetUserResponse } from './types';
+import { postsApi } from './posts';
+import { SyncUserResponse, GetUserResponse, Post } from './types';
 import { useUserStore } from '@/store/userStore';
 
 // User hooks
@@ -24,7 +24,7 @@ export const useSyncUser = () => {
 // Content hooks
 export const useCreateContent = () => {
   return useMutation({
-    mutationFn: contentApi.create,
+    mutationFn: postsApi.create,
   });
 };
 
@@ -102,4 +102,36 @@ export const useWalletLogin = () => {
     isLoading: getChallenge.isPending || verifySignature.isPending || syncUser.isPending,
     error: getChallenge.error || verifySignature.error || syncUser.error,
   };
+};
+
+export const usePost = (id: string) => {
+  return useQuery<Post>({
+    queryKey: ['post', id],
+    queryFn: () => postsApi.get(id),
+  });
+};
+
+export const useCreateComment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, content }: { postId: string; content: string }) =>
+      postsApi.createComment(postId, content),
+    onSuccess: (_, { postId }) => {
+      // 使帖子查询失效，触发重新获取
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+    },
+  });
+};
+
+export const useToggleLike = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (postId: string) => postsApi.toggleLike(postId),
+    onSuccess: (_, postId) => {
+      // 使帖子查询失效，触发重新获取
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+    },
+  });
 }; 

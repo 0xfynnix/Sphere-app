@@ -13,8 +13,13 @@ const suiClient = new SuiClient({
 const walrusClient = new WalrusClient({
   network: 'testnet',
   suiClient,
+  storageNodeClientOptions: {
+    timeout: 120000,
+    onError: (error) => {
+      console.error('Error fetching from storage node:', error);
+    },
+  },
 });
-
 // 文件大小限制：5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 // 允许的文件类型
@@ -31,7 +36,7 @@ export interface UploadOptions {
 }
 
 // 压缩图片
-async function compressImage(file: File): Promise<File> {
+export async function compressImage(file: File): Promise<File> {
   // 将 File 转换为 Buffer
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -74,10 +79,10 @@ export async function uploadImage(file: File, options: UploadOptions = {}): Prom
     const keypair = Ed25519Keypair.fromSecretKey(privateKey);
     
     // 压缩图片
-    const compressedFile = await compressImage(file);
+    // const compressedFile = await compressImage(file);
     
     // 将文件转换为 Uint8Array
-    const arrayBuffer = await compressedFile.arrayBuffer();
+    const arrayBuffer = await file.arrayBuffer();
     const blob = new Uint8Array(arrayBuffer);
     
     // 确定存储时间
@@ -89,6 +94,13 @@ export async function uploadImage(file: File, options: UploadOptions = {}): Prom
       deletable: false,
       epochs,
       signer: keypair,
+      attributes: {
+        filename: file.name,
+        contentType: file.type,
+        size: file.size.toString(),
+        lastModified: new Date(file.lastModified).toISOString(),
+        uploadTime: new Date().toISOString(),
+      },
     });
     
     // 返回 blob ID

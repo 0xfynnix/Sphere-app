@@ -45,3 +45,4 @@ next-env.d.ts
 
 # sui
 client_config.yaml
+.env*.local

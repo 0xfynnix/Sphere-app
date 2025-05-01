@@ -3,50 +3,57 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Flame, Gift } from 'lucide-react';
+import { Heart, MessageCircle, Gift } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
 import { useState } from 'react';
 import { RewardDialog } from '@/components/reward/RewardDialog';
+import { formatDistanceToNow } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
+import { usePost, useToggleLike, useCreateComment } from '@/lib/api/hooks';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+
+interface CommentFormData {
+  content: string;
+}
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
-  
-  // 模拟数据，实际应用中应该从API获取
-  const post = {
-    id,
-    author: "Alice",
-    authorId: "alice123", // 添加作者ID
-    title: "My First Digital Art Collection",
-    content: "Just launched my first NFT collection! This is a detailed description of my artwork and the inspiration behind it. I've been working on this project for months, and I'm excited to finally share it with the world.",
-    likes: 42,
-    rewards: 24,
-    image: "/sample-art.jpg",
-    comments: [
-      {
-        id: 1,
-        author: "Bob",
-        authorId: "bob456",
-        content: "Amazing work! Love the colors.",
-        timestamp: "2h ago"
-      },
-      {
-        id: 2,
-        author: "Charlie",
-        authorId: "charlie789",
-        content: "The composition is really unique.",
-        timestamp: "1h ago"
-      }
-    ]
-  };
+  const { data: post, isLoading, error } = usePost(id);
+  const toggleLike = useToggleLike();
+  const createComment = useCreateComment();
+  const { register, handleSubmit, reset } = useForm<CommentFormData>();
 
   const handleReward = (amount: number) => {
     // 这里处理打赏逻辑
     console.log(`Rewarding ${amount} to post ${id}`);
     // TODO: 调用打赏API
   };
+
+  const handleLike = () => {
+    toggleLike.mutate(id);
+  };
+
+  const onSubmit = (data: CommentFormData) => {
+    createComment.mutate({ postId: id, content: data.content });
+    reset();
+  };
+
+  if (isLoading) {
+    return <div className="max-w-4xl mx-auto p-6">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="max-w-4xl mx-auto p-6 text-red-500">{error.message}</div>;
+  }
+
+  if (!post) {
+    return <div className="max-w-4xl mx-auto p-6">Post not found</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -64,12 +71,24 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           {/* Author Info */}
           <div 
             className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => router.push(`/user/${post.authorId}`)}
+            onClick={() => router.push(`/user/${post.author.id}`)}
           >
-            <div className="w-10 h-10 rounded-full bg-muted mr-3"></div>
+            <Avatar className="h-10 w-10 mr-3">
+              {post.author.avatar ? (
+                <AvatarImage src={post.author.avatar} />
+              ) : (
+                <AvatarFallback>
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+                    <User className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </AvatarFallback>
+              )}
+            </Avatar>
             <div>
-              <h3 className="font-semibold text-foreground">{post.author}</h3>
-              <p className="text-sm text-muted-foreground">Posted 2h ago</p>
+              <h3 className="font-semibold text-foreground">{post.author.name}</h3>
+              <p className="text-sm text-muted-foreground">
+                Posted {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+              </p>
             </div>
           </div>
 
@@ -77,13 +96,25 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           <div>
             <h2 className="text-2xl font-bold mb-4 text-foreground">{post.title}</h2>
             <p className="text-muted-foreground mb-6">{post.content}</p>
-            <div className="aspect-video bg-muted rounded-lg mb-6"></div>
+            {post.images.length > 0 && (
+              <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden">
+                <img 
+                  src={post.images[0].url} 
+                  alt={post.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
 
           {/* Actions */}
           <div className="flex items-center justify-between">
             <div className="flex space-x-4">
-              <Button variant="ghost" className="flex items-center">
+              <Button 
+                variant="ghost" 
+                className="flex items-center"
+                onClick={handleLike}
+              >
                 <Heart className="mr-2 h-4 w-4" />
                 {post.likes}
               </Button>
@@ -100,11 +131,19 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                 Reward
               </Button>
             </div>
-            <div className="flex items-center text-amber-500">
-              <Flame className="mr-2 h-4 w-4" />
-              <span className="font-medium">{post.rewards}</span>
-            </div>
           </div>
+
+          {/* Comment Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <Textarea
+              {...register('content', { required: true })}
+              placeholder="Write a comment..."
+              className="min-h-[100px]"
+            />
+            <Button type="submit" disabled={createComment.isPending}>
+              {createComment.isPending ? 'Posting...' : 'Post Comment'}
+            </Button>
+          </form>
 
           {/* Comments */}
           <div className="space-y-4">
@@ -113,13 +152,25 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
               <Card key={comment.id} className="p-4">
                 <div 
                   className="flex items-start cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => router.push(`/user/${comment.authorId}`)}
+                  onClick={() => router.push(`/user/${comment.author.id}`)}
                 >
-                  <div className="w-8 h-8 rounded-full bg-muted mr-3"></div>
+                  <Avatar className="h-8 w-8 mr-3">
+                    {comment.author.avatar ? (
+                      <AvatarImage src={comment.author.avatar} />
+                    ) : (
+                      <AvatarFallback>
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
                   <div>
                     <div className="flex items-center mb-1">
-                      <h4 className="font-semibold mr-2 text-foreground">{comment.author}</h4>
-                      <span className="text-sm text-muted-foreground">{comment.timestamp}</span>
+                      <h4 className="font-semibold mr-2 text-foreground">{comment.author.name}</h4>
+                      <span className="text-sm text-muted-foreground">
+                        {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                      </span>
                     </div>
                     <p className="text-muted-foreground">{comment.content}</p>
                   </div>

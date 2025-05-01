@@ -34,4 +34,34 @@ export type SyncUserResponse = ApiResponse<{
 // 获取用户响应
 export type GetUserResponse = ApiResponse<{
   user: UserProfile;
-}>; 
+}>;
+
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  author: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  likes: number;
+  comments: Comment[];
+  images: {
+    url: string;
+    type: 'walrus' | 'vercel';
+  }[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  author: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  timestamp: Date;
+} 
