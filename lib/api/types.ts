@@ -17,13 +17,27 @@ export interface UserProfileData {
 }
 
 // 用户相关类型
+export enum UserType {
+  ARTIST = "ARTIST",       // 艺术家
+  GEEK = "GEEK",          // 极客
+  STORYTELLER = "STORYTELLER", // 故事家
+  MEME_LORD = "MEME_LORD",   // 迷因王
+  EXPLORER = "EXPLORER"     // 探索者
+}
+
 export interface UserProfile {
   id: string;
   walletAddress: string;
   email: string | null;
+  userType?: UserType;
   profile: UserProfileData | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserUpdateInput {
+  userType?: UserType;
+  email?: string;
 }
 
 // 同步用户响应
@@ -65,3 +79,14 @@ export interface Comment {
   };
   timestamp: Date;
 } 
+
+// 更新用户请求参数
+export interface UpdateUserRequest {
+  userType?: UserType;
+  email?: string;
+}
+
+// 更新用户响应
+export type UpdateUserResponse = ApiResponse<{
+  user: UserProfile;
+}>; 

@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   useCurrentWallet,
   ConnectButton,
-  useSignPersonalMessage,
   useDisconnectWallet,
 } from "@mysten/dapp-kit";
 import { Button } from "@/components/ui/button";
@@ -14,8 +13,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/userStore";
 import { useNotificationStore } from "@/store/notificationStore";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { useWalletLogin } from "@/lib/api/hooks";
+import { LoginFlowDialog } from "../dialog/LoginFlowDialog";
+import { UserTypeDialog } from "../dialog/UserTypeDialog";
+import { UserTypeSelectionDialog } from "@/components/dialog/UserTypeSelectionDialog";
+import { UserProfile, UserType } from "@/lib/api/types";
 
 interface AuthButtonProps {
   isMobile?: boolean;
@@ -25,45 +26,33 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { currentWallet, isConnected } = useCurrentWallet();
   const { user, logout, refreshUser } = useUserStore();
   const { unreadCount } = useNotificationStore();
+  const hasRefreshed = useRef(false);
 
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  // const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const { mutate: disconnect } = useDisconnectWallet();
 
   const router = useRouter();
-  
-  const { login, isLoading: isLoginLoading } = useWalletLogin();
+
+
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showUserTypeDialog, setShowUserTypeDialog] = useState(false);
+  const [showUserTypeSelection, setShowUserTypeSelection] = useState(false);
+  const [selectedUserType, setSelectedUserType] = useState<UserType>();
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  useEffect(() => {
+    console.log("currentWallet", currentWallet);
+    if (currentWallet) {
+      setShowLoginDialog(true);
+      setIsLoginLoading(true);
+    }
+  }, [currentWallet]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !hasRefreshed.current) {
+      hasRefreshed.current = true;
       refreshUser();
     }
   }, [user, refreshUser]);
-
-  const handleConnect = async () => {
-    try {
-      if (!currentWallet) {
-        throw new Error('No wallet connected');
-      }
-
-      const address = currentWallet.accounts[0].address;
-
-      // 使用 login 函数处理登录流程
-      const result = await login(address, async (message) => {
-        const { signature } = await signPersonalMessage({ message });
-        return { signature };
-      });
-      
-      if (result.success) {
-        toast.success('Login successful');
-      } else {
-        // 显示错误信息
-        toast.error(result.error);
-      }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      toast.error('Failed to connect wallet');
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -75,9 +64,28 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
     router.push("/profile");
   };
 
+  const handleLoginSuccess = (result: { user: UserProfile }) => {
+    setShowLoginDialog(false);
+    if (result.user && !result.user.userType) {
+      setShowUserTypeSelection(true);
+    }
+  };
+
+  const handleUserTypeSelect = (type: UserType) => {
+    setSelectedUserType(type);
+    setShowUserTypeSelection(false);
+    setShowUserTypeDialog(true);
+  };
+
   if (user) {
     return (
-      <div className={isMobile ? "flex items-center gap-2" : "flex flex-col items-center justify-center min-w-[200px]"}>
+      <div
+        className={
+          isMobile
+            ? "flex items-center gap-2"
+            : "flex flex-col items-center justify-center min-w-[200px]"
+        }
+      >
         <div className="flex items-center gap-4">
           <div
             className={cn(
@@ -87,7 +95,9 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
             onClick={handleProfileClick}
           >
             <Avatar className={isMobile ? "h-8 w-8" : ""}>
-              {user.profile?.avatar && <AvatarImage src={user.profile.avatar} />}
+              {user.profile?.avatar && (
+                <AvatarImage src={user.profile.avatar} />
+              )}
               <AvatarFallback>
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
                   <User className="h-4 w-4 text-muted-foreground" />
@@ -106,9 +116,9 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
               </div>
             )}
           </div>
-          <div 
+          <div
             className="relative cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => router.push('/notifications')}
+            onClick={() => router.push("/notifications")}
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
@@ -124,16 +134,42 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
             Logout
           </Button>
         )}
+        {showUserTypeSelection && (
+          <UserTypeSelectionDialog
+            open={showUserTypeSelection}
+            onClose={() => setShowUserTypeSelection(false)}
+            onSelect={handleUserTypeSelect}
+          />
+        )}
+        {showUserTypeDialog && selectedUserType && (
+          <UserTypeDialog
+            open={showUserTypeDialog}
+            onClose={() => setShowUserTypeDialog(false)}
+            selectedType={selectedUserType}
+          />
+        )}
       </div>
     );
   }
 
   return (
-    <div className={isMobile ? "flex items-center" : "flex flex-col items-center justify-center p-6 min-w-[200px]"}>
+    <div
+      className={
+        isMobile
+          ? "flex items-center"
+          : "flex flex-col items-center justify-center p-6 min-w-[200px]"
+      }
+    >
       {isConnected ? (
-        <div className={isMobile ? "flex items-center" : "flex flex-col items-center space-y-4 w-full"}>
+        <div
+          className={
+            isMobile
+              ? "flex items-center"
+              : "flex flex-col items-center space-y-4 w-full"
+          }
+        >
           <Button
-            onClick={handleConnect}
+            onClick={() => setShowLoginDialog(true)}
             disabled={isLoginLoading}
             className={isMobile ? "h-8 px-3" : "w-full"}
             size={isMobile ? "sm" : "default"}
@@ -141,11 +177,20 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
             {isLoginLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            {isLoginLoading ? "Logging in..." : "Retry Login"}
+            {isLoginLoading ? "Logging in..." : "Login"}
           </Button>
         </div>
       ) : (
         <ConnectButton className={isMobile ? "h-8" : "w-full"} />
+      )}
+      {showLoginDialog && (
+        <LoginFlowDialog
+          open={showLoginDialog}
+          onClose={() => {setShowLoginDialog(false)
+            setIsLoginLoading(false)  
+          }}
+          onSuccess={handleLoginSuccess}
+        />
       )}
     </div>
   );

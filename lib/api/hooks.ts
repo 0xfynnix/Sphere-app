@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from './auth';
 import { walletApi } from './wallet';
 import { postsApi } from './posts';
-import { SyncUserResponse, GetUserResponse, Post } from './types';
+import { SyncUserResponse, GetUserResponse, Post, UpdateUserRequest } from './types';
 import { useUserStore } from '@/store/userStore';
 
 // User hooks
@@ -99,6 +99,8 @@ export const useWalletLogin = () => {
 
   return {
     login,
+    getChallenge,
+    verifySignature,
     isLoading: getChallenge.isPending || verifySignature.isPending || syncUser.isPending,
     error: getChallenge.error || verifySignature.error || syncUser.error,
   };
@@ -132,6 +134,21 @@ export const useToggleLike = () => {
     onSuccess: (_, postId) => {
       // 使帖子查询失效，触发重新获取
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
+    },
+  });
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+  const { setUser } = useUserStore();
+
+  return useMutation({
+    mutationFn: (data: UpdateUserRequest) => authApi.update(data),
+    onSuccess: (response) => {
+      if (response.data?.user) {
+        setUser(response.data.user);
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+      }
     },
   });
 }; 

@@ -24,10 +24,19 @@ model Challenge {
   @@index([expiresAt])
 }
 
+enum UserType {
+  ARTIST       // 艺术家
+  GEEK         // 极客
+  STORYTELLER  // 故事家
+  MEME_LORD    // 迷因王
+  EXPLORER     // 探索者
+}
+
 model User {
   id            String   @id @default(cuid())
   walletAddress String   @unique    // 用户钱包地址
   email         String?  // 用户邮箱（可选）
+  userType      UserType? // 用户类型（可选）
   profile       Profile? // 用户资料
   posts         Post[]   // 用户发布的帖子
   comments      Comment[] // 用户发表的评论

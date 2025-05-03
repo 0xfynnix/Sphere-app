@@ -1,6 +1,6 @@
 import { request } from './requests';
 import { API_ENDPOINTS } from './requests';
-import { SyncUserResponse, GetUserResponse } from './types';
+import { SyncUserResponse, GetUserResponse, UpdateUserRequest, UpdateUserResponse } from './types';
 
 export const authApi = {
   // 同步用户数据
@@ -11,9 +11,15 @@ export const authApi = {
   },
 
   // 获取用户数据
-  get: async (): Promise<GetUserResponse> => {
-    return request<GetUserResponse>(API_ENDPOINTS.AUTH.USER, {
+  get: () => request<GetUserResponse>(API_ENDPOINTS.AUTH.USER, {
       method: 'GET',
-    });
+  }),
+
+  update: (data: UpdateUserRequest) => request<UpdateUserResponse>(API_ENDPOINTS.AUTH.USER, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
   },
+  }),
 }; 
