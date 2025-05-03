@@ -17,29 +17,27 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useWalletLogin } from "@/lib/api/hooks";
 
-interface AuthDialogProps {
+interface AuthButtonProps {
   isMobile?: boolean;
 }
 
-export function AuthDialog({ isMobile = false }: AuthDialogProps) {
+export function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { currentWallet, isConnected } = useCurrentWallet();
-  const { user, logout } = useUserStore();
+  const { user, logout, refreshUser } = useUserStore();
   const { unreadCount } = useNotificationStore();
 
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const { mutate: disconnect } = useDisconnectWallet();
 
-  useEffect(() => {
-    console.log("currentWallet", currentWallet);
-    if (currentWallet) {
-      handleConnect();
-    }
-  }, [currentWallet]);
-
-
   const router = useRouter();
   
   const { login, isLoading: isLoginLoading } = useWalletLogin();
+
+  useEffect(() => {
+    if (user) {
+      refreshUser();
+    }
+  }, [user, refreshUser]);
 
   const handleConnect = async () => {
     try {

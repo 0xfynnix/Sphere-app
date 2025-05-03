@@ -1,15 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Home, User, PlusCircle } from 'lucide-react';
-import { AuthDialog } from '../auth/AuthDialog';
-import { ThemeToggle } from './ThemeToggle';
-import { useUserStore } from '@/store/userStore';
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Home, User, PlusCircle } from "lucide-react";
+import { AuthButton } from "../auth/AuthButton";
+import { ThemeToggle } from "./ThemeToggle";
+import { useUserStore } from "@/store/userStore";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -17,7 +17,8 @@ export default function Sidebar() {
   const { user } = useUserStore();
 
   // 检查是否是从侧边栏进入的用户页面
-  const isUserPageFromSidebar = pathname.startsWith('/user') && searchParams.get('source') === 'sidebar';
+  const isUserPageFromSidebar =
+    pathname.startsWith("/user") && searchParams.get("source") === "sidebar";
 
   return (
     <div className="w-64 h-screen bg-sidebar backdrop-blur-sm border-r border-sidebar-border fixed left-0 top-0 flex flex-col">
@@ -31,30 +32,36 @@ export default function Sidebar() {
               height={32}
               className="rounded-full mr-2"
             />
-            <h1 className="text-xl font-bold text-sidebar-foreground">Sphere</h1>
+            <h1 className="text-xl font-bold text-sidebar-foreground">
+              Sphere
+            </h1>
           </div>
           <ThemeToggle />
         </div>
         <nav className="space-y-2">
           <Link href="/">
             <Button
-              variant={pathname === '/' ? 'default' : 'ghost'}
+              variant={pathname === "/" ? "default" : "ghost"}
               className={cn(
                 "w-full justify-start transition-colors",
-                pathname === '/' ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
+                pathname === "/"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                  : "hover:bg-sidebar-accent"
               )}
             >
               <Home className="mr-2 h-4 w-4" />
               Home
             </Button>
           </Link>
-          { user && (
+          {user && (
             <Link href={`/user/${user.walletAddress}`}>
               <Button
-                variant={isUserPageFromSidebar ? 'default' : 'ghost'}
+                variant={isUserPageFromSidebar ? "default" : "ghost"}
                 className={cn(
                   "w-full justify-start transition-colors",
-                  isUserPageFromSidebar ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent"
+                  isUserPageFromSidebar
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                    : "hover:bg-sidebar-accent"
                 )}
               >
                 <User className="mr-2 h-4 w-4" />
@@ -64,7 +71,7 @@ export default function Sidebar() {
           )}
         </nav>
 
-         {user && (
+        {user && (
           <div className="my-8">
             <Link href="/create">
               <Button
@@ -88,10 +95,10 @@ export default function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-sidebar-border">
-          <div className="flex justify-center">
-            <AuthDialog />
-          </div>
+        <div className="flex justify-center">
+          <AuthButton />
+        </div>
       </div>
     </div>
   );
-} 
+}

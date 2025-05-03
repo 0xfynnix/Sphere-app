@@ -1,39 +1,40 @@
 /* eslint-disable @next/next/no-img-element */
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Home, User, PlusCircle, Menu, X } from 'lucide-react';
-import { AuthDialog } from '../auth/AuthDialog';
-import { ThemeToggle } from './ThemeToggle';
-import { useState, useEffect } from 'react';
-import { useCurrentWallet } from '@mysten/dapp-kit';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Home, User, PlusCircle, Menu, X } from "lucide-react";
+import { AuthButton } from "../auth/AuthButton";
+import { ThemeToggle } from "./ThemeToggle";
+import { useState, useEffect } from "react";
+import { useCurrentWallet } from "@mysten/dapp-kit";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { currentWallet } = useCurrentWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   // 点击菜单外部关闭菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (isMenuOpen && !target.closest('.header-menu')) {
+      if (isMenuOpen && !target.closest(".header-menu")) {
         setIsMenuOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMenuOpen]);
 
-  const isUserPageFromSidebar = pathname.startsWith('/user') && searchParams.get('source') === 'sidebar';
+  const isUserPageFromSidebar =
+    pathname.startsWith("/user") && searchParams.get("source") === "sidebar";
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-sidebar border-b border-sidebar-border z-50">
@@ -48,10 +49,10 @@ export default function Header() {
           />
           <h1 className="text-xl font-bold text-sidebar-foreground">Sphere</h1>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <ThemeToggle />
-          {isMobile && <AuthDialog isMobile />}
+          {isMobile && <AuthButton isMobile />}
           <Button
             variant="ghost"
             size="icon"
@@ -69,7 +70,7 @@ export default function Header() {
 
       {/* 菜单遮罩层 */}
       {isMenuOpen && (
-        <div 
+        <div
           className={cn(
             "fixed inset-0 bg-black/30 backdrop-blur-[2px]",
             "transition-opacity duration-300 ease-in-out",
@@ -80,7 +81,7 @@ export default function Header() {
       )}
 
       {/* 菜单内容 */}
-      <div 
+      <div
         className={cn(
           "header-menu fixed top-0 right-0 bottom-0 w-64 bg-sidebar/95 backdrop-blur-sm",
           "transform transition-all duration-300 ease-in-out",
@@ -101,7 +102,9 @@ export default function Header() {
                   height={32}
                   className="rounded-full mr-2"
                 />
-                <h2 className="text-lg font-semibold text-sidebar-foreground">Sphere</h2>
+                <h2 className="text-lg font-semibold text-sidebar-foreground">
+                  Sphere
+                </h2>
               </div>
               <Button
                 variant="ghost"
@@ -116,13 +119,13 @@ export default function Header() {
           <nav className="p-4 space-y-2">
             <Link
               href="/"
-                className={cn(
+              className={cn(
                 "flex items-center px-4 py-2 rounded-lg",
                 "text-sidebar-foreground hover:bg-sidebar-hover",
                 pathname === "/" && "bg-sidebar-hover"
-                )}
+              )}
               onClick={() => setIsMenuOpen(false)}
-              >
+            >
               <Home className="h-5 w-5 mr-3" />
               Home
             </Link>
@@ -131,26 +134,28 @@ export default function Header() {
               <>
                 <Link
                   href={`/user/${currentWallet.accounts[0]?.address}`}
-                    className={cn(
+                  className={cn(
                     "flex items-center px-4 py-2 rounded-lg",
                     "text-sidebar-foreground hover:bg-sidebar-hover",
-                    pathname.startsWith("/user") && !isUserPageFromSidebar && "bg-sidebar-hover"
-                    )}
+                    pathname.startsWith("/user") &&
+                      !isUserPageFromSidebar &&
+                      "bg-sidebar-hover"
+                  )}
                   onClick={() => setIsMenuOpen(false)}
-                  >
+                >
                   <User className="h-5 w-5 mr-3" />
                   My Page
                 </Link>
 
                 <Link
                   href="/create"
-                    className={cn(
+                  className={cn(
                     "flex items-center px-4 py-2 rounded-lg",
                     "text-sidebar-foreground hover:bg-sidebar-hover",
                     pathname === "/create" && "bg-sidebar-hover"
                   )}
                   onClick={() => setIsMenuOpen(false)}
-                  >
+                >
                   <PlusCircle className="h-5 w-5 mr-3" />
                   Create
                 </Link>
@@ -161,4 +166,4 @@ export default function Header() {
       </div>
     </header>
   );
-} 
+}
