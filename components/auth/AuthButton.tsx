@@ -5,6 +5,8 @@ import {
   useCurrentWallet,
   ConnectButton,
   useDisconnectWallet,
+  useConnectWallet,
+  useWallets,
 } from "@mysten/dapp-kit";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogOut, User, Bell } from "lucide-react";
@@ -17,6 +19,7 @@ import { LoginFlowDialog } from "../dialog/LoginFlowDialog";
 import { UserTypeDialog } from "../dialog/UserTypeDialog";
 import { UserTypeSelectionDialog } from "@/components/dialog/UserTypeSelectionDialog";
 import { UserProfile, UserType } from "@/lib/api/types";
+import { toast } from "sonner";
 
 interface AuthButtonProps {
   isMobile?: boolean;
@@ -27,25 +30,29 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { user, logout, refreshUser } = useUserStore();
   const { unreadCount } = useNotificationStore();
   const hasRefreshed = useRef(false);
-
+  const wallets = useWallets();
+  const [logoutLoading, setLogoutLoading] = useState(false);
   // const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const { mutate: disconnect } = useDisconnectWallet();
+  const { mutate: connect } = useConnectWallet();
 
   const router = useRouter();
-
 
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showUserTypeDialog, setShowUserTypeDialog] = useState(false);
   const [showUserTypeSelection, setShowUserTypeSelection] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType>();
   const [isLoginLoading, setIsLoginLoading] = useState(false);
+  // console.log("currentWallet", currentWallet);
+  // console.log("user", user);
+  // console.log("isConnected", isConnected);
+
   useEffect(() => {
-    console.log("currentWallet", currentWallet);
-    if (currentWallet) {
+    if (!user && currentWallet && !logoutLoading) {
       setShowLoginDialog(true);
       setIsLoginLoading(true);
     }
-  }, [currentWallet]);
+  }, [currentWallet, user, logoutLoading]);
 
   useEffect(() => {
     if (user && !hasRefreshed.current) {
@@ -54,10 +61,46 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
     }
   }, [user, refreshUser]);
 
-  const handleLogout = () => {
-    logout();
-    disconnect();
-    router.push("/");
+  // 处理钱包断开连接的情况
+  useEffect(() => {
+    if (user && !currentWallet && wallets.length > 0) {
+      // 钱包断开连接，需要重新连接
+      connectWallet();
+    } else if (
+      user &&
+      currentWallet &&
+      currentWallet.accounts[0]?.address !== user.walletAddress
+    ) {
+      // 钱包地址不匹配，需要退出登录
+      handleLogout();
+    }
+  }, [user, currentWallet, wallets]);
+  const connectWallet = async () => {
+    try {
+      await connect({ wallet: wallets[0] });
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+      toast.error("Failed to connect wallet", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+      handleLogout();
+    }
+  };
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    try {
+      await Promise.all([
+        logout(),
+        disconnect(),
+      ]);
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setTimeout(() => {
+        setLogoutLoading(false);
+      }, 1000);
+    }
   };
 
   const handleProfileClick = () => {
@@ -186,8 +229,9 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
       {showLoginDialog && (
         <LoginFlowDialog
           open={showLoginDialog}
-          onClose={() => {setShowLoginDialog(false)
-            setIsLoginLoading(false)  
+          onClose={() => {
+            setShowLoginDialog(false);
+            setIsLoginLoading(false);
           }}
           onSuccess={handleLoginSuccess}
         />
