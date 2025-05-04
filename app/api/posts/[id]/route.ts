@@ -38,7 +38,8 @@ export async function GET(
           }
         },
         walrusImages: true,
-        vercelBlobImages: true
+        vercelBlobImages: true,
+        filebaseImages: true,
       }
     });
 
@@ -78,6 +79,10 @@ export async function GET(
         ...post.vercelBlobImages.map(img => ({
           url: img.url,
           type: 'vercel'
+        })),
+        ...post.filebaseImages.map(img => ({
+          url: img.url,
+          type: 'filebase'
         }))
       ],
       createdAt: post.createdAt,

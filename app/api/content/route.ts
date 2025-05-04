@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { PostStatus } from '@prisma/client';
-import { uploadImage } from '@/lib/imageUpload';
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const text = formData.get('text') as string;
-    const image = formData.get('image') as File;
+    const { text, title, imageInfo } = await request.json();
     const address = request.headers.get('x-user-address');
-    
-    if (!text || !image) {
+    console.log(text, title, imageInfo);
+    if (!text || !imageInfo || !title) {
       return NextResponse.json(
-        { error: 'Text and image are required' },
+        { error: 'Text, title and image are required' },
         { status: 400 }
       );
     }
@@ -36,35 +33,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // 上传图片
-    const uploadResult = await uploadImage(image, { permanent: true });
     
     // 创建数据库记录
     const post = await prisma.post.create({
       data: {
         content: text,
-        title: text.substring(0, 100),
+        title: title,
         userId: user.id,
-        ...(uploadResult.blobId ? {
+        ...(imageInfo.blobId ? {
           walrusImages: {
             create: {
-              url: uploadResult.url,
-              blobId: uploadResult.blobId,
+              url: imageInfo.url,
+              blobId: imageInfo.blobId,
               expiryDate: new Date(Date.now() + 53 * 24 * 60 * 60 * 1000), // 53个epoch
             },
           },
-        } : uploadResult.pathname ? {
+        } : imageInfo.pathname ? {
           vercelBlobImages: {
             create: {
-              url: uploadResult.url,
-              pathname: uploadResult.pathname,
+              url: imageInfo.url,
+              pathname: imageInfo.pathname,
             },
           },
         } : {
           filebaseImages: {
             create: {
-              url: uploadResult.url,
-              cid: uploadResult.cid!,
+              url: imageInfo.url,
+              cid: imageInfo.cid,
             },
           },
         }),

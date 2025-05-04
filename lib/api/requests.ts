@@ -20,6 +20,10 @@ export const API_ENDPOINTS = {
   CONTENT: {
     CREATE: '/api/content',
   },
+  // Images endpoints
+  IMAGES: {
+    UPLOAD: '/api/images',
+  },
   // Post endpoints
   POSTS: {
     GET: (id: string) => `/api/posts/${id}`,

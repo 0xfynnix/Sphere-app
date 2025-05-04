@@ -221,7 +221,7 @@ model VercelBlobImage {
 
 model FilebaseImage {
   id         String   @id @default(uuid())
-  cid        String   @unique
+  cid        String   
   url        String
   postId     String?
   post       Post?    @relation(fields: [postId], references: [id])

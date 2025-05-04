@@ -12,21 +12,21 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export interface Step<T = unknown> {
+export interface Step<T = unknown, R = unknown> {
   title: string;
   description: string;
-  action: (data?: T) => Promise<unknown>;
+  action: (data?: T) => Promise<R>;
 }
 
-interface FlowDialogProps {
+interface FlowDialogProps<T = unknown, R = unknown> {
   open: boolean;
   onClose: () => void;
-  steps: Step<unknown>[];
-  onSuccess?: (result: unknown) => void;
+  steps: Step<T, R>[];
+  onSuccess?: (result: R) => void;
   onError?: (error: Error) => void;
 }
 
-export const FlowDialog = ({ open, onClose, steps, onSuccess, onError }: FlowDialogProps) => {
+export const FlowDialog = <T = unknown, R = unknown>({ open, onClose, steps, onSuccess, onError }: FlowDialogProps<T, R>) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -37,9 +37,9 @@ export const FlowDialog = ({ open, onClose, steps, onSuccess, onError }: FlowDia
   const { mutate: executeStep, isPending } = useMutation({
     mutationFn: async () => {
       try {
-        const result = await steps[currentStepRef.current].action(stepDataRef.current);
+        const result = await steps[currentStepRef.current].action(stepDataRef.current as T);
         if (currentStepRef.current < steps.length - 1) {
-          stepDataRef.current = result;
+          stepDataRef.current = result as unknown;
           const nextStep = currentStepRef.current + 1;
           currentStepRef.current = nextStep;
           setCurrentStep(nextStep);

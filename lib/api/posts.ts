@@ -3,13 +3,26 @@ import { API_ENDPOINTS } from './requests';
 import { Post, Comment } from './types';
 
 export const postsApi = {
-  // 创建帖子
-  create: async (formData: FormData) => {
-    return request(API_ENDPOINTS.CONTENT.CREATE, {
+  // 上传图片
+  uploadImage: async (image: File): Promise<{ url: string; cid: string }> => {
+    const formData = new FormData();
+    formData.append('image', image);
+    return request(API_ENDPOINTS.IMAGES.UPLOAD, {
       method: 'POST',
       body: formData,
-      // 不要设置 Content-Type，让浏览器自动设置
-      // 当发送 FormData 时，浏览器会自动设置正确的 Content-Type 和 boundary
+    });
+  },
+
+  // 创建帖子
+  create: async (data: { 
+    text: string; 
+    title: string; 
+    signature: string; 
+    imageInfo: { url: string; cid: string } 
+  }) => {
+    return request(API_ENDPOINTS.CONTENT.CREATE, {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   },
 

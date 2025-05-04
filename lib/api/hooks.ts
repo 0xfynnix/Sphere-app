@@ -151,4 +151,10 @@ export const useUpdateUser = () => {
       }
     },
   });
+};
+
+export const useUploadImage = () => {
+  return useMutation({
+    mutationFn: postsApi.uploadImage,
+  });
 }; 
