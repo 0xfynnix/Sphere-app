@@ -106,6 +106,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get("postId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
 
     if (!postId) {
       return NextResponse.json(
@@ -114,23 +116,30 @@ export async function GET(request: Request) {
       );
     }
 
-    const bids = await prisma.bid.findMany({
-      where: { postId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            id: true,
-            profile: {
-              select: {
-                name: true,
-                avatar: true,
+    const [bids, total] = await Promise.all([
+      prisma.bid.findMany({
+        where: { postId },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          user: {
+            select: {
+              id: true,
+              profile: {
+                select: {
+                  name: true,
+                  avatar: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
+      prisma.bid.count({
+        where: { postId }
+      })
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -142,6 +151,12 @@ export async function GET(request: Request) {
           avatar: bid.user.profile?.avatar,
         },
       })),
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize)
+      }
     });
   } catch (error) {
     console.error("Error getting bids:", error);

@@ -1,6 +1,6 @@
 import { request } from './requests';
 import { API_ENDPOINTS } from './requests';
-import { CreateBidRequest, CreateBidResponse, GetBidsResponse } from './types';
+import { CreateBidRequest, CreateBidResponse, GetBidsResponse, GetAuctionHistoryResponse } from './types';
 
 export const bidsApi = {
   // 创建竞拍
@@ -12,9 +12,13 @@ export const bidsApi = {
   },
 
   // 获取竞拍列表
-  get: async (postId: string): Promise<GetBidsResponse> => {
-    return request(API_ENDPOINTS.BIDS.GET(postId), {
+  get: async (postId: string, page: number = 1, pageSize: number = 10): Promise<GetBidsResponse> => {
+    return request(API_ENDPOINTS.BIDS.GET(postId, page, pageSize), {
       method: 'GET',
     });
   },
+
+  getHistory: (postId: string) => {
+    return request<GetAuctionHistoryResponse>(`/api/bids/history?postId=${postId}`);
+  }
 }; 

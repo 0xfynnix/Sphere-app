@@ -33,7 +33,8 @@ export const API_ENDPOINTS = {
   // Bids endpoints
   BIDS: {
     CREATE: '/api/bids',
-    GET: (postId: string) => `/api/bids?postId=${postId}`,
+    GET: (postId: string, page?: number, pageSize?: number) => 
+      `/api/bids?postId=${postId}${page ? `&page=${page}` : ''}${pageSize ? `&pageSize=${pageSize}` : ''}`,
   },
 } as const;
 

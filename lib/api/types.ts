@@ -142,7 +142,39 @@ export interface CreateBidResponse {
   bid: Bid;
 }
 
+export interface Pagination {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface GetBidsResponse {
   success: boolean;
   bids: Bid[];
+  pagination: Pagination;
+}
+
+export interface AuctionHistory {
+  id: string;
+  postId: string;
+  winnerId: string;
+  winner: {
+    id: string;
+    walletAddress: string;
+    profile?: {
+      name: string;
+      avatar?: string;
+    };
+  };
+  finalPrice: number;
+  totalBids: number;
+  startPrice: number;
+  biddingDueDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetAuctionHistoryResponse {
+  history: AuctionHistory[];
 } 

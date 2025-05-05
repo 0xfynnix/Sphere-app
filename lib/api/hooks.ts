@@ -173,10 +173,18 @@ export const useCreateBid = () => {
   });
 };
 
-export const useBids = (postId: string) => {
+export const useBids = (postId: string, page: number = 1, pageSize: number = 10) => {
   return useQuery<GetBidsResponse>({
-    queryKey: ['bids', postId],
-    queryFn: () => bidsApi.get(postId),
+    queryKey: ['bids', postId, page, pageSize],
+    queryFn: () => bidsApi.get(postId, page, pageSize),
     enabled: !!postId,
   });
-}; 
+};
+
+export function useAuctionHistory(postId: string) {
+  return useQuery({
+    queryKey: ['auctionHistory', postId],
+    queryFn: () => bidsApi.getHistory(postId),
+    enabled: !!postId,
+  });
+} 

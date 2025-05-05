@@ -46,6 +46,7 @@ model User {
   nfts          NFT[]    // 用户拥有的NFT
   referredRewards Reward[] @relation("Referrer") // 作为推荐人的打赏记录
   bids          Bid[]    // 用户的竞拍记录
+  auctionHistory AuctionHistory[] // 用户的竞拍历史记录
   nftCount      Int      @default(0) // 拥有的NFT数量
   totalEarnings Float    @default(0) // 总收益（SUI）
   chainId       String?  // 链上用户ID
@@ -91,6 +92,7 @@ model Post {
   biddingDueDate DateTime? // 竞拍截止日期
   startPrice    Float?    // 起拍价（SUI）
   bids          Bid[]     // 竞拍记录
+  auctionHistory AuctionHistory[] // 竞拍历史记录
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -249,4 +251,22 @@ model Bid {
 
   @@index([postId])
   @@index([userId])
+}
+
+// 新增：竞拍历史记录模型
+model AuctionHistory {
+  id            String   @id @default(cuid())
+  postId        String
+  post          Post     @relation(fields: [postId], references: [id])
+  winnerId      String
+  winner        User     @relation(fields: [winnerId], references: [id])
+  finalPrice    Float    // 最终成交价
+  totalBids     Int      // 总竞拍次数
+  startPrice    Float    // 起拍价
+  biddingDueDate DateTime // 竞拍截止日期
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([postId])
+  @@index([winnerId])
 } 

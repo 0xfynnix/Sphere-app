@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Gift, Clock, Gavel, Trophy } from 'lucide-react';
+import { MessageCircle, Gift, Clock, Gavel, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
 import { useState, useEffect } from 'react';
@@ -18,6 +18,7 @@ import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BidDialog } from "@/components/dialog/BidDialog";
+import { AuctionHistoryDialog } from "@/components/dialog/AuctionHistoryDialog";
 
 interface CommentFormData {
   content: string;
@@ -28,8 +29,10 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const { id } = use(params);
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
   const [isBidDialogOpen, setIsBidDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const { data: post, isLoading, error } = usePost(id);
-  const { data: bidsData } = useBids(id);
+  const { data: bidsData } = useBids(id, page, pageSize);
   const createComment = useCreateComment();
   const { register, handleSubmit, reset } = useForm<CommentFormData>();
   const [showConfetti, setShowConfetti] = useState(false);
@@ -132,31 +135,42 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                     Start Price: {post.startPrice} SUI
                   </p>
                 </div>
-                {isBiddingActive && post.biddingDueDate ? (
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="mr-1 h-4 w-4" />
-                      Ends in {formatDistance(new Date(post.biddingDueDate), new Date())}
+                <div className="flex items-center space-x-4">
+                  {isBiddingActive && post.biddingDueDate ? (
+                    <>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="mr-1 h-4 w-4" />
+                        Ends in {formatDistance(new Date(post.biddingDueDate), new Date())}
+                      </div>
+                      <BidDialog
+                        isOpen={isBidDialogOpen}
+                        onOpenChange={setIsBidDialogOpen}
+                        startPrice={post.startPrice || 0}
+                        currentBids={bidsData?.bids || []}
+                        postId={id}
+                        trigger={
+                          <Button>
+                            <Gavel className="mr-2 h-4 w-4" />
+                            Place Bid
+                          </Button>
+                        }
+                      />
+                    </>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      Bidding ended
                     </div>
-                    <BidDialog
-                      isOpen={isBidDialogOpen}
-                      onOpenChange={setIsBidDialogOpen}
-                      startPrice={post.startPrice || 0}
-                      currentBids={bidsData?.bids || []}
-                      postId={id}
-                      trigger={
-                        <Button>
-                          <Gavel className="mr-2 h-4 w-4" />
-                          Place Bid
-                        </Button>
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    Bidding ended
-                  </div>
-                )}
+                  )}
+                  <AuctionHistoryDialog
+                    postId={id}
+                    trigger={
+                      <Button variant="outline">
+                        <History className="mr-2 h-4 w-4" />
+                        View History
+                      </Button>
+                    }
+                  />
+                </div>
               </div>
 
               {/* Bidding History */}
@@ -197,16 +211,41 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={3} className="h-24 text-center">
-                            <div className="flex flex-col items-center justify-center space-y-2">
-                              <Trophy className="h-8 w-8 text-muted-foreground" />
-                              <p className="text-sm text-muted-foreground">No bids yet. Be the first to bid!</p>
-                            </div>
+                          <TableCell colSpan={3} className="text-center text-muted-foreground">
+                            No bids yet
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
+                  {bidsData?.pagination && bidsData.pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage(page - 1)}
+                          disabled={page === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page {page} of {bidsData.pagination.totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage(page + 1)}
+                          disabled={page === bidsData.pagination.totalPages}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Total {bidsData.pagination.total} bids
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
