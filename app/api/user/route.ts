@@ -49,6 +49,10 @@ export async function GET(request: Request) {
             avatar: user.profile?.avatar,
             bio: user.profile?.bio,
           },
+          auctionEarnings: user.auctionEarnings,
+          rewardEarnings: user.rewardEarnings,
+          rewardSpent: user.rewardSpent,
+          nftCount: user.nftCount,
         },
       },
     });
@@ -119,6 +123,10 @@ export async function PATCH(request: Request) {
             avatar: user.profile.avatar,
             bio: user.profile.bio,
           } : null,
+          auctionEarnings: user.auctionEarnings,
+          rewardEarnings: user.rewardEarnings,
+          rewardSpent: user.rewardSpent,
+          nftCount: user.nftCount,
         },
       },
     });

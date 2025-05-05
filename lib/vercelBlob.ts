@@ -29,9 +29,9 @@ export const isServiceEnabled = (): boolean => {
  * @returns Promise<UploadResult>
  */
 export const uploadImage = async (file: File, options: UploadOptions = {}): Promise<UploadResult> => {
-  if (!isServiceEnabled()) {
-    throw new Error('Vercel Blob service is not enabled');
-  }
+  // if (!isServiceEnabled()) {
+  //   throw new Error('Vercel Blob service is not enabled');
+  // }
 
   // 验证文件大小
   if (file.size > MAX_FILE_SIZE) {

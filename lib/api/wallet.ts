@@ -31,8 +31,8 @@ export const walletApi = {
     });
   },
 
-  // 获取钱包用户
+  // 获取用户
   getUser: async (walletAddress: string) => {
-    return request<{ data: { user: UserProfile } }>(API_ENDPOINTS.LOGIN.USER(walletAddress));
+    return request<{ data: { user: UserProfile } }>(API_ENDPOINTS.WALLET.USER(walletAddress));
   },
 }; 

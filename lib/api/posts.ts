@@ -1,6 +1,14 @@
 import { request } from './requests';
 import { API_ENDPOINTS } from './requests';
-import { Post, Comment } from './types';
+import { Post, Comment, Pagination } from './types';
+
+export interface GetUserPostsResponse {
+  success: boolean;
+  data: {
+    posts: Post[];
+    pagination: Pagination;
+  };
+}
 
 export const postsApi = {
   // 上传图片
@@ -49,6 +57,14 @@ export const postsApi = {
   toggleLike: async (postId: string): Promise<{ likes: number }> => {
     return request<{ likes: number }>(API_ENDPOINTS.POSTS.LIKE(postId), {
       method: 'POST',
+    });
+  },
+
+  // 获取用户帖子列表
+  getUserPosts: async (params: { page?: number; pageSize?: number; address: string }) => {
+    const { page = 1, pageSize = 10, address } = params;
+    return request<GetUserPostsResponse>(API_ENDPOINTS.CONTENT.LIST(page, pageSize, address), {
+      method: 'GET',
     });
   },
 }; 

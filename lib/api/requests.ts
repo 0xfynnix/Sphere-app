@@ -14,11 +14,15 @@ export const API_ENDPOINTS = {
     CHALLENGE: '/api/login/challenge',
     VERIFY: '/api/login/verify',
     SYNC: '/api/login/sync',
-    USER: (walletAddress: string) => `/api/login/user/${walletAddress}`,
+  },
+  WALLET: {
+    USER: (walletAddress: string) => `/api/wallet/user/${walletAddress}`,
   },
   // Content endpoints
   CONTENT: {
     CREATE: '/api/content',
+    LIST: (page?: number, pageSize?: number, address?: string) => 
+      `/api/content?${address ? `address=${address}` : ''}${page ? `&page=${page}` : ''}${pageSize ? `&pageSize=${pageSize}` : ''}`,
   },
   // Images endpoints
   IMAGES: {
@@ -35,6 +39,9 @@ export const API_ENDPOINTS = {
     CREATE: '/api/bids',
     GET: (postId: string, page?: number, pageSize?: number) => 
       `/api/bids?postId=${postId}${page ? `&page=${page}` : ''}${pageSize ? `&pageSize=${pageSize}` : ''}`,
+  },
+  PROFILE: {
+    UPDATE: '/api/profile',
   },
 } as const;
 

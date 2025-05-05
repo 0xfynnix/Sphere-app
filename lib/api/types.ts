@@ -34,6 +34,11 @@ export interface UserProfile {
   profile: UserProfileData | null;
   createdAt: string;
   updatedAt: string;
+  auctionEarnings: number;
+  rewardEarnings: number;
+  rewardSpent: number;
+  nftCount: number;
+  posts?: Post[];
 }
 
 export interface UserUpdateInput {
@@ -193,4 +198,25 @@ export interface CreateRewardRequest {
   ref: string;
   amount: number;
   postId: string;
+}
+
+export interface UpdateProfileRequest {
+  name?: string;
+  bio?: string;
+  avatar?: File;
+}
+
+export interface UpdateProfileResponse {
+  success: boolean;
+  data?: {
+    profile: {
+      id: string;
+      name: string | null;
+      bio: string | null;
+      avatar: string | null;
+    };
+  };
+  error?: {
+    message: string;
+  };
 } 

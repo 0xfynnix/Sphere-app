@@ -72,6 +72,7 @@ export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps
       const { signature } = await signPersonalMessage({
         message: new TextEncoder().encode(`Reward post: ${rewardOptions[currentIndex].amount} SUI`),
       });
+      console.log('signature', signature);
 
       clearInterval(signInterval);
       setSignProgress(50);

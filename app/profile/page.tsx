@@ -1,40 +1,98 @@
 /* eslint-disable @next/next/no-img-element */
-'use client';
+"use client";
 
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { logger } from "@/lib/utils";
-import { useEffect } from 'react';
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUserStore } from '@/store/userStore';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { User } from 'lucide-react';
-import Image from 'next/image';
-import { useUser } from '@/lib/api/hooks';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserStore } from "@/store/userStore";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { User } from "lucide-react";
+import Image from "next/image";
+import { useUser } from "@/lib/api/hooks";
+import { useUserPosts } from "@/lib/api/hooks";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+// import { useCreateBid } from "@/lib/api/hooks";
+import { UpdateProfileForm } from "./components/UpdateProfileForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Pencil } from "lucide-react";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
   const router = useRouter();
-  
-  const { data: userData, isLoading: isUserLoading, isError: isUserError } = useUser();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  // const createBid = useCreateBid();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const {
+    data: userData,
+    isLoading: isUserLoading,
+    isError: isUserError,
+  } = useUser();
+  const { data: postsData, isLoading: isPostsLoading } = useUserPosts(
+    user?.walletAddress || "",
+    currentPage,
+    pageSize
+  );
 
   useEffect(() => {
     if (isUserError) {
-      toast.error('Please connect and login to view your profile');
-      router.push('/');
+      toast.error("Please connect and login to view your profile");
+      router.push("/");
     }
   }, [isUserError, router]);
 
-  
-  if (isUserLoading) {
+  if (isUserLoading || isPostsLoading) {
     return <LoadingSpinner />;
   }
 
-  const profile = userData?.data?.user?.profile;
-  logger.debug('Profile', { profile });
+  const posts = postsData?.data?.posts || [];
+  const pagination = postsData?.data?.pagination;
+  // logger.debug('Profile', { profile, posts, pagination });
+
+  const handleCancelBidding = async (postId: string) => {
+    try {
+      // TODO: 实现取消竞拍的 API 调用
+      console.log("postId", postId);
+      toast.success("Bidding cancelled successfully");
+    } catch (error) {
+      console.error("Failed to cancel bidding", error);
+      toast.error("Failed to cancel bidding");
+    }
+  };
+
+  const handleStartBidding = async (postId: string) => {
+    try {
+      // TODO: 实现开始竞拍的 API 调用
+      console.log("postId", postId);
+      toast.success("Bidding started successfully");
+    } catch (error) {
+      console.error("Failed to start bidding", error);
+      toast.error("Failed to start bidding");
+    }
+  };
+
+  const handleUpdateSuccess = () => {
+    setIsDialogOpen(false);
+    router.refresh();
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -48,34 +106,76 @@ export default function ProfilePage() {
                 <User className="h-10 w-10 text-muted-foreground" />
               </div>
             )}
-            {user?.profile?.avatar && <AvatarFallback>{user.profile?.name?.[0] || 'U'}</AvatarFallback>}
+            {user?.profile?.avatar && (
+              <AvatarFallback>{user.profile?.name?.[0] || "U"}</AvatarFallback>
+            )}
           </Avatar>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{user?.profile?.name || 'Anonymous'}</h1>
-            <p className="text-muted-foreground">@{user?.walletAddress.slice(0, 6)}...{user?.walletAddress.slice(-4)}</p>
+          <div className="flex items-start gap-2 flex-col">
+            <h1 className="text-3xl font-bold text-foreground">
+              {user?.profile?.name || "Anonymous"}
+            </h1>
+          <p className="text-muted-foreground">
+            @{user?.walletAddress.slice(0, 6)}...{user?.walletAddress.slice(-4)}
+          </p>
           </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Edit Profile</DialogTitle>
+              </DialogHeader>
+              <UpdateProfileForm
+                profile={{
+                  name: user?.profile?.name || undefined,
+                  bio: user?.profile?.bio || undefined,
+                  avatar: user?.profile?.avatar || undefined,
+                }}
+                onSuccess={handleUpdateSuccess}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">Content Created</h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">12</p>
+          <h3 className="text-sm font-semibold mb-2 text-foreground">
+            Content Created
+          </h3>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">
+            {pagination?.total || 0}
+          </p>
           <p className="text-xs text-muted-foreground">Total Posts</p>
         </Card>
         <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">Followers</h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">256</p>
-          <p className="text-xs text-muted-foreground">Community Members</p>
+          <h3 className="text-sm font-semibold mb-2 text-foreground">
+            Total Auction Revenue
+          </h3>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">
+            {userData?.data?.user?.auctionEarnings || 0} SUI
+          </p>
+          <p className="text-xs text-muted-foreground">From Auctions</p>
         </Card>
         <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">Total Received Rewards</h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">8.5 SUI</p>
+          <h3 className="text-sm font-semibold mb-2 text-foreground">
+            Total Received Rewards
+          </h3>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">
+            {userData?.data?.user?.rewardEarnings || 0} SUI
+          </p>
           <p className="text-xs text-muted-foreground">From Community</p>
         </Card>
         <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">Total Given Rewards</h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">2.5 SUI</p>
+          <h3 className="text-sm font-semibold mb-2 text-foreground">
+            Total Given Rewards
+          </h3>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">
+            {userData?.data?.user?.rewardSpent || 0} SUI
+          </p>
           <p className="text-xs text-muted-foreground">To Community</p>
         </Card>
       </div>
@@ -90,25 +190,33 @@ export default function ProfilePage() {
         <TabsContent value="wallet" className="mt-6">
           <div className="space-y-6">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Transaction History On Sphere</h3>
+              <h3 className="text-lg font-semibold mb-4 text-foreground">
+                Transaction History On Sphere
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
-                    <p className="font-medium text-foreground">Content Creation Reward</p>
+                    <p className="font-medium text-foreground">
+                      Content Creation Reward
+                    </p>
                     <p className="text-sm text-muted-foreground">2 hours ago</p>
                   </div>
                   <p className="text-green-500 font-semibold">+5.2 SUI</p>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
-                    <p className="font-medium text-foreground">Content Purchase</p>
+                    <p className="font-medium text-foreground">
+                      Content Purchase
+                    </p>
                     <p className="text-sm text-muted-foreground">1 day ago</p>
                   </div>
                   <p className="text-red-500 font-semibold">-2.5 SUI</p>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
-                    <p className="font-medium text-foreground">Community Reward</p>
+                    <p className="font-medium text-foreground">
+                      Community Reward
+                    </p>
                     <p className="text-sm text-muted-foreground">3 days ago</p>
                   </div>
                   <p className="text-green-500 font-semibold">+1.8 SUI</p>
@@ -119,7 +227,108 @@ export default function ProfilePage() {
         </TabsContent>
         <TabsContent value="content" className="mt-6">
           <div className="space-y-4">
-            <p className="text-muted-foreground">No content yet.</p>
+            {posts?.length === 0 ? (
+              <p className="text-muted-foreground">No content yet.</p>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Content</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {posts.map((post) => (
+                      <TableRow key={post.id}>
+                        <TableCell className="font-medium">
+                          {post.title}
+                        </TableCell>
+                        <TableCell className="max-w-[300px] truncate">
+                          {post.content}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                              post.status === "PUBLISHED"
+                                ? "bg-green-100 text-green-700"
+                                : post.status === "DRAFT"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {post.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm">
+                              View Details
+                            </Button>
+                            {post.allowBidding ? (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleCancelBidding(post.id)}
+                              >
+                                Cancel Bidding
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleStartBidding(post.id)}
+                              >
+                                Start Bidding
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {pagination && pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {(currentPage - 1) * pageSize + 1}-
+                      {Math.min(currentPage * pageSize, pagination.total)} of{" "}
+                      {pagination.total} items
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(1, prev - 1))
+                        }
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(pagination.totalPages, prev + 1)
+                          )
+                        }
+                        disabled={currentPage === pagination.totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </TabsContent>
         <TabsContent value="nfts" className="mt-6">
@@ -133,34 +342,46 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <Card className="p-4 hover:shadow-lg transition-shadow">
                 <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                  <Image 
-                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
-                    alt="NFT" 
+                  <Image
+                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
+                    alt="NFT"
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
                 </div>
-                <h3 className="font-semibold text-foreground">Sphere Creator #1</h3>
-                <p className="text-sm text-muted-foreground">Minted on 2024-03-20</p>
+                <h3 className="font-semibold text-foreground">
+                  Sphere Creator #1
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Minted on 2024-03-20
+                </p>
                 <div className="mt-2">
-                  <Button variant="outline" size="sm">View Details</Button>
+                  <Button variant="outline" size="sm">
+                    View Details
+                  </Button>
                 </div>
               </Card>
               <Card className="p-4 hover:shadow-lg transition-shadow">
                 <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                  <Image 
-                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
-                    alt="NFT" 
+                  <Image
+                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
+                    alt="NFT"
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
                 </div>
-                <h3 className="font-semibold text-foreground">Sphere Creator #2</h3>
-                <p className="text-sm text-muted-foreground">Minted on 2024-03-21</p>
+                <h3 className="font-semibold text-foreground">
+                  Sphere Creator #2
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Minted on 2024-03-21
+                </p>
                 <div className="mt-2">
-                  <Button variant="outline" size="sm">View Details</Button>
+                  <Button variant="outline" size="sm">
+                    View Details
+                  </Button>
                 </div>
               </Card>
             </div>
@@ -180,40 +401,52 @@ export default function ProfilePage() {
 
             <div className="pt-8 border-t">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">Mintable NFTs</h2>
+                <h2 className="text-2xl font-bold text-foreground">
+                  Mintable NFTs
+                </h2>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Available: 2</span>
+                  <span className="text-sm text-muted-foreground">
+                    Available: 2
+                  </span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <Card className="p-4 hover:shadow-lg transition-shadow">
                   <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                    <Image 
-                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
-                      alt="NFT" 
+                    <Image
+                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
+                      alt="NFT"
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
                   </div>
-                  <h3 className="font-semibold text-foreground">Sphere Creator #3</h3>
-                  <p className="text-sm text-muted-foreground">Limited Edition</p>
+                  <h3 className="font-semibold text-foreground">
+                    Sphere Creator #3
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Limited Edition
+                  </p>
                   <div className="mt-2">
                     <Button size="sm">Mint Now</Button>
                   </div>
                 </Card>
                 <Card className="p-4 hover:shadow-lg transition-shadow">
                   <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                    <Image 
-                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60" 
-                      alt="NFT" 
+                    <Image
+                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
+                      alt="NFT"
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
                   </div>
-                  <h3 className="font-semibold text-foreground">Sphere Creator #4</h3>
-                  <p className="text-sm text-muted-foreground">Limited Edition</p>
+                  <h3 className="font-semibold text-foreground">
+                    Sphere Creator #4
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Limited Edition
+                  </p>
                   <div className="mt-2">
                     <Button size="sm">Mint Now</Button>
                   </div>
@@ -244,4 +477,4 @@ export default function ProfilePage() {
       </Tabs>
     </div>
   );
-} 
+}

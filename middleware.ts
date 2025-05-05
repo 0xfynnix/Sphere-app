@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
 // 配置需要鉴权的路由
 export const config = {
   matcher: [
-    '/api/content/:path*',
+    '/api/content:path*:method(POST)',
     '/api/user/:path*',
     '/api/bids/:path*',
     '/api/rewards/:path*',

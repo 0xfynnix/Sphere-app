@@ -1,12 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from './auth';
 import { walletApi } from './wallet';
-import { postsApi } from './posts';
-import { SyncUserResponse, GetUserResponse, Post, UpdateUserRequest } from './types';
+import { postsApi, GetUserPostsResponse } from './posts';
+import { 
+  SyncUserResponse, 
+  GetUserResponse, 
+  Post, 
+  UpdateUserRequest, 
+  UpdateProfileRequest, 
+  UserProfileData 
+} from './types';
 import { useUserStore } from '@/store/userStore';
 import { bidsApi } from './bids';
 import { CreateBidRequest, GetBidsResponse } from './types';
 import { createReward, type CreateRewardParams, type Reward } from './rewards';
+import { profileApi } from './profile';
 
 // User hooks
 export const useUser = () => {
@@ -197,6 +205,45 @@ export const useCreateReward = () => {
     mutationFn: createReward,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+};
+
+// 获取用户帖子列表
+export const useUserPosts = (address: string, page: number = 1, pageSize: number = 10) => {
+  return useQuery<GetUserPostsResponse>({
+    queryKey: ['user-posts', address, page, pageSize],
+    queryFn: () => postsApi.getUserPosts({ address, page, pageSize }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!address,
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  const { setUser } = useUserStore();
+
+  return useMutation({
+    mutationFn: (data: UpdateProfileRequest) => profileApi.update(data),
+    onSuccess: (response) => {
+      if (response.data?.profile) {
+        // 更新用户 store 中的 profile
+        const currentUser = useUserStore.getState().user;
+        if (currentUser) {
+          const updatedProfile: UserProfileData = {
+            id: response.data.profile.id,
+            name: response.data.profile.name,
+            bio: response.data.profile.bio,
+            avatar: response.data.profile.avatar,
+          };
+          setUser({
+            ...currentUser,
+            profile: updatedProfile,
+          });
+        }
+        // 使相关查询失效，触发重新获取
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+      }
     },
   });
 }; 
