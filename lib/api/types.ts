@@ -179,4 +179,18 @@ export interface AuctionHistory {
 
 export interface GetAuctionHistoryResponse {
   history: AuctionHistory[];
+}
+
+export interface Reward {
+  id: string;
+  postId: string;
+  amount: number;
+  referrerId?: string;
+  createdAt: string;
+}
+
+export interface CreateRewardRequest {
+  ref: string;
+  amount: number;
+  postId: string;
 } 

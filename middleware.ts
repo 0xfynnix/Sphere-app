@@ -49,6 +49,7 @@ export const config = {
     '/api/content/:path*',
     '/api/user/:path*',
     '/api/bids/:path*',
+    '/api/rewards/:path*',
   ],
 }
 

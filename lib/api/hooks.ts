@@ -6,6 +6,7 @@ import { SyncUserResponse, GetUserResponse, Post, UpdateUserRequest } from './ty
 import { useUserStore } from '@/store/userStore';
 import { bidsApi } from './bids';
 import { CreateBidRequest, GetBidsResponse } from './types';
+import { createReward, type CreateRewardParams, type Reward } from './rewards';
 
 // User hooks
 export const useUser = () => {
@@ -187,4 +188,15 @@ export function useAuctionHistory(postId: string) {
     queryFn: () => bidsApi.getHistory(postId),
     enabled: !!postId,
   });
-} 
+}
+
+export const useCreateReward = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<Reward, Error, CreateRewardParams>({
+    mutationFn: createReward,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+}; 

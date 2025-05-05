@@ -7,7 +7,7 @@ import { MessageCircle, Gift, Clock, Gavel, History, ChevronLeft, ChevronRight }
 import { useRouter, useSearchParams } from 'next/navigation';
 import { use } from 'react';
 import { useState, useEffect } from 'react';
-import { RewardDialog } from '@/components/reward/RewardDialog';
+import { RewardDialog } from '@/components/dialog/RewardDialog';
 import { formatDistanceToNow, formatDistance } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
@@ -20,6 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BidDialog } from "@/components/dialog/BidDialog";
 import { AuctionHistoryDialog } from "@/components/dialog/AuctionHistoryDialog";
 import { ShareDialog } from "@/components/dialog/ShareDialog";
+import { useUserStore } from '@/store/userStore';
 
 interface CommentFormData {
   content: string;
@@ -39,7 +40,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const createComment = useCreateComment();
   const { register, handleSubmit, reset } = useForm<CommentFormData>();
   const [showConfetti, setShowConfetti] = useState(false);
-
+  const user = useUserStore((state) => state.user);
   useEffect(() => {
     if (showConfetti) {
       const timer = setTimeout(() => setShowConfetti(false), 2000);
@@ -65,12 +66,6 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       }
     }
   }, [searchParams, post?.shareCode]);
-
-  const handleReward = (amount: number) => {
-    // 这里处理打赏逻辑
-    console.log(`Rewarding ${amount} to post ${id}`);
-    // TODO: 调用打赏API
-  };
 
   const onSubmit = (data: CommentFormData) => {
     createComment.mutate({ postId: id, content: data.content });
@@ -343,7 +338,8 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       <RewardDialog
         isOpen={isRewardDialogOpen}
         onClose={() => setIsRewardDialogOpen(false)}
-        onReward={handleReward}
+        postId={id}
+        ref={user?.shareCode ? `${user.shareCode}-${post.shareCode}` : ''}
       />
     </div>
   );

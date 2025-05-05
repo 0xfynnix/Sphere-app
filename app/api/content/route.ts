@@ -72,6 +72,15 @@ export async function POST(request: Request) {
           },
         }),
         status: PostStatus.PUBLISHED,
+        lotteryPool: {
+          create: {
+            amount: 0, // 初始金额为0
+            round: 1, // 初始轮次为1
+          }
+        }
+      },
+      include: {
+        lotteryPool: true
       }
     });
 
