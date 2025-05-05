@@ -30,6 +30,11 @@ export const API_ENDPOINTS = {
     COMMENT: (id: string) => `/api/posts/${id}/comments`,
     LIKE: (id: string) => `/api/posts/${id}/like`,
   },
+  // Bids endpoints
+  BIDS: {
+    CREATE: '/api/bids',
+    GET: (postId: string) => `/api/bids?postId=${postId}`,
+  },
 } as const;
 
 // 统一的请求处理函数

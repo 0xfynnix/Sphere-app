@@ -18,7 +18,11 @@ export const postsApi = {
     text: string; 
     title: string; 
     signature: string; 
-    imageInfo: { url: string; cid: string } 
+    imageInfo: { url: string; cid: string };
+    biddingInfo?: {
+      dueDate: Date;
+      startPrice: number;
+    }
   }) => {
     return request(API_ENDPOINTS.CONTENT.CREATE, {
       method: 'POST',

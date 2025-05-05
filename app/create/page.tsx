@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ImageIcon, Wand2 } from "lucide-react";
+import { ImageIcon, Wand2, CalendarIcon } from "lucide-react";
 import { ImageUpload } from "@/components/common/ImageUpload";
 import { toast } from "sonner";
 import { useCreateContent, useUploadImage } from "@/lib/api/hooks";
@@ -14,6 +14,13 @@ import { FlowDialog, Step } from "@/components/dialog/FlowDialog";
 import { useCurrentAccount, useSignPersonalMessage } from "@mysten/dapp-kit";
 import { Post } from "@/lib/api/types";
 import { useRouter } from "next/navigation";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+
 export default function CreatePage() {
   const [, setActiveTab] = useState("traditional");
   const [text, setText] = useState("");
@@ -24,11 +31,15 @@ export default function CreatePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState("");
   const [showFlowDialog, setShowFlowDialog] = useState(false);
+  const [allowBidding, setAllowBidding] = useState(false);
+  const [biddingDueDate, setBiddingDueDate] = useState<Date>();
+  const [startPrice, setStartPrice] = useState<string>("");
   const router = useRouter();
   const createContent = useCreateContent();
   const uploadImage = useUploadImage();
   const account = useCurrentAccount();
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+
   const handleImageChange = (file: File | null) => {
     setImage(file);
     setImageUrl(file?.name || "");
@@ -50,6 +61,10 @@ export default function CreatePage() {
       toast.error("Please fill in the title, content and select an image");
       return;
     }
+    if (allowBidding && (!biddingDueDate || !startPrice)) {
+      toast.error("Please select bidding end date and start price");
+      return;
+    }
     setShowFlowDialog(true);
   };
 
@@ -64,6 +79,10 @@ export default function CreatePage() {
           address: account?.address || "",
           signature: "",
           imageInfo: result,
+          biddingInfo: allowBidding ? {
+            dueDate: biddingDueDate,
+            startPrice: parseFloat(startPrice)
+          } : null
         };
       },
     },
@@ -82,6 +101,9 @@ export default function CreatePage() {
           signature,
           imageInfo: (data as { imageInfo: { url: string; cid: string } })
             .imageInfo,
+          biddingInfo: (
+            data as { biddingInfo: { dueDate: Date; startPrice: number } }
+          ).biddingInfo,
         } as unknown;
       },
     },
@@ -90,16 +112,18 @@ export default function CreatePage() {
       description: "Creating content...",
       action: async (data) => {
         if (!data) throw new Error("Missing data");
-        const { signature, imageInfo } = data as {
+        const { signature, imageInfo, biddingInfo } = data as {
           address: string;
           signature: string;
           imageInfo: { url: string; cid: string };
+          biddingInfo: { dueDate: Date; startPrice: number };
         };
         const result = await createContent.mutateAsync({
           text,
           title,
           signature,
           imageInfo,
+          biddingInfo
         });
         return (result as { post: Post }).post;
       },
@@ -164,6 +188,64 @@ export default function CreatePage() {
                 <p className="text-sm text-muted-foreground mt-1">
                   {text.length}/250 characters
                 </p>
+              </div>
+
+              <div className="space-y-4 border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="allowBidding">Allow Bidding</Label>
+                  <Switch
+                    id="allowBidding"
+                    checked={allowBidding}
+                    onCheckedChange={setAllowBidding}
+                  />
+                </div>
+
+                {allowBidding && (
+                  <>
+                    <div>
+                      <Label className="mb-0.5" htmlFor="biddingDueDate">Bidding End Date(max 30 days)</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !biddingDueDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {biddingDueDate ? format(biddingDueDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={biddingDueDate}
+                            onSelect={setBiddingDueDate}
+                            initialFocus
+                            disabled={(date: Date) => 
+                              date < new Date() || 
+                              date > new Date(new Date().setDate(new Date().getDate() + 30))
+                            }
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="startPrice">Start Price (SUI)</Label>
+                      <Input
+                        id="startPrice"
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        value={startPrice}
+                        onChange={(e) => setStartPrice(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div>

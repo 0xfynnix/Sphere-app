@@ -45,6 +45,7 @@ model User {
   following     Follow[] @relation("Follower")  // 该用户关注的用户
   nfts          NFT[]    // 用户拥有的NFT
   referredRewards Reward[] @relation("Referrer") // 作为推荐人的打赏记录
+  bids          Bid[]    // 用户的竞拍记录
   nftCount      Int      @default(0) // 拥有的NFT数量
   totalEarnings Float    @default(0) // 总收益（SUI）
   chainId       String?  // 链上用户ID
@@ -86,6 +87,10 @@ model Post {
   walrusImages  WalrusImage[] // 帖子关联的 Walrus 图片
   vercelBlobImages VercelBlobImage[] // 帖子关联的 Vercel Blob 图片
   filebaseImages FilebaseImage[] // 帖子关联的 Filebase IPFS 图片
+  allowBidding  Boolean  @default(false) // 是否允许竞拍
+  biddingDueDate DateTime? // 竞拍截止日期
+  startPrice    Float?    // 起拍价（SUI）
+  bids          Bid[]     // 竞拍记录
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -228,4 +233,20 @@ model FilebaseImage {
   createdAt  DateTime @default(now())
 
   @@index([postId])
+}
+
+// 新增：竞拍模型
+model Bid {
+  id        String   @id @default(cuid())
+  amount    Float    // 竞拍金额
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  chainId   String?  // 链上竞拍记录ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([userId])
 } 

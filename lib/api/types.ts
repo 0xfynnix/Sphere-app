@@ -54,19 +54,45 @@ export interface Post {
   id: string;
   title: string;
   content: string;
+  userId: string;
   author: {
     id: string;
     name: string;
     avatar?: string;
   };
-  likes: number;
-  comments: Comment[];
-  images: {
-    url: string;
-    type: 'walrus' | 'vercel';
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'DELETED' | 'PENDING' | 'FAILED';
+  category?: {
+    id: string;
+    name: string;
+  };
+  tags: {
+    id: string;
+    name: string;
   }[];
-  createdAt: Date;
-  updatedAt: Date;
+  comments: {
+    id: string;
+    content: string;
+    author: {
+      id: string;
+      name: string;
+      avatar?: string;
+    };
+    timestamp: string;
+  }[];
+  images: {
+    id: string;
+    url: string;
+  }[];
+  chainId?: string;
+  contentHash?: string;
+  audienceCount: number;
+  totalRewards: number;
+  postType: 'NORMAL' | 'MEME_LORD';
+  allowBidding: boolean;
+  biddingDueDate?: string;
+  startPrice?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Comment {
@@ -89,4 +115,34 @@ export interface UpdateUserRequest {
 // 更新用户响应
 export type UpdateUserResponse = ApiResponse<{
   user: UserProfile;
-}>; 
+}>;
+
+export interface Bid {
+  id: string;
+  amount: number;
+  postId: string;
+  userId: string;
+  chainId?: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface CreateBidRequest {
+  postId: string;
+  amount: number;
+  signature: string;
+}
+
+export interface CreateBidResponse {
+  success: boolean;
+  bid: Bid;
+}
+
+export interface GetBidsResponse {
+  success: boolean;
+  bids: Bid[];
+} 

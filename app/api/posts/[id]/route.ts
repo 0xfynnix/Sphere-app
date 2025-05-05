@@ -85,6 +85,9 @@ export async function GET(
           type: 'filebase'
         }))
       ],
+      allowBidding: post.allowBidding,
+      biddingDueDate: post.biddingDueDate,
+      startPrice: post.startPrice,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt
     };

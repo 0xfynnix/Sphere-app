@@ -48,6 +48,7 @@ export const config = {
   matcher: [
     '/api/content/:path*',
     '/api/user/:path*',
+    '/api/bids/:path*',
   ],
 }
 

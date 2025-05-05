@@ -4,6 +4,8 @@ import { walletApi } from './wallet';
 import { postsApi } from './posts';
 import { SyncUserResponse, GetUserResponse, Post, UpdateUserRequest } from './types';
 import { useUserStore } from '@/store/userStore';
+import { bidsApi } from './bids';
+import { CreateBidRequest, GetBidsResponse } from './types';
 
 // User hooks
 export const useUser = () => {
@@ -156,5 +158,25 @@ export const useUpdateUser = () => {
 export const useUploadImage = () => {
   return useMutation({
     mutationFn: postsApi.uploadImage,
+  });
+};
+
+export const useCreateBid = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateBidRequest) => bidsApi.create(data),
+    onSuccess: (_, { postId }) => {
+      // 使竞拍列表查询失效，触发重新获取
+      queryClient.invalidateQueries({ queryKey: ['bids', postId] });
+    },
+  });
+};
+
+export const useBids = (postId: string) => {
+  return useQuery<GetBidsResponse>({
+    queryKey: ['bids', postId],
+    queryFn: () => bidsApi.get(postId),
+    enabled: !!postId,
   });
 }; 

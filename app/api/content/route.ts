@@ -4,7 +4,7 @@ import { PostStatus } from '@prisma/client';
 
 export async function POST(request: Request) {
   try {
-    const { text, title, imageInfo } = await request.json();
+    const { text, title, imageInfo, biddingInfo } = await request.json();
     const address = request.headers.get('x-user-address');
     console.log(text, title, imageInfo);
     if (!text || !imageInfo || !title) {
@@ -40,6 +40,9 @@ export async function POST(request: Request) {
         content: text,
         title: title,
         userId: user.id,
+        allowBidding: !!biddingInfo,
+        biddingDueDate: biddingInfo?.dueDate,
+        startPrice: biddingInfo?.startPrice,
         ...(imageInfo.blobId ? {
           walrusImages: {
             create: {
