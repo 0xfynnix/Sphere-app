@@ -28,8 +28,9 @@ export enum UserType {
 export interface UserProfile {
   id: string;
   walletAddress: string;
-  email: string | null;
-  userType?: UserType;
+  email?: string;
+  userType?: string;
+  shareCode: string;
   profile: UserProfileData | null;
   createdAt: string;
   updatedAt: string;
@@ -55,6 +56,7 @@ export interface Post {
   title: string;
   content: string;
   userId: string;
+  shareCode: string;
   author: {
     id: string;
     name: string;

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Gift, Clock, Gavel, History, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { use } from 'react';
 import { useState, useEffect } from 'react';
 import { RewardDialog } from '@/components/reward/RewardDialog';
@@ -19,6 +19,7 @@ import 'react-photo-view/dist/react-photo-view.css';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BidDialog } from "@/components/dialog/BidDialog";
 import { AuctionHistoryDialog } from "@/components/dialog/AuctionHistoryDialog";
+import { ShareDialog } from "@/components/dialog/ShareDialog";
 
 interface CommentFormData {
   content: string;
@@ -26,12 +27,14 @@ interface CommentFormData {
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { id } = use(params);
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
   const [isBidDialogOpen, setIsBidDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const { data: post, isLoading, error } = usePost(id);
+  console.log(post);
   const { data: bidsData } = useBids(id, page, pageSize);
   const createComment = useCreateComment();
   const { register, handleSubmit, reset } = useForm<CommentFormData>();
@@ -43,6 +46,25 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       return () => clearTimeout(timer);
     }
   }, [showConfetti]);
+
+  // 处理推荐码
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref && post?.shareCode) {
+      try {
+        // 解析分享码格式：用户分享码-帖子分享码
+        const [userShareCode, postShareCode] = ref.split('-');
+        
+        // 验证分享码是否有效
+        if (postShareCode === post.shareCode) {
+          // TODO: 记录推荐数据到数据库
+          console.log(`Referral from user with share code: ${userShareCode} for post: ${postShareCode}`);
+        }
+      } catch (error) {
+        console.error('Invalid referral code:', error);
+      }
+    }
+  }, [searchParams, post?.shareCode]);
 
   const handleReward = (amount: number) => {
     // 这里处理打赏逻辑
@@ -266,6 +288,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                 <Gift className="mr-2 h-4 w-4" />
                 Reward
               </Button>
+              <ShareDialog postId={id} postShareCode={post.shareCode} />
             </div>
           </div>
 

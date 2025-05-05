@@ -88,6 +88,7 @@ export async function GET(
       allowBidding: post.allowBidding,
       biddingDueDate: post.biddingDueDate,
       startPrice: post.startPrice,
+      shareCode: post.shareCode,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt
     };

@@ -39,7 +39,8 @@ export async function GET(request: Request) {
         user: {
           id: user.id,
           walletAddress: user.walletAddress,
-          email: user.email,
+          email: user.email || undefined,
+          shareCode: user.shareCode || "",
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
           profile: {

@@ -3,9 +3,13 @@ import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
 import { SuiGraphQLClient } from '@mysten/sui/graphql';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
+import { customAlphabet } from 'nanoid';
 
 // JWT 密钥
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// 使用自定义字母表生成更短的ID
+const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
 
 export async function POST(request: Request) {
   try {
@@ -71,6 +75,7 @@ export async function POST(request: Request) {
       },
       create: {
         walletAddress,
+        shareCode: nanoid(), // 创建用户时生成分享码
       },
       update: {},
     });

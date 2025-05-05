@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { PostStatus } from '@prisma/client';
+import { customAlphabet } from 'nanoid';
+
+// 使用自定义字母表生成更短的ID
+const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
 
 export async function POST(request: Request) {
   try {
@@ -40,6 +44,7 @@ export async function POST(request: Request) {
         content: text,
         title: title,
         userId: user.id,
+        shareCode: nanoid(), // 生成帖子分享码
         allowBidding: !!biddingInfo,
         biddingDueDate: biddingInfo?.dueDate,
         startPrice: biddingInfo?.startPrice,

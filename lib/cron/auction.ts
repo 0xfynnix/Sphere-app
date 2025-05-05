@@ -1,5 +1,9 @@
 import { prisma } from '../prisma';
 import { PostStatus } from '@prisma/client';
+import { customAlphabet } from 'nanoid';
+
+// 使用自定义字母表生成更短的ID
+const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
 
 export async function processExpiredAuctions() {
   try {
@@ -51,6 +55,7 @@ export async function processExpiredAuctions() {
         where: { id: post.id },
         data: {
           userId: winningBid.userId, // 更新所有者
+          shareCode: nanoid(), // 生成新的分享码
           allowBidding: false, // 关闭竞拍，等待新所有者设置
           biddingDueDate: null, // 清空截止日期
           startPrice: null, // 清空起拍价

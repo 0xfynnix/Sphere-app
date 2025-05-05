@@ -38,6 +38,7 @@ model User {
   email         String?  // 用户邮箱（可选）
   userType      UserType? // 用户类型（可选）
   profile       Profile? // 用户资料
+  shareCode     String   @unique @default("") // 用户分享码
   posts         Post[]   // 用户发布的帖子
   comments      Comment[] // 用户发表的评论
   likes         Like[]   // 用户点赞的帖子
@@ -72,6 +73,7 @@ model Post {
   content       String   // 帖子内容
   userId        String
   user          User     @relation(fields: [userId], references: [id])
+  shareCode     String   @unique @default("") // 帖子分享码
   status        PostStatus @default(DRAFT) // 帖子状态
   category      Category? @relation(fields: [categoryId], references: [id])
   categoryId    String?
