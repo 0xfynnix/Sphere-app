@@ -16,12 +16,13 @@ export async function GET(
       );
     }
 
-    const history = await prisma.auctionHistory.findMany({
+    // 获取帖子的所有竞拍记录，按轮次和金额排序
+    const bids = await prisma.bid.findMany({
       where: {
         postId
       },
       include: {
-        winner: {
+        user: {
           select: {
             id: true,
             walletAddress: true,
@@ -34,12 +35,35 @@ export async function GET(
           }
         }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: [
+        { round: 'desc' },
+        { amount: 'desc' }
+      ]
     });
 
-    return NextResponse.json({ history });
+    // 按轮次分组
+    const history = bids.reduce((acc, bid) => {
+      if (!acc[bid.round]) {
+        acc[bid.round] = {
+          round: bid.round,
+          bids: [],
+          winner: null
+        };
+      }
+      acc[bid.round].bids.push(bid);
+      if (bid.isWinner) {
+        acc[bid.round].winner = bid.user;
+      }
+      return acc;
+    }, {} as Record<number, {
+      round: number;
+      bids: typeof bids;
+      winner: typeof bids[0]['user'] | null;
+    }>);
+
+    return NextResponse.json({ 
+      history: Object.values(history).sort((a, b) => b.round - a.round)
+    });
   } catch (error) {
     console.error('Error fetching auction history:', error);
     return NextResponse.json(

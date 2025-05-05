@@ -34,7 +34,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const { data: post, isLoading, error } = usePost(id);
-  console.log(post);
+  // console.log(post);
   const { data: bidsData } = useBids(id, page, pageSize);
   const createComment = useCreateComment();
   const { register, handleSubmit, reset } = useForm<CommentFormData>();

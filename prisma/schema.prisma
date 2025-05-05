@@ -46,14 +46,19 @@ model User {
   following     Follow[] @relation("Follower")  // 该用户关注的用户
   nfts          NFT[]    // 用户拥有的NFT
   referredRewards Reward[] @relation("Referrer") // 作为推荐人的打赏记录
-  bids          Bid[]    // 用户的竞拍记录
-  auctionHistory AuctionHistory[] // 用户的竞拍历史记录
+  referredBids   Bid[]    @relation("BidReferrer") // 作为推荐人的竞拍记录
+  bids          Bid[]    @relation("BidUser") // 用户的竞拍记录
+  winningBids   Bid[]    @relation("Winner") // 用户获胜的竞拍记录
+  soldBids      Bid[]    @relation("Creator") // 作为创作者被竞拍的记录
   nftCount      Int      @default(0) // 拥有的NFT数量
-  totalEarnings Float    @default(0) // 总收益（SUI）
+  rewardEarnings Float   @default(0) // 获得的打赏总收益（SUI）
+  auctionEarnings Float  @default(0) // 获得的竞拍总收益（SUI）
+  rewardSpent     Float   @default(0) // 打赏总支出（SUI）
   chainId       String?  // 链上用户ID
   isAdmin       Boolean  @default(false) // 是否是管理员
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  lotteryPools     LotteryPool[]     // 作为中奖者的抽奖池
 }
 
 model Profile {
@@ -93,13 +98,14 @@ model Post {
   allowBidding  Boolean  @default(false) // 是否允许竞拍
   biddingDueDate DateTime? // 竞拍截止日期
   startPrice    Float?    // 起拍价（SUI）
-  bids          Bid[]     // 竞拍记录
-  auctionHistory AuctionHistory[] // 竞拍历史记录
+  bids          Bid[]     @relation("BidPost") // 竞拍记录
+  lotteryPool     LotteryPool?     // 当前抽奖池
+  auctionRound   Int      @default(1) // 竞拍轮次，从1开始
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
-// 新增：帖子状态枚举
+// 帖子状态枚举
 enum PostStatus {
   DRAFT     // 草稿
   PUBLISHED // 已发布
@@ -109,7 +115,7 @@ enum PostStatus {
   FAILED    // 失败
 }
 
-// 新增：分类模型
+// 分类模型
 model Category {
   id          String   @id @default(cuid())
   name        String   // 分类名称
@@ -119,7 +125,7 @@ model Category {
   updatedAt   DateTime @updatedAt
 }
 
-// 新增：标签模型
+// 标签模型
 model Tag {
   id        String   @id @default(cuid())
   name      String   @unique // 标签名称
@@ -128,7 +134,7 @@ model Tag {
   updatedAt DateTime @updatedAt
 }
 
-// 新增：评论模型
+// 评论模型
 model Comment {
   id        String   @id @default(cuid())
   content   String   // 评论内容
@@ -143,7 +149,7 @@ model Comment {
   updatedAt DateTime @updatedAt
 }
 
-// 新增：点赞模型
+// 点赞模型
 model Like {
   id        String   @id @default(cuid())
   postId    String
@@ -156,7 +162,7 @@ model Like {
   @@unique([postId, userId]) // 确保用户对同一帖子只能点赞一次
 }
 
-// 新增：关注模型
+// 关注模型
 model Follow {
   id          String   @id @default(cuid())
   followerId  String   // 关注者ID
@@ -169,13 +175,13 @@ model Follow {
   @@unique([followerId, followingId]) // 确保用户不能重复关注同一用户
 }
 
-// 新增：帖子类型枚举
+// 帖子类型枚举
 enum PostType {
   NORMAL    // 普通帖子
   MEME_LORD // Meme Lord类型
 }
 
-// 新增：NFT模型
+// NFT模型
 model NFT {
   id        String   @id @default(cuid())
   chainId   String?  // 链上NFT ID
@@ -188,18 +194,17 @@ model NFT {
   updatedAt DateTime @updatedAt
 }
 
-// 新增：打赏记录模型
+// 打赏记录模型
 model Reward {
   id            String   @id @default(cuid())
   chainId       String?  // 链上打赏记录ID
   postId        String
   post          Post     @relation(fields: [postId], references: [id])
   amount        Float    // 打赏金额
-  authorShare   Float    // 作者分成
-  platformShare Float    // 平台分成
-  referrerShare Float    // 推荐人分成
   referrerId    String?  // 推荐人ID
   referrer      User?    @relation("Referrer", fields: [referrerId], references: [id])
+  lotteryPoolId   String?  // 抽奖池ID
+  lotteryPool     LotteryPool? @relation(fields: [lotteryPoolId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -239,36 +244,48 @@ model FilebaseImage {
   @@index([postId])
 }
 
-// 新增：竞拍模型
+// 竞拍模型
 model Bid {
   id        String   @id @default(cuid())
   amount    Float    // 竞拍金额
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id])
+  postId    String?  // 可以为空
+  post      Post?    @relation("BidPost", fields: [postId], references: [id], map: "BidPost_fkey")
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation("BidUser", fields: [userId], references: [id], map: "BidUser_fkey")
+  referrerId String? // 推荐人ID
+  referrer   User?   @relation("BidReferrer", fields: [referrerId], references: [id])
+  isWinner   Boolean @default(false) // 是否是竞拍获胜者
+  lotteryPoolId String? // 抽奖池ID
+  lotteryPool   LotteryPool? @relation(fields: [lotteryPoolId], references: [id])
   chainId   String?  // 链上竞拍记录ID
+  round     Int      @default(1) // 竞拍轮次
+  winner    User?    @relation("Winner", fields: [userId], references: [id], map: "BidWinner_fkey")
+  creator   User?    @relation("Creator", fields: [postId], references: [id], map: "BidCreator_fkey")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([postId])
   @@index([userId])
+  @@index([referrerId])
+  @@index([lotteryPoolId])
+  @@index([round])
 }
 
-// 新增：竞拍历史记录模型
-model AuctionHistory {
-  id            String   @id @default(cuid())
-  postId        String
-  post          Post     @relation(fields: [postId], references: [id])
-  winnerId      String
-  winner        User     @relation(fields: [winnerId], references: [id])
-  finalPrice    Float    // 最终成交价
-  totalBids     Int      // 总竞拍次数
-  startPrice    Float    // 起拍价
-  biddingDueDate DateTime // 竞拍截止日期
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+// 抽奖池模型
+model LotteryPool {
+  id        String   @id @default(cuid())
+  postId    String   @unique // 一个帖子只能有一个抽奖池
+  post      Post     @relation(fields: [postId], references: [id])
+  amount    Float    @default(0) // 奖池金额
+  winnerId  String?  // 中奖者ID
+  winner    User?    @relation(fields: [winnerId], references: [id])
+  bids      Bid[]    // 关联的竞拍记录
+  rewards   Reward[] // 关联的打赏记录
+  round     Int      @default(1) // 抽奖池轮次
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([postId])
   @@index([winnerId])
+  @@index([round])
 } 

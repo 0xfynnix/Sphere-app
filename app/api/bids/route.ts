@@ -66,6 +66,7 @@ export async function POST(request: Request) {
         postId,
         userId: user.id,
         chainId: signature, // 暂时使用签名作为链上ID
+        round: post.auctionRound // 设置当前轮次
       },
       include: {
         user: {

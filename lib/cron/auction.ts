@@ -25,7 +25,8 @@ export async function processExpiredAuctions() {
           include: {
             user: true
           }
-        }
+        },
+        lotteryPool: true
       }
     });
 
@@ -38,34 +39,87 @@ export async function processExpiredAuctions() {
       // 获取最高出价者（按金额降序，时间升序排序）
       const winningBid = post.bids[0];
       
-      // 创建竞拍历史记录
-      await prisma.auctionHistory.create({
-        data: {
-          postId: post.id,
-          winnerId: winningBid.userId,
-          finalPrice: winningBid.amount,
-          totalBids: post.bids.length,
-          startPrice: post.startPrice || 0,
-          biddingDueDate: post.biddingDueDate || new Date()
+
+
+
+      // 更新所有竞拍记录，设置轮次并解除与帖子的关联
+      await prisma.bid.updateMany({
+        where: { postId: post.id },
+        data: { 
+          round: post.auctionRound,
+          isWinner: false,
+          postId: undefined,
+          lotteryPoolId: undefined
         }
       });
+
+      // 更新获胜者的竞拍记录
+      await prisma.bid.update({
+        where: { id: winningBid.id },
+        data: { 
+          isWinner: true,
+          postId: undefined,
+          lotteryPoolId: undefined
+        }
+      });
+
+      // 更新创作者的竞拍收益（80%）
+      await prisma.user.update({
+        where: { id: post.userId },
+        data: {
+          auctionEarnings: {
+            increment: winningBid.amount * 0.8 // 创作者获得80%
+          }
+        }
+      });
+
+      // 如果有推荐人，更新推荐人的竞拍收益（5%）
+      if (winningBid.referrerId) {
+        await prisma.user.update({
+          where: { id: winningBid.referrerId },
+          data: {
+            auctionEarnings: {
+              increment: winningBid.amount * 0.05 // 推荐人获得5%
+            }
+          }
+        });
+      }
+
+      // 更新抽奖池金额（5%）
+      if (post.lotteryPool) {
+        await prisma.lotteryPool.update({
+          where: { id: post.lotteryPool.id },
+          data: {
+            amount: {
+              increment: winningBid.amount * 0.05 // 抽奖池获得5%
+            }
+          }
+        });
+      } else {
+        // 如果没有抽奖池，创建一个新的
+        await prisma.lotteryPool.create({
+          data: {
+            postId: post.id,
+            amount: winningBid.amount * 0.05, // 抽奖池获得5%
+            round: post.auctionRound // 设置当前轮次
+          }
+        });
+      }
 
       // 更新帖子所有者和竞拍状态
       await prisma.post.update({
         where: { id: post.id },
         data: {
-          userId: winningBid.userId, // 更新所有者
-          shareCode: nanoid(), // 生成新的分享码
-          allowBidding: false, // 关闭竞拍，等待新所有者设置
-          biddingDueDate: null, // 清空截止日期
-          startPrice: null, // 清空起拍价
-          status: PostStatus.PUBLISHED // 保持发布状态
+          userId: winningBid.userId,
+          shareCode: nanoid(),
+          allowBidding: false,
+          biddingDueDate: null,
+          startPrice: null,
+          status: PostStatus.PUBLISHED,
+          auctionRound: {
+            increment: 1 // 增加竞拍轮次
+          }
         }
-      });
-
-      // 清空竞拍记录
-      await prisma.bid.deleteMany({
-        where: { postId: post.id }
       });
 
       console.log(`Processed expired auction for post ${post.id}, winner: ${winningBid.userId}`);
