@@ -134,6 +134,7 @@ export function useSphereContract() {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
+    console.log(mintRecord, creatorRecord, name, description, link, imageUrl, thumbnailUrl, projectUrl, creator);
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::mint`,
       arguments: [

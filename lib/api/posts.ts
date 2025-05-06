@@ -25,7 +25,7 @@ export const postsApi = {
   create: async (data: { 
     text: string; 
     title: string; 
-    signature: string; 
+    digest: string; 
     imageInfo: { url: string; cid: string };
     biddingInfo?: {
       dueDate: Date;

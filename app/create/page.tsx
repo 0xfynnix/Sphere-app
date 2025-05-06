@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { GenerateImageDialog } from "@/components/dialog/GenerateImageDialog";
 import Image from "next/image";
+import { useSphereContract } from "@/hooks/useSphereContract";
 
 export default function CreatePage() {
   const [text, setText] = useState("");
@@ -37,6 +38,7 @@ export default function CreatePage() {
   const uploadImage = useUploadImage();
   const account = useCurrentAccount();
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  const { mintCopyrightNFT } = useSphereContract();
 
   const handleImageChange = (file: File | null) => {
     setImage(file);
@@ -80,14 +82,25 @@ export default function CreatePage() {
         if (!account?.address) {
           throw new Error("No wallet connected");
         }
-        const { signature } = await signPersonalMessage({
-          message: new TextEncoder().encode(`Create content: ${title}`),
-        });
+        const { imageInfo } = data as { imageInfo: { url: string; cid: string } };
+        
+        // 调用合约 mint 函数
+        const result = await mintCopyrightNFT(
+          process.env.NEXT_PUBLIC_COPY_RIGHT_MINT_RECORD || "", 
+          process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD || "", 
+          title,
+          text,
+          imageInfo.url,
+          imageInfo.url,
+          imageInfo.url,
+          imageInfo.url,
+          account.address
+        );
+
         return {
           address: account.address,
-          signature,
-          imageInfo: (data as { imageInfo: { url: string; cid: string } })
-            .imageInfo,
+          signature: result.digest,
+          imageInfo,
           biddingInfo: (
             data as { biddingInfo: { dueDate: Date; startPrice: number } }
           ).biddingInfo,
@@ -108,7 +121,7 @@ export default function CreatePage() {
         const result = await createContent.mutateAsync({
           text,
           title,
-          signature,
+          digest:signature,
           imageInfo,
           biddingInfo
         });

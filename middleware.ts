@@ -12,6 +12,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // 对于 /api/content 的非 POST 请求直接放行
+  if (request.nextUrl.pathname.startsWith('/api/content') && request.method !== 'POST') {
+    return NextResponse.next()
+  }
+
   // 获取 Authorization header
   const authHeader = request.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) {
@@ -29,7 +34,6 @@ export async function middleware(request: NextRequest) {
     // 将用户地址添加到请求头中
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-user-address', payload.walletAddress as string)
-
     return NextResponse.next({
       request: {
         headers: requestHeaders,
@@ -46,11 +50,11 @@ export async function middleware(request: NextRequest) {
 // 配置需要鉴权的路由
 export const config = {
   matcher: [
-    '/api/content:path*:method(POST)',
+    '/api/content/:path*',
     '/api/user/:path*',
     '/api/bids/:path*',
     '/api/rewards/:path*',
-    '/api/auction/process-expired:method(POST)',
+    '/api/auction/process-expired',
   ],
 }
 
