@@ -30,7 +30,8 @@ export const postsApi = {
     biddingInfo?: {
       dueDate: Date;
       startPrice: number;
-    }
+    },
+    nftObjectId: string;
   }) => {
     return request(API_ENDPOINTS.CONTENT.CREATE, {
       method: 'POST',

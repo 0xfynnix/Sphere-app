@@ -40,6 +40,8 @@ model SuiTransaction {
   user        User     @relation(fields: [userId], references: [id])
   postId      String?  // 帖子ID
   post        Post?    @relation("PostTransactions", fields: [postId], references: [id])
+  rewardId    String?  // 打赏记录ID
+  reward      Reward?  @relation(fields: [rewardId], references: [id])
   type        String   // 交易类型(register, mint, auction等)
   status      String   // 交易状态(pending, success, failed)
   data        Json?    // 交易相关数据
@@ -51,6 +53,7 @@ model SuiTransaction {
   @@index([type])
   @@index([status])
   @@index([postId])
+  @@index([rewardId])
 }
 
 model User {
@@ -110,6 +113,7 @@ model Post {
   nfts          NFT[]    // 帖子关联的NFT
   chainId       String?  // 链上帖子ID
   contentHash   String?  // 内容哈希
+  nftObjectId   String?  // NFT 对象 ID
   audienceCount Int      @default(0) // 观众数量
   totalRewards  Float    @default(0) // 总打赏金额
   postType      PostType @default(NORMAL) // 帖子类型
@@ -220,7 +224,6 @@ model NFT {
 // 打赏记录模型
 model Reward {
   id            String   @id @default(cuid())
-  chainId       String?  // 链上打赏记录ID
   postId        String
   post          Post     @relation(fields: [postId], references: [id])
   amount        Float    // 打赏金额
@@ -228,6 +231,7 @@ model Reward {
   referrer      User?    @relation("Referrer", fields: [referrerId], references: [id])
   lotteryPoolId   String?  // 抽奖池ID
   lotteryPool     LotteryPool? @relation(fields: [lotteryPoolId], references: [id])
+  transactions   SuiTransaction[] // 关联的交易记录
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

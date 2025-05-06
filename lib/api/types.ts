@@ -93,6 +93,7 @@ export interface Post {
   }[];
   chainId?: string;
   contentHash?: string;
+  nftObjectId: string;
   audienceCount: number;
   totalRewards: number;
   postType: 'NORMAL' | 'MEME_LORD';
@@ -199,6 +200,7 @@ export interface CreateRewardRequest {
   ref: string;
   amount: number;
   postId: string;
+  digest: string;
 }
 
 export interface UpdateProfileRequest {

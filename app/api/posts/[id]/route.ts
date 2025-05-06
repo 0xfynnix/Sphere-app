@@ -89,6 +89,7 @@ export async function GET(
       biddingDueDate: post.biddingDueDate,
       startPrice: post.startPrice,
       shareCode: post.shareCode,
+      nftObjectId: post.nftObjectId,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt
     };

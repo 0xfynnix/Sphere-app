@@ -88,7 +88,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { text, title, imageInfo, biddingInfo, digest } =
+    const { text, title, imageInfo, biddingInfo, digest, nftObjectId } =
       await request.json();
     const address = request.headers.get("x-user-address");
     console.log(text, title, imageInfo);
@@ -123,6 +123,7 @@ export async function POST(request: Request) {
         biddingDueDate: biddingInfo?.dueDate,
         startPrice: biddingInfo?.startPrice,
         auctionRound: 1, // 初始轮次为1
+        nftObjectId: nftObjectId, // 添加 NFT 对象 ID
         ...(imageInfo.blobId
           ? {
               walrusImages: {

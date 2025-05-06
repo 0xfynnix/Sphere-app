@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,56 +8,85 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { useState } from 'react';
-import { Hand } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit';
-import { useCreateReward } from '@/lib/api/hooks';
-import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import { Hand } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCreateReward } from "@/lib/api/hooks";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
+import { useSphereContract } from "@/hooks/useSphereContract";
+import { getRefData } from "@/lib/api/ref";
 
 interface RewardDialogProps {
   isOpen: boolean;
   onClose: () => void;
   postId: string;
   ref: string;
+  nftObjectId: string;
 }
 
 const rewardOptions = [
-  { amount: 1, label: '1 SUI' },
-  { amount: 5, label: '5 SUI' },
-  { amount: 10, label: '10 SUI' },
-  { amount: 50, label: '50 SUI' },
+  { amount: 1, label: "1 SUI" },
+  { amount: 3, label: "3 SUI" },
+  { amount: 10, label: "10 SUI" },
+  { amount: 30, label: "30 SUI" },
 ];
 
-export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps) {
+export function RewardDialog({
+  isOpen,
+  onClose,
+  postId,
+  ref,
+  nftObjectId,
+}: RewardDialogProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animationKey, setAnimationKey] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [signProgress, setSignProgress] = useState(0);
   const [rewardProgress, setRewardProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState<'select' | 'signing' | 'rewarding'>('select');
-  
+  const [currentStep, setCurrentStep] = useState<
+    "select" | "signing" | "rewarding"
+  >("select");
+
   const account = useCurrentAccount();
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const createReward = useCreateReward();
+  const { tipNFT } = useSphereContract();
 
   const handleTap = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % rewardOptions.length);
-    setAnimationKey(prev => prev + 1);
+    setAnimationKey((prev) => prev + 1);
   };
 
   const handleReward = async () => {
     if (!account?.address) {
-      toast.error('Please connect your wallet first');
+      toast.error("Please connect your wallet first");
       return;
     }
 
     try {
-      // 第一步：获取签名
-      setCurrentStep('signing');
+      // 如果有 ref，先验证 ref
+      let referrer = null;
+      if (ref) {
+        try {
+          const refData = await getRefData(ref);
+          // 验证 postId 是否匹配
+          if (refData.postId !== postId) {
+            toast.error("Invalid reference code");
+            return;
+          }
+          referrer = refData.walletAddress;
+        } catch (error) {
+          console.error("Failed to validate ref:", error);
+          toast.error("Invalid reference code");
+          return;
+        }
+      }
+
+      // 第一步：调用打赏合约
+      setCurrentStep("signing");
       setSignProgress(0);
       const signInterval = setInterval(() => {
         setSignProgress((prev) => {
@@ -69,16 +98,22 @@ export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps
         });
       }, 100);
 
-      const { signature } = await signPersonalMessage({
-        message: new TextEncoder().encode(`Reward post: ${rewardOptions[currentIndex].amount} SUI`),
-      });
-      console.log('signature', signature);
+      const result = await tipNFT(
+        process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD || "0x0", // TODO: 需要从合约获取 creatorRecord
+        nftObjectId || "0x0", // TODO: 需要从合约获取 nftAddress
+        process.env.NEXT_PUBLIC_COPY_RIGHT_REVENUE_TIP_POOL || "0x0", // TODO: 需要从合约获取 revenueTipPool
+        process.env.NEXT_PUBLIC_COPY_RIGHT_REFERENCE_TIP_POOL || "0x0", // TODO: 需要从合约获取 referenceTipPool
+        process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_TIP_POOL || "0x0", // TODO: 需要从合约获取 creatorTipPool
+        rewardOptions[currentIndex].amount,
+        process.env.NEXT_PUBLIC_REVENUE_ADDRESS || "0x0", // TODO: 需要从合约获取 revenueAddress
+        referrer || "0x0"
+      );
 
       clearInterval(signInterval);
       setSignProgress(50);
 
-      // 第二步：创建打赏
-      setCurrentStep('rewarding');
+      // 第二步：创建打赏记录
+      setCurrentStep("rewarding");
       setRewardProgress(50);
       const rewardInterval = setInterval(() => {
         setRewardProgress((prev) => {
@@ -94,20 +129,21 @@ export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps
         ref,
         amount: rewardOptions[currentIndex].amount,
         postId,
+        digest: result.digest,
       });
 
       clearInterval(rewardInterval);
       setRewardProgress(100);
       setShowConfetti(true);
       onClose();
-      toast.success('Reward sent successfully!');
+      toast.success("Reward sent successfully!");
     } catch (error) {
-      console.error('Failed to send reward:', error);
-      toast.error('Failed to send reward');
+      console.error("Failed to send reward:", error);
+      toast.error("Failed to send reward");
     } finally {
       setSignProgress(0);
       setRewardProgress(0);
-      setCurrentStep('select');
+      setCurrentStep("select");
     }
   };
 
@@ -128,12 +164,12 @@ export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps
                 initial={{ scale: 0.5, opacity: 0, y: 50 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.5, opacity: 0, y: -50 }}
-                transition={{ 
+                transition={{
                   type: "spring",
                   stiffness: 1000,
                   damping: 50,
                   mass: 0.5,
-                  duration: 0.1
+                  duration: 0.1,
                 }}
                 className="text-4xl font-bold text-primary"
               >
@@ -146,25 +182,29 @@ export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps
             size="lg"
             className="h-20 w-20 rounded-full"
             onClick={handleTap}
-            disabled={currentStep !== 'select'}
+            disabled={currentStep !== "select"}
           >
             <Hand className="h-8 w-8" />
           </Button>
 
-          {currentStep === 'signing' && (
+          {currentStep === "signing" && (
             <div className="space-y-2 w-full">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Signing with wallet...</span>
+                <span className="text-muted-foreground">
+                  Sending reward to contract...
+                </span>
                 <span className="font-medium">{signProgress}%</span>
               </div>
               <Progress value={signProgress} className="h-2" />
             </div>
           )}
 
-          {currentStep === 'rewarding' && (
+          {currentStep === "rewarding" && (
             <div className="space-y-2 w-full">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Sending reward...</span>
+                <span className="text-muted-foreground">
+                  Recording reward...
+                </span>
                 <span className="font-medium">{rewardProgress}%</span>
               </div>
               <Progress value={rewardProgress} className="h-2" />
@@ -175,9 +215,9 @@ export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleReward}
-            disabled={currentStep !== 'select'}
+            disabled={currentStep !== "select"}
             className="relative overflow-hidden"
           >
             <AnimatePresence>
@@ -193,13 +233,15 @@ export function RewardDialog({ isOpen, onClose, postId, ref }: RewardDialogProps
               )}
             </AnimatePresence>
             <span className={showConfetti ? "invisible" : ""}>
-              {currentStep === 'select' ? 'Confirm Reward' : 
-               currentStep === 'signing' ? 'Signing...' : 
-               'Sending Reward...'}
+              {currentStep === "select"
+                ? "Confirm Reward"
+                : currentStep === "signing"
+                  ? "Sending to Contract..."
+                  : "Recording Reward..."}
             </span>
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-} 
+}

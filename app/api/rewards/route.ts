@@ -17,9 +17,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { ref, amount, postId } = await req.json();
+    const { ref, amount, postId, digest } = await req.json();
     
-    if (!amount || !postId) {
+    if (!amount || !postId || !digest) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
@@ -65,31 +65,50 @@ export async function POST(req: Request) {
         data: {
           postId: post.id,
           amount: amount,
-          referrerId: referrer?.id
+          referrerId: referrer?.id,
+          lotteryPoolId: post.lotteryPool?.id,
+        }
+      });
+
+      // Create transaction record
+      await tx.suiTransaction.create({
+        data: {
+          digest: digest,
+          userId: user.id,
+          postId: post.id,
+          rewardId: reward.id,
+          type: "reward",
+          status: "success",
+          data: {
+            amount,
+            ref,
+            referrerId: referrer?.id,
+            postShareCode
+          }
         }
       });
 
       // If we have a valid referrer and post share code, use the original split
       if (referrer && postShareCode) {
         // Update post owner's earnings (80%)
-        await tx.user.update({
-          where: { id: post.userId },
-          data: {
-            rewardEarnings: {
-              increment: amount * 0.8
-            }
-          }
-        });
+        // await tx.user.update({
+        //   where: { id: post.userId },
+        //   data: {
+        //     rewardEarnings: {
+        //       increment: amount * 0.8
+        //     }
+        //   }
+        // });
 
-        // Update referrer's earnings (5%)
-        await tx.user.update({
-          where: { id: referrer.id },
-          data: {
-            rewardEarnings: {
-              increment: amount * 0.05
-            }
-          }
-        });
+        // // Update referrer's earnings (5%)
+        // await tx.user.update({
+        //   where: { id: referrer.id },
+        //   data: {
+        //     rewardEarnings: {
+        //       increment: amount * 0.05
+        //     }
+        //   }
+        // });
 
         // Update or create lottery pool (5%)
         if (post.lotteryPool) {
@@ -111,14 +130,14 @@ export async function POST(req: Request) {
         }
       } else {
         // If no valid referrer or post share code, give 85% to creator
-        await tx.user.update({
-          where: { id: post.userId },
-          data: {
-            rewardEarnings: {
-              increment: amount * 0.85
-            }
-          }
-        });
+        // await tx.user.update({
+        //   where: { id: post.userId },
+        //   data: {
+        //     rewardEarnings: {
+        //       increment: amount * 0.85
+        //     }
+        //   }
+        // });
 
         // Update or create lottery pool (5%)
         if (post.lotteryPool) {

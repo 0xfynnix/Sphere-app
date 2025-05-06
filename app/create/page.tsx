@@ -10,7 +10,7 @@ import { ImageUpload } from "@/components/common/ImageUpload";
 import { toast } from "sonner";
 import { useCreateContent, useUploadImage } from "@/lib/api/hooks";
 import { FlowDialog, Step } from "@/components/dialog/FlowDialog";
-import { useCurrentAccount, useSignPersonalMessage } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Post } from "@/lib/api/types";
 import { useRouter } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { GenerateImageDialog } from "@/components/dialog/GenerateImageDialog";
 import Image from "next/image";
 import { useSphereContract } from "@/hooks/useSphereContract";
+import { useSuiClient } from "@mysten/dapp-kit";
 
 export default function CreatePage() {
   const [text, setText] = useState("");
@@ -37,8 +38,9 @@ export default function CreatePage() {
   const createContent = useCreateContent();
   const uploadImage = useUploadImage();
   const account = useCurrentAccount();
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  // const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const { mintCopyrightNFT } = useSphereContract();
+  const client = useSuiClient();
 
   const handleImageChange = (file: File | null) => {
     setImage(file);
@@ -97,6 +99,29 @@ export default function CreatePage() {
           account.address
         );
 
+        // 等待交易确认并查询事件
+        const txResponse = await client.waitForTransaction({
+          digest: result.digest,
+          options: {
+            showEvents: true,
+            showEffects: true,
+          },
+        });
+
+        // 查找 NFTMinted 事件
+        const nftMintedEvent = txResponse.events?.find(
+          (event) => event.type.includes('::copyright_nft::NFTMinted')
+        );
+
+        if (!nftMintedEvent) {
+          throw new Error('Failed to find NFTMinted event');
+        }
+
+        const nftObjectId = (nftMintedEvent.parsedJson as { object_id: string })?.object_id;
+        if (!nftObjectId) {
+          throw new Error('Failed to get NFT object ID from event');
+        }
+
         return {
           address: account.address,
           signature: result.digest,
@@ -104,6 +129,7 @@ export default function CreatePage() {
           biddingInfo: (
             data as { biddingInfo: { dueDate: Date; startPrice: number } }
           ).biddingInfo,
+          nftObjectId,
         } as unknown;
       },
     },
@@ -112,19 +138,21 @@ export default function CreatePage() {
       description: "Creating content...",
       action: async (data) => {
         if (!data) throw new Error("Missing data");
-        const { signature, imageInfo, biddingInfo } = data as {
+        const { signature, imageInfo, biddingInfo, nftObjectId } = data as {
           address: string;
           signature: string;
           imageInfo: { url: string; cid: string };
           biddingInfo: { dueDate: Date; startPrice: number };
+          nftObjectId: string;
         };
         const result = await createContent.mutateAsync({
           text,
           title,
-          digest:signature,
+          digest: signature,
           imageInfo,
-          biddingInfo
-        });
+          biddingInfo,
+          nftObjectId,
+        } );
         return (result as { post: Post }).post;
       },
     },

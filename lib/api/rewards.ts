@@ -4,6 +4,7 @@ export interface CreateRewardParams {
   ref: string;
   amount: number;
   postId: string;
+  digest: string;
 }
 
 export interface Reward {

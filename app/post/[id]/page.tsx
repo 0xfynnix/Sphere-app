@@ -340,6 +340,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         onClose={() => setIsRewardDialogOpen(false)}
         postId={id}
         ref={user?.shareCode ? `${user.shareCode}-${post.shareCode}` : ''}
+        nftObjectId={post.nftObjectId}
       />
     </div>
   );
