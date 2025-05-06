@@ -15,6 +15,7 @@ import { bidsApi } from './bids';
 import { CreateBidRequest, GetBidsResponse } from './types';
 import { createReward, type CreateRewardParams, type Reward } from './rewards';
 import { profileApi } from './profile';
+import { generateImage, type GenerateImageRequest, type GenerateImageResponse } from './ai';
 
 // User hooks
 export const useUser = () => {
@@ -245,5 +246,11 @@ export const useUpdateProfile = () => {
         queryClient.invalidateQueries({ queryKey: ['user'] });
       }
     },
+  });
+};
+
+export const useGenerateImage = () => {
+  return useMutation<GenerateImageResponse, Error, GenerateImageRequest>({
+    mutationFn: generateImage,
   });
 }; 

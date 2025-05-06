@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ImageIcon, Wand2, CalendarIcon } from "lucide-react";
+import { Wand2, CalendarIcon } from "lucide-react";
 import { ImageUpload } from "@/components/common/ImageUpload";
 import { toast } from "sonner";
 import { useCreateContent, useUploadImage } from "@/lib/api/hooks";
@@ -20,20 +19,19 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { GenerateImageDialog } from "@/components/dialog/GenerateImageDialog";
+import Image from "next/image";
 
 export default function CreatePage() {
-  const [, setActiveTab] = useState("traditional");
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
-  const [prompt, setPrompt] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState("");
   const [showFlowDialog, setShowFlowDialog] = useState(false);
   const [allowBidding, setAllowBidding] = useState(false);
   const [biddingDueDate, setBiddingDueDate] = useState<Date>();
   const [startPrice, setStartPrice] = useState<string>("");
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const router = useRouter();
   const createContent = useCreateContent();
   const uploadImage = useUploadImage();
@@ -43,17 +41,6 @@ export default function CreatePage() {
   const handleImageChange = (file: File | null) => {
     setImage(file);
     setImageUrl(file?.name || "");
-  };
-
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setGeneratedContent(
-      "This is a sample generated content based on your prompt. You can edit it before publishing."
-    );
-    setIsGenerating(false);
-    setImage(null);
-    setImageUrl("");
   };
 
   const handlePublish = async () => {
@@ -137,194 +124,146 @@ export default function CreatePage() {
           Create Content
         </h1>
         <p className="text-muted-foreground">
-          Choose your preferred way to create content
+          Create and share your content with the community
         </p>
       </div>
 
-      <Tabs
-        defaultValue="traditional"
-        className="w-full"
-        onValueChange={setActiveTab}
-      >
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="traditional">
-            <ImageIcon className="mr-2 h-4 w-4" />
-            Traditional
-          </TabsTrigger>
-          <TabsTrigger value="ai">
-            <Wand2 className="mr-2 h-4 w-4" />
-            AI Agent
-          </TabsTrigger>
-        </TabsList>
+      <Card className="p-6">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <Textarea
+              id="title"
+              placeholder="Enter a title for your content"
+              maxLength={25}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1"
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              {title.length}/25 characters
+            </p>
+          </div>
 
-        <TabsContent value="traditional" className="mt-6">
-          <Card className="p-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Textarea
-                  id="title"
-                  placeholder="Enter a title for your content"
-                  maxLength={25}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  {title.length}/25 characters
-                </p>
-              </div>
+          <div>
+            <Label htmlFor="text">Content</Label>
+            <Textarea
+              id="text"
+              placeholder="Write your content here (max 250 characters)"
+              maxLength={250}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="mt-1"
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              {text.length}/250 characters
+            </p>
+          </div>
 
-              <div>
-                <Label htmlFor="text">Content</Label>
-                <Textarea
-                  id="text"
-                  placeholder="Write your content here (max 250 characters)"
-                  maxLength={250}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  className="mt-1"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  {text.length}/250 characters
-                </p>
-              </div>
-
-              <div className="space-y-4 border rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="allowBidding">Allow Bidding</Label>
-                  <Switch
-                    id="allowBidding"
-                    checked={allowBidding}
-                    onCheckedChange={setAllowBidding}
-                  />
-                </div>
-
-                {allowBidding && (
-                  <>
-                    <div>
-                      <Label className="mb-0.5" htmlFor="biddingDueDate">Bidding End Date(max 30 days)</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !biddingDueDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {biddingDueDate ? format(biddingDueDate, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={biddingDueDate}
-                            onSelect={setBiddingDueDate}
-                            initialFocus
-                            disabled={(date: Date) => 
-                              date < new Date() || 
-                              date > new Date(new Date().setDate(new Date().getDate() + 30))
-                            }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="startPrice">Start Price (SUI)</Label>
-                      <Input
-                        id="startPrice"
-                        type="number"
-                        min="0.1"
-                        step="0.1"
-                        value={startPrice}
-                        onChange={(e) => setStartPrice(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="image">Image (Required)</Label>
-                <ImageUpload
-                  onImageChange={handleImageChange}
-                  disabled={createContent.isPending}
-                />
-                {imageUrl && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Selected image: {imageUrl}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handlePublish}
-                  disabled={createContent.isPending}
-                >
-                  {createContent.isPending ? "Publishing..." : "Publish"}
-                </Button>
-              </div>
+          <div className="space-y-4 border rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="allowBidding">Allow Bidding</Label>
+              <Switch
+                id="allowBidding"
+                checked={allowBidding}
+                onCheckedChange={setAllowBidding}
+              />
             </div>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="ai" className="mt-6">
-          <Card className="p-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="prompt">AI Prompt</Label>
-                <Textarea
-                  id="prompt"
-                  placeholder="Describe what you want to create..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            {allowBidding && (
+              <>
                 <div>
-                  <p className="font-medium text-foreground">Cost: 0.5 SUI</p>
-                  <p className="text-sm text-muted-foreground">
-                    Pay with your wallet
-                  </p>
+                  <Label className="mb-0.5" htmlFor="biddingDueDate">Bidding End Date(max 30 days)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !biddingDueDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {biddingDueDate ? format(biddingDueDate, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={biddingDueDate}
+                        onSelect={setBiddingDueDate}
+                        initialFocus
+                        disabled={(date: Date) => 
+                          date < new Date() || 
+                          date > new Date(new Date().setDate(new Date().getDate() + 30))
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <Button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || !prompt}
-                >
-                  {isGenerating ? "Generating..." : "Generate"}
-                </Button>
-              </div>
 
-              {generatedContent && (
                 <div>
-                  <Label>Generated Content</Label>
-                  <Textarea
-                    value={generatedContent}
-                    onChange={(e) => setGeneratedContent(e.target.value)}
+                  <Label htmlFor="startPrice">Start Price (SUI)</Label>
+                  <Input
+                    id="startPrice"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={startPrice}
+                    onChange={(e) => setStartPrice(e.target.value)}
                     className="mt-1"
                   />
                 </div>
-              )}
+              </>
+            )}
+          </div>
 
-              <div className="flex justify-end">
-                <Button
-                  onClick={handlePublish}
-                  disabled={!generatedContent || createContent.isPending}
-                >
-                  {createContent.isPending ? "Publishing..." : "Publish"}
-                </Button>
-              </div>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="image">Image (Required)</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowGenerateDialog(true)}
+              >
+                <Wand2 className="mr-2 h-4 w-4" />
+                Generate with AI
+              </Button>
             </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            <div className="space-y-4">
+              <ImageUpload
+                onImageChange={handleImageChange}
+                disabled={createContent.isPending}
+                showPreview={false}
+              />
+              {image && (
+                <div className="relative aspect-square w-full max-w-[512px] mx-auto rounded-lg overflow-hidden border">
+                  <Image
+                    src={URL.createObjectURL(image)}
+                    alt="Content image preview"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              {imageUrl && !image && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Selected image: {imageUrl}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              onClick={handlePublish}
+              disabled={createContent.isPending}
+            >
+              {createContent.isPending ? "Publishing..." : "Publish"}
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <FlowDialog
         open={showFlowDialog}
@@ -341,6 +280,12 @@ export default function CreatePage() {
         onError={(error) => {
           toast.error(error.message);
         }}
+      />
+
+      <GenerateImageDialog
+        open={showGenerateDialog}
+        onClose={() => setShowGenerateDialog(false)}
+        onImageGenerated={handleImageChange}
       />
 
       <div className="mt-8 text-sm text-muted-foreground">

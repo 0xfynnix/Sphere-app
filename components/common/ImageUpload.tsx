@@ -12,6 +12,7 @@ interface ImageUploadProps {
   className?: string
   label?: string
   description?: string
+  showPreview?: boolean
 }
 
 export function ImageUpload({ 
@@ -19,7 +20,8 @@ export function ImageUpload({
   disabled = false,
   className,
   label = "",
-  description = "Upload a single image (max 1MB)"
+  description = "Upload a single image (max 1MB)",
+  showPreview = true
 }: ImageUploadProps) {
   const [preview, setPreview] = React.useState<string | null>(null)
   const [error, setError] = React.useState<string | null>(null)
@@ -51,13 +53,17 @@ export function ImageUpload({
       return
     }
 
-    // Create preview
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setPreview(reader.result as string)
+    // Create preview if showPreview is true
+    if (showPreview) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreview(reader.result as string)
+        onImageChange(file)
+      }
+      reader.readAsDataURL(file)
+    } else {
       onImageChange(file)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleRemove = () => {
@@ -98,7 +104,7 @@ export function ImageUpload({
             <ImageIcon className="h-4 w-4" />
             Choose Image
           </Button>
-          {preview && (
+          {(preview || inputRef.current?.value) && (
             <Button
               type="button"
               variant="ghost"
@@ -115,7 +121,7 @@ export function ImageUpload({
           <p className="text-sm text-destructive">{error}</p>
         )}
 
-        {preview && (
+        {showPreview && preview && (
           <div className="mt-2">
             <Image
               src={preview}
