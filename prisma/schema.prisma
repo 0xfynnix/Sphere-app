@@ -32,6 +32,24 @@ enum UserType {
   EXPLORER     // 探索者
 }
 
+// Sui交易记录模型
+model SuiTransaction {
+  id          String   @id @default(cuid())
+  digest      String   @unique // 交易哈希
+  userId      String   // 用户ID
+  user        User     @relation(fields: [userId], references: [id])
+  type        String   // 交易类型(register, mint, auction等)
+  status      String   // 交易状态(pending, success, failed)
+  data        Json?    // 交易相关数据
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([digest])
+  @@index([type])
+  @@index([status])
+}
+
 model User {
   id            String   @id @default(cuid())
   walletAddress String   @unique    // 用户钱包地址
@@ -59,6 +77,7 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   lotteryPools     LotteryPool[]     // 作为中奖者的抽奖池
+  transactions   SuiTransaction[]    // 用户的Sui交易记录
 }
 
 model Profile {

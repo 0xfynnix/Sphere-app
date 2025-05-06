@@ -81,7 +81,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { userType, email } = body;
+    const { userType, txDigest } = body;
 
     // 验证 userType 是否有效
     if (userType && !Object.values(UserType).includes(userType)) {
@@ -93,40 +93,73 @@ export async function PATCH(request: Request) {
       }, { status: 400 });
     }
 
-    const updateData: UserUpdateInput = {};
-    if (userType !== undefined) updateData.userType = userType;
-    if (email !== undefined) updateData.email = email;
-
-    const user = await prisma.user.update({
+    // 获取用户信息
+    const user = await prisma.user.findUnique({
       where: {
         walletAddress: address,
       },
-      data: updateData,
-      include: {
-        profile: true,
-      },
     });
+
+    if (!user) {
+      return NextResponse.json({
+        success: false,
+        error: {
+          message: "User not found",
+        },
+      }, { status: 404 });
+    }
+
+    const updateData: UserUpdateInput = {};
+    if (userType !== undefined) updateData.userType = userType;
+    if (txDigest !== undefined) updateData.txDigest = txDigest;
+
+    // 使用事务来确保数据一致性
+    const [updatedUser, transaction] = await prisma.$transaction([
+      // 更新用户信息
+      prisma.user.update({
+        where: {
+          walletAddress: address,
+        },
+        data: updateData,
+        include: {
+          profile: true,
+        },
+      }),
+      // 记录交易
+      prisma.suiTransaction.create({
+        data: {
+          digest: txDigest,
+          userId: user.id,
+          type: 'register',
+          status: 'success',
+          data: {
+            userType,
+            walletAddress: address,
+          },
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
       data: {
         user: {
-          id: user.id,
-          walletAddress: user.walletAddress,
-          email: user.email,
-          userType: user.userType,
-          createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString(),
-          profile: user.profile ? {
-            id: user.profile.id,
-            name: user.profile.name,
-            avatar: user.profile.avatar,
-            bio: user.profile.bio,
+          id: updatedUser.id,
+          walletAddress: updatedUser.walletAddress,
+          email: updatedUser.email,
+          userType: updatedUser.userType,
+          createdAt: updatedUser.createdAt.toISOString(),
+          updatedAt: updatedUser.updatedAt.toISOString(),
+          profile: updatedUser.profile ? {
+            id: updatedUser.profile.id,
+            name: updatedUser.profile.name,
+            avatar: updatedUser.profile.avatar,
+            bio: updatedUser.profile.bio,
           } : null,
-          auctionEarnings: user.auctionEarnings,
-          rewardEarnings: user.rewardEarnings,
-          rewardSpent: user.rewardSpent,
-          nftCount: user.nftCount,
+          auctionEarnings: updatedUser.auctionEarnings,
+          rewardEarnings: updatedUser.rewardEarnings,
+          rewardSpent: updatedUser.rewardSpent,
+          nftCount: updatedUser.nftCount,
         },
       },
     });

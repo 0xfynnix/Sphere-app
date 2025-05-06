@@ -44,6 +44,7 @@ export interface UserProfile {
 export interface UserUpdateInput {
   userType?: UserType;
   email?: string;
+  txDigest?: string;
 }
 
 // 同步用户响应
@@ -115,8 +116,8 @@ export interface Comment {
 
 // 更新用户请求参数
 export interface UpdateUserRequest {
-  userType?: UserType;
-  email?: string;
+  userType: UserType;
+  txDigest: string;
 }
 
 // 更新用户响应

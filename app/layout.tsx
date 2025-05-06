@@ -42,22 +42,22 @@ export default function RootLayout({
             <Suspense fallback={<LoadingSpinner />}>
               <div className="flex flex-col md:flex-row min-h-screen">
                 {/* Desktop Sidebar */}
-                <div className="hidden md:block fixed left-0 top-0 h-screen w-64">
-                  <Sidebar />
-                </div>
-                
-                {/* Mobile Header */}
-                <div className="block md:hidden w-full">
-                  <Header />
-                </div>
+                  <div className="hidden md:block fixed left-0 top-0 h-screen w-64">
+                    <Sidebar />
+                  </div>
+                  
+                  {/* Mobile Header */}
+                  <div className="block md:hidden w-full">
+                    <Header />
+                  </div>
 
-                {/* Main Content */}
-                <main className="flex-1 p-4 overflow-x-hidden md:pl-68 pt-16 md:pt-4">
-                  {children}
-                </main>
-              </div>
-            </Suspense>
-            <Toaster position="top-center" />
+                  {/* Main Content */}
+                  <main className="flex-1 p-4 overflow-x-hidden md:pl-68 pt-16 md:pt-4">
+                    {children}
+                  </main>
+                </div>
+              </Suspense>
+              <Toaster position="top-center" />
           </AppProvider>
         </ThemeProvider>
       </body>
