@@ -50,6 +50,7 @@ export const config = {
     '/api/user/:path*',
     '/api/bids/:path*',
     '/api/rewards/:path*',
+    '/api/auction/process-expired:method(POST)',
   ],
 }
 
