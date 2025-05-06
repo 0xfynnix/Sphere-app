@@ -114,7 +114,7 @@ export async function PATCH(request: Request) {
     if (txDigest !== undefined) updateData.txDigest = txDigest;
 
     // 使用事务来确保数据一致性
-    const [updatedUser, transaction] = await prisma.$transaction([
+    const [updatedUser] = await prisma.$transaction([
       // 更新用户信息
       prisma.user.update({
         where: {

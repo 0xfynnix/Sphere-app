@@ -1,12 +1,12 @@
-import { useSuiClient } from '@mysten/dapp-kit';
-import { useQuery } from '@tanstack/react-query';
-import { CONTRACT_ADDRESSES, MODULE_NAMES } from '@/lib/sui/config';
+import { useSuiClient } from "@mysten/dapp-kit";
+import { useQuery } from "@tanstack/react-query";
+import { CONTRACT_ADDRESS, MODULE_NAMES } from "@/lib/sui/config";
 
 export function useIdentity(address?: string) {
   const client = useSuiClient();
 
   return useQuery({
-    queryKey: ['identity', address],
+    queryKey: ["identity", address],
     queryFn: async () => {
       if (!address) return null;
       try {
@@ -17,15 +17,18 @@ export function useIdentity(address?: string) {
             showOwner: true,
           },
         });
-        
+
         // Check if the object is of the correct type
-        if (result.data?.type !== `${CONTRACT_ADDRESSES.IDENTITY}::${MODULE_NAMES.IDENTITY}::Identity`) {
+        if (
+          result.data?.type !==
+          `${CONTRACT_ADDRESS}::${MODULE_NAMES.IDENTITY}::Identity`
+        ) {
           return null;
         }
-        
+
         return result;
       } catch (error) {
-        console.error('Failed to fetch identity:', error);
+        console.error("Failed to fetch identity:", error);
         return null;
       }
     },
@@ -37,7 +40,7 @@ export function useAuction(auctionId?: string) {
   const client = useSuiClient();
 
   return useQuery({
-    queryKey: ['auction', auctionId],
+    queryKey: ["auction", auctionId],
     queryFn: async () => {
       if (!auctionId) return null;
       try {
@@ -48,15 +51,18 @@ export function useAuction(auctionId?: string) {
             showOwner: true,
           },
         });
-        
+
         // Check if the object is of the correct type
-        if (result.data?.type !== `${CONTRACT_ADDRESSES.NFT_AUCTION}::${MODULE_NAMES.NFT_AUCTION}::Auction`) {
+        if (
+          result.data?.type !==
+          `${CONTRACT_ADDRESS}::${MODULE_NAMES.NFT_AUCTION}::Auction`
+        ) {
           return null;
         }
-        
+
         return result;
       } catch (error) {
-        console.error('Failed to fetch auction:', error);
+        console.error("Failed to fetch auction:", error);
         return null;
       }
     },
@@ -68,7 +74,7 @@ export function useCopyrightNFT(nftId?: string) {
   const client = useSuiClient();
 
   return useQuery({
-    queryKey: ['copyrightNFT', nftId],
+    queryKey: ["copyrightNFT", nftId],
     queryFn: async () => {
       if (!nftId) return null;
       try {
@@ -79,15 +85,18 @@ export function useCopyrightNFT(nftId?: string) {
             showOwner: true,
           },
         });
-        
+
         // Check if the object is of the correct type
-        if (result.data?.type !== `${CONTRACT_ADDRESSES.COPYRIGHT_NFT}::${MODULE_NAMES.COPYRIGHT_NFT}::CopyrightNFT`) {
+        if (
+          result.data?.type !==
+          `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::CopyrightNFT`
+        ) {
           return null;
         }
-        
+
         return result;
       } catch (error) {
-        console.error('Failed to fetch copyright NFT:', error);
+        console.error("Failed to fetch copyright NFT:", error);
         return null;
       }
     },
@@ -99,7 +108,7 @@ export function useBadgeNFT(nftId?: string) {
   const client = useSuiClient();
 
   return useQuery({
-    queryKey: ['badgeNFT', nftId],
+    queryKey: ["badgeNFT", nftId],
     queryFn: async () => {
       if (!nftId) return null;
       try {
@@ -110,18 +119,21 @@ export function useBadgeNFT(nftId?: string) {
             showOwner: true,
           },
         });
-        
+
         // Check if the object is of the correct type
-        if (result.data?.type !== `${CONTRACT_ADDRESSES.BADGE_NFT}::${MODULE_NAMES.BADGE_NFT}::BadgeNFT`) {
+        if (
+          result.data?.type !==
+          `${CONTRACT_ADDRESS}::${MODULE_NAMES.BADGE_NFT}::BadgeNFT`
+        ) {
           return null;
         }
-        
+
         return result;
       } catch (error) {
-        console.error('Failed to fetch badge NFT:', error);
+        console.error("Failed to fetch badge NFT:", error);
         return null;
       }
     },
     enabled: !!nftId,
   });
-} 
+}
