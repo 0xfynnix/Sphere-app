@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { User } from "lucide-react";
+import { User, Pencil, Coins, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@/lib/api/hooks";
 import { useUserPosts } from "@/lib/api/hooks";
@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Pencil } from "lucide-react";
+import { useClaimReward, useUnclaimedRewards, useClaimBid, useUnclaimedBids } from "@/lib/api/hooks";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -51,6 +51,10 @@ export default function ProfilePage() {
     currentPage,
     pageSize
   );
+  const { data: unclaimedRewardsData } = useUnclaimedRewards();
+  const { data: unclaimedBidsData } = useUnclaimedBids();
+  const claimReward = useClaimReward();
+  const claimBid = useClaimBid();
 
   useEffect(() => {
     if (isUserError) {
@@ -92,6 +96,26 @@ export default function ProfilePage() {
   const handleUpdateSuccess = () => {
     setIsDialogOpen(false);
     router.refresh();
+  };
+
+  const handleClaimReward = async (rewardId: string, type: 'recipient' | 'referrer') => {
+    try {
+      await claimReward.mutateAsync({ rewardId, type });
+      toast.success('Reward claimed successfully');
+    } catch (error) {
+      console.error('Failed to claim reward:', error);
+      toast.error('Failed to claim reward');
+    }
+  };
+
+  const handleClaimBid = async (bidId: string, type: 'creator' | 'referrer') => {
+    try {
+      await claimBid.mutateAsync({ bidId, type });
+      toast.success('Bid reward claimed successfully');
+    } catch (error) {
+      console.error('Failed to claim bid reward:', error);
+      toast.error('Failed to claim bid reward');
+    }
   };
 
   return (
@@ -181,10 +205,11 @@ export default function ProfilePage() {
       </div>
 
       <Tabs defaultValue="wallet" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="wallet">Transaction</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="nfts">NFTs</TabsTrigger>
+          <TabsTrigger value="claim">Claim</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         <TabsContent value="wallet" className="mt-6">
@@ -464,6 +489,227 @@ export default function ProfilePage() {
                     Next
                   </Button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="claim" className="mt-6">
+          <div className="space-y-8">
+            {/* Unclaimed Rewards Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Unclaimed Rewards</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Recipient Rewards */}
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-purple-500"></span>
+                      As Recipient
+                    </h3>
+                    <Button
+                      onClick={() => {
+                        const rewards = unclaimedRewardsData?.recipientRewards || [];
+                        rewards.forEach(reward => handleClaimReward(reward.id, 'recipient'));
+                      }}
+                      disabled={!unclaimedRewardsData?.recipientRewards?.length || claimReward.isPending}
+                      className="bg-purple-500 hover:bg-purple-600"
+                    >
+                      {claimReward.isPending ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Claiming...
+                        </div>
+                      ) : (
+                        'Claim All'
+                      )}
+                    </Button>
+                  </div>
+                  {!unclaimedRewardsData?.recipientRewards?.length ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <div className="rounded-full bg-purple-500/10 p-3 mb-3">
+                        <Coins className="h-6 w-6 text-purple-500" />
+                      </div>
+                      <p className="text-muted-foreground">No unclaimed rewards as recipient</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {unclaimedRewardsData.recipientRewards.map((reward) => (
+                        <div key={reward.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="space-y-1">
+                            <p className="font-medium">{reward.post.title}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>From: {reward.sender.walletAddress.slice(0, 6)}...{reward.sender.walletAddress.slice(-4)}</span>
+                              <span>•</span>
+                              <span className="text-purple-500 font-medium">{reward.recipientAmount} SUI</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+
+                {/* Referrer Rewards */}
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                      As Referrer
+                    </h3>
+                    <Button
+                      onClick={() => {
+                        const rewards = unclaimedRewardsData?.referrerRewards || [];
+                        rewards.forEach(reward => handleClaimReward(reward.id, 'referrer'));
+                      }}
+                      disabled={!unclaimedRewardsData?.referrerRewards?.length || claimReward.isPending}
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      {claimReward.isPending ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Claiming...
+                        </div>
+                      ) : (
+                        'Claim All'
+                      )}
+                    </Button>
+                  </div>
+                  {!unclaimedRewardsData?.referrerRewards?.length ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <div className="rounded-full bg-blue-500/10 p-3 mb-3">
+                        <Coins className="h-6 w-6 text-blue-500" />
+                      </div>
+                      <p className="text-muted-foreground">No unclaimed rewards as referrer</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {unclaimedRewardsData.referrerRewards.map((reward) => (
+                        <div key={reward.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="space-y-1">
+                            <p className="font-medium">{reward.post.title}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>From: {reward.sender.walletAddress.slice(0, 6)}...{reward.sender.walletAddress.slice(-4)}</span>
+                              <span>•</span>
+                              <span className="text-blue-500 font-medium">{reward.referrerAmount} SUI</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
+            </div>
+
+            {/* Unclaimed Bids Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Unclaimed Bid Rewards</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Creator Bids */}
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                      As Creator
+                    </h3>
+                    <Button
+                      onClick={() => {
+                        const bids = unclaimedBidsData?.creatorBids || [];
+                        bids.forEach(bid => handleClaimBid(bid.id, 'creator'));
+                      }}
+                      disabled={!unclaimedBidsData?.creatorBids?.length || claimBid.isPending}
+                      className="bg-green-500 hover:bg-green-600"
+                    >
+                      {claimBid.isPending ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Claiming...
+                        </div>
+                      ) : (
+                        'Claim All'
+                      )}
+                    </Button>
+                  </div>
+                  {!unclaimedBidsData?.creatorBids?.length ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <div className="rounded-full bg-green-500/10 p-3 mb-3">
+                        <Coins className="h-6 w-6 text-green-500" />
+                      </div>
+                      <p className="text-muted-foreground">No unclaimed bid rewards as creator</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {unclaimedBidsData.creatorBids.map((bid) => (
+                        <div key={bid.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="space-y-1">
+                            <p className="font-medium">{bid.post.title}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>From: {bid.user.walletAddress.slice(0, 6)}...{bid.user.walletAddress.slice(-4)}</span>
+                              <span>•</span>
+                              <span className="text-green-500 font-medium">{bid.creatorAmount} SUI</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+
+                {/* Referrer Bids */}
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+                      As Referrer
+                    </h3>
+                    <Button
+                      onClick={() => {
+                        const bids = unclaimedBidsData?.referrerBids || [];
+                        bids.forEach(bid => handleClaimBid(bid.id, 'referrer'));
+                      }}
+                      disabled={!unclaimedBidsData?.referrerBids?.length || claimBid.isPending}
+                      className="bg-orange-500 hover:bg-orange-600"
+                    >
+                      {claimBid.isPending ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Claiming...
+                        </div>
+                      ) : (
+                        'Claim All'
+                      )}
+                    </Button>
+                  </div>
+                  {!unclaimedBidsData?.referrerBids?.length ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <div className="rounded-full bg-orange-500/10 p-3 mb-3">
+                        <Coins className="h-6 w-6 text-orange-500" />
+                      </div>
+                      <p className="text-muted-foreground">No unclaimed bid rewards as referrer</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {unclaimedBidsData.referrerBids.map((bid) => (
+                        <div key={bid.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="space-y-1">
+                            <p className="font-medium">{bid.post.title}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>From: {bid.user.walletAddress.slice(0, 6)}...{bid.user.walletAddress.slice(-4)}</span>
+                              <span>•</span>
+                              <span className="text-orange-500 font-medium">{bid.referrerAmount} SUI</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
               </div>
             </div>
           </div>

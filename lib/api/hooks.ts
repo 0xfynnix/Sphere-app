@@ -16,6 +16,8 @@ import { CreateBidRequest, GetBidsResponse } from './types';
 import { createReward, type CreateRewardParams, type Reward } from './rewards';
 import { profileApi } from './profile';
 import { generateImage, type GenerateImageRequest, type GenerateImageResponse } from './ai';
+import { claimReward, getUnclaimedRewards } from './rewards';
+import { RewardClaimRequest, BidClaimRequest } from './types';
 
 // User hooks
 export const useUser = () => {
@@ -175,7 +177,7 @@ export const useCreateBid = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateBidRequest) => bidsApi.create(data),
+    mutationFn: (data: CreateBidRequest) => bidsApi.createBid(data),
     onSuccess: (_, { postId }) => {
       // 使竞拍列表查询失效，触发重新获取
       queryClient.invalidateQueries({ queryKey: ['bids', postId] });
@@ -186,7 +188,7 @@ export const useCreateBid = () => {
 export const useBids = (postId: string, page: number = 1, pageSize: number = 10) => {
   return useQuery<GetBidsResponse>({
     queryKey: ['bids', postId, page, pageSize],
-    queryFn: () => bidsApi.get(postId, page, pageSize),
+    queryFn: () => bidsApi.getBids(postId, page, pageSize),
     enabled: !!postId,
   });
 };
@@ -194,7 +196,7 @@ export const useBids = (postId: string, page: number = 1, pageSize: number = 10)
 export function useAuctionHistory(postId: string) {
   return useQuery({
     queryKey: ['auctionHistory', postId],
-    queryFn: () => bidsApi.getHistory(postId),
+    queryFn: () => bidsApi.getAuctionHistory(postId),
     enabled: !!postId,
   });
 }
@@ -258,5 +260,35 @@ export const useGenerateImage = () => {
 export const useUpdatePostAuction = () => {
   return useMutation({
     mutationFn: postsApi.updatePostAuction,
+  });
+};
+
+// 领取打赏奖励
+export const useClaimReward = () => {
+  return useMutation({
+    mutationFn: (data: RewardClaimRequest) => claimReward(data),
+  });
+};
+
+// 获取未领取的打赏奖励
+export const useUnclaimedRewards = () => {
+  return useQuery({
+    queryKey: ['unclaimedRewards'],
+    queryFn: getUnclaimedRewards,
+  });
+};
+
+// 领取竞拍奖励
+export const useClaimBid = () => {
+  return useMutation({
+    mutationFn: (data: BidClaimRequest) => bidsApi.claimBid(data),
+  });
+};
+
+// 获取未领取的竞拍奖励
+export const useUnclaimedBids = () => {
+  return useQuery({
+    queryKey: ['unclaimedBids'],
+    queryFn: bidsApi.getUnclaimedBids,
   });
 }; 

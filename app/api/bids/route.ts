@@ -87,6 +87,7 @@ export async function POST(request: Request) {
         userId: user.id,
         round: post.auctionRound, // 设置当前轮次
         referrerId: referrer?.id, // 添加推荐人ID
+        platformAmount: amount * 0.1, // 5% platform fee
         transactions: {
           create: {
             digest,

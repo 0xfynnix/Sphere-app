@@ -246,3 +246,74 @@ export interface UpdatePostAuctionRequest {
   postId: string;
   auctionInfo: AuctionInfo;
 }
+
+// 打赏奖励领取类型
+export type RewardClaimType = 'recipient' | 'referrer';
+
+// 竞拍奖励领取类型
+export type BidClaimType = 'creator' | 'referrer';
+
+// 打赏奖励领取请求
+export interface RewardClaimRequest {
+  rewardId: string;
+  type: RewardClaimType;
+}
+
+// 竞拍奖励领取请求
+export interface BidClaimRequest {
+  bidId: string;
+  type: BidClaimType;
+}
+
+// 打赏奖励领取响应
+export interface RewardClaimResponse {
+  success: boolean;
+  amount: number;
+}
+
+// 竞拍奖励领取响应
+export interface BidClaimResponse {
+  success: boolean;
+  amount: number;
+}
+
+// 未领取的打赏奖励
+export interface UnclaimedReward {
+  id: string;
+  amount: number;
+  recipientAmount: number;
+  referrerAmount?: number;
+  post: {
+    title: string;
+    shareCode: string;
+  };
+  sender: {
+    walletAddress: string;
+  };
+}
+
+// 未领取的竞拍奖励
+export interface UnclaimedBid {
+  id: string;
+  amount: number;
+  creatorAmount?: number;
+  referrerAmount?: number;
+  post: {
+    title: string;
+    shareCode: string;
+  };
+  user: {
+    walletAddress: string;
+  };
+}
+
+// 未领取奖励响应
+export interface UnclaimedRewardsResponse {
+  recipientRewards: UnclaimedReward[];
+  referrerRewards: UnclaimedReward[];
+}
+
+export interface UnclaimedBidsResponse {
+  creatorBids: UnclaimedBid[];
+  referrerBids: UnclaimedBid[];
+}

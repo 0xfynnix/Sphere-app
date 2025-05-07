@@ -60,7 +60,24 @@ export async function POST(req: Request) {
 
     // Start transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create reward record
+      // Calculate amounts for each party
+      let recipientAmount, referrerAmount, platformAmount, lotteryAmount;
+
+      if (referrer && postShareCode) {
+        // With referrer: 80% to creator, 5% to referrer, 5% to lottery, 10% to platform
+        recipientAmount = amount * 0.8;
+        referrerAmount = amount * 0.05;
+        lotteryAmount = amount * 0.05;
+        platformAmount = amount * 0.1;
+      } else {
+        // Without referrer: 85% to creator, 5% to lottery, 10% to platform
+        recipientAmount = amount * 0.85;
+        referrerAmount = null;
+        lotteryAmount = amount * 0.05;
+        platformAmount = amount * 0.1;
+      }
+
+      // Create reward record with all amounts
       const reward = await tx.reward.create({
         data: {
           postId: post.id,
@@ -69,6 +86,16 @@ export async function POST(req: Request) {
           recipientId: post.userId,
           referrerId: referrer?.id,
           lotteryPoolId: post.lotteryPool?.id,
+          // Record amounts for each party
+          recipientAmount,
+          referrerAmount,
+          platformAmount,
+          lotteryAmount,
+          // All claims start as false
+          recipientClaimed: false,
+          referrerClaimed: false,
+          platformClaimed: false,
+          lotteryClaimed: true // Lottery amount is claimed immediately
         }
       });
 
@@ -87,40 +114,22 @@ export async function POST(req: Request) {
             referrerId: referrer?.id,
             postShareCode,
             senderId: user.id,
-            recipientId: post.userId
+            recipientId: post.userId,
+            recipientAmount,
+            referrerAmount,
+            platformAmount,
+            lotteryAmount
           }
         }
       });
 
-      // If we have a valid referrer and post share code, use the original split
-      if (referrer && postShareCode) {
-        // Update post owner's earnings (80%)
-        // await tx.user.update({
-        //   where: { id: post.userId },
-        //   data: {
-        //     rewardEarnings: {
-        //       increment: amount * 0.8
-        //     }
-        //   }
-        // });
-
-        // // Update referrer's earnings (5%)
-        // await tx.user.update({
-        //   where: { id: referrer.id },
-        //   data: {
-        //     rewardEarnings: {
-        //       increment: amount * 0.05
-        //     }
-        //   }
-        // });
-
-        // Update or create lottery pool (5%)
+      // Update or create lottery pool with direct amount update
         if (post.lotteryPool) {
           await tx.lotteryPool.update({
             where: { id: post.lotteryPool.id },
             data: {
               amount: {
-                increment: amount * 0.05
+              increment: lotteryAmount
               }
             }
           });
@@ -128,39 +137,10 @@ export async function POST(req: Request) {
           await tx.lotteryPool.create({
             data: {
               postId: post.id,
-              amount: amount * 0.05
+            amount: lotteryAmount,
+            round: post.auctionRound
             }
           });
-        }
-      } else {
-        // If no valid referrer or post share code, give 85% to creator
-        // await tx.user.update({
-        //   where: { id: post.userId },
-        //   data: {
-        //     rewardEarnings: {
-        //       increment: amount * 0.85
-        //     }
-        //   }
-        // });
-
-        // Update or create lottery pool (5%)
-        if (post.lotteryPool) {
-          await tx.lotteryPool.update({
-            where: { id: post.lotteryPool.id },
-            data: {
-              amount: {
-                increment: amount * 0.05
-              }
-            }
-          });
-        } else {
-          await tx.lotteryPool.create({
-            data: {
-              postId: post.id,
-              amount: amount * 0.05
-            }
-          });
-        }
       }
 
       return reward;
@@ -171,4 +151,4 @@ export async function POST(req: Request) {
     console.error('Error processing reward:', error);
     return NextResponse.json({ error: 'Failed to process reward' }, { status: 500 });
   }
-} 
+}

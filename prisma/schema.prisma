@@ -80,8 +80,10 @@ model User {
   winningBids   Bid[]    @relation("Winner") // 用户获胜的竞拍记录
   soldBids      Bid[]    @relation("Creator") // 作为创作者被竞拍的记录
   nftCount      Int      @default(0) // 拥有的NFT数量
-  rewardEarnings Float   @default(0) // 获得的打赏总收益（SUI）
-  auctionEarnings Float  @default(0) // 获得的竞拍总收益（SUI）
+  rewardEarnings Float   @default(0) // 获得的打赏收益（SUI）
+  referredRewardEarnings Float @default(0) // 作为推荐人获得的打赏收益（SUI）
+  auctionEarnings Float  @default(0) // 获得的竞拍收益（SUI）
+  referredAuctionEarnings Float @default(0) // 作为推荐人获得的竞拍收益（SUI）
   rewardSpent     Float   @default(0) // 打赏总支出（SUI）
   chainId       String?  // 链上用户ID
   isAdmin       Boolean  @default(false) // 是否是管理员
@@ -233,7 +235,7 @@ model Reward {
   id            String   @id @default(cuid())
   postId        String
   post          Post     @relation(fields: [postId], references: [id])
-  amount        Float    // 打赏金额
+  amount        Float    // 打赏总金额
   senderId      String   // 打赏人ID
   sender        User     @relation("RewardSender", fields: [senderId], references: [id])
   recipientId   String   // 被打赏人ID
@@ -243,6 +245,20 @@ model Reward {
   lotteryPoolId   String?  // 抽奖池ID
   lotteryPool     LotteryPool? @relation(fields: [lotteryPoolId], references: [id])
   transactions   SuiTransaction[] // 关联的交易记录
+  round         Int      @default(1) // 打赏对应的轮次
+
+  // 各方可获得的金额
+  recipientAmount Float    // 被打赏人可获得的金额
+  referrerAmount  Float?   // 推荐人可获得的金额
+  platformAmount  Float    // 平台可获得的金额
+  lotteryAmount   Float?   // 抽奖池可获得的金额
+
+  // 各方领取状态
+  recipientClaimed Boolean @default(false) // 被打赏人是否已领取
+  referrerClaimed  Boolean @default(false) // 推荐人是否已领取
+  platformClaimed  Boolean @default(false) // 平台是否已领取
+  lotteryClaimed   Boolean @default(false) // 抽奖池是否已领取
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -251,6 +267,7 @@ model Reward {
   @@index([postId])
   @@index([referrerId])
   @@index([lotteryPoolId])
+  @@index([round])
 }
 
 model WalrusImage {
@@ -291,7 +308,7 @@ model FilebaseImage {
 // 竞拍模型
 model Bid {
   id        String   @id @default(cuid())
-  amount    Float    // 竞拍金额
+  amount    Float    // 竞拍总金额
   postId    String?  // 可以为空
   post      Post?    @relation("BidPost", fields: [postId], references: [id], map: "BidPost_fkey")
   userId    String
@@ -306,6 +323,19 @@ model Bid {
   winner    User?    @relation("Winner", fields: [userId], references: [id], map: "BidWinner_fkey")
   creator   User?    @relation("Creator", fields: [postId], references: [id], map: "BidCreator_fkey")
   transactions SuiTransaction[] // 关联的交易记录
+
+  // 各方可获得的金额
+  creatorAmount Float?   // 创作者可获得的金额
+  referrerAmount Float?  // 推荐人可获得的金额
+  platformAmount Float   // 平台可获得的金额
+  lotteryAmount Float?   // 抽奖池可获得的金额
+
+  // 各方领取状态
+  creatorClaimed Boolean @default(false) // 创作者是否已领取
+  referrerClaimed Boolean @default(false) // 推荐人是否已领取
+  platformClaimed Boolean @default(false) // 平台是否已领取
+  lotteryClaimed Boolean @default(false) // 抽奖池是否已领取
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
