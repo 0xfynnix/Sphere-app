@@ -18,11 +18,11 @@ export interface UserProfileData {
 
 // 用户相关类型
 export enum UserType {
-  ARTIST = "ARTIST",       // 艺术家
-  GEEK = "GEEK",          // 极客
+  ARTIST = "ARTIST", // 艺术家
+  GEEK = "GEEK", // 极客
   STORYTELLER = "STORYTELLER", // 故事家
-  MEME_LORD = "MEME_LORD",   // 迷因王
-  EXPLORER = "EXPLORER"     // 探索者
+  MEME_LORD = "MEME_LORD", // 迷因王
+  EXPLORER = "EXPLORER", // 探索者
 }
 
 export interface UserProfile {
@@ -38,6 +38,8 @@ export interface UserProfile {
   rewardEarnings: number;
   rewardSpent: number;
   nftCount: number;
+  sentRewards: Reward[];
+  receivedRewards: Reward[];
   posts?: Post[];
 }
 
@@ -69,7 +71,7 @@ export interface Post {
     avatar?: string;
     walletAddress: string;
   };
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'DELETED' | 'PENDING' | 'FAILED';
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED" | "DELETED" | "PENDING" | "FAILED";
   category?: {
     id: string;
     name: string;
@@ -98,7 +100,7 @@ export interface Post {
   auctionObjectId: string;
   audienceCount: number;
   totalRewards: number;
-  postType: 'NORMAL' | 'MEME_LORD';
+  postType: "NORMAL" | "MEME_LORD";
   allowBidding: boolean;
   currentHighestBid: number;
   biddingDueDate?: string;
@@ -116,7 +118,7 @@ export interface Comment {
     avatar?: string;
   };
   timestamp: Date;
-} 
+}
 
 // 更新用户请求参数
 export interface UpdateUserRequest {
@@ -147,6 +149,7 @@ export interface CreateBidRequest {
   postId: string;
   amount: number;
   digest: string;
+  ref?: string;
 }
 
 export interface CreateBidResponse {
@@ -193,10 +196,14 @@ export interface GetAuctionHistoryResponse {
 
 export interface Reward {
   id: string;
+  createdAt: Date;
+  updatedAt: Date;
   postId: string;
   amount: number;
-  referrerId?: string;
-  createdAt: string;
+  senderId: string;
+  recipientId: string;
+  referrerId: string | null;
+  lotteryPoolId: string | null;
 }
 
 export interface CreateRewardRequest {
@@ -238,4 +245,4 @@ export interface AuctionInfo {
 export interface UpdatePostAuctionRequest {
   postId: string;
   auctionInfo: AuctionInfo;
-} 
+}

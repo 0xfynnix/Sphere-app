@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const { postId, amount, digest } = await request.json();
+    const { postId, amount, digest, ref } = await request.json();
 
     if (!postId || !amount || !digest) {
       return NextResponse.json(
@@ -59,6 +59,26 @@ export async function POST(request: Request) {
       );
     }
 
+    let referrer = null;
+    let postShareCode = null;
+
+    // If ref is provided, try to find referrer and validate post share code
+    if (ref) {
+      const [userShareCode, refPostShareCode] = ref.split('-');
+      if (userShareCode && refPostShareCode) {
+        // Validate post share code
+        if (post.shareCode === refPostShareCode) {
+          postShareCode = refPostShareCode;
+          // Find referrer
+          referrer = await prisma.user.findFirst({
+            where: {
+              shareCode: userShareCode
+            }
+          });
+        }
+      }
+    }
+
     // 创建竞拍记录
     const bid = await prisma.bid.create({
       data: {
@@ -66,6 +86,7 @@ export async function POST(request: Request) {
         postId,
         userId: user.id,
         round: post.auctionRound, // 设置当前轮次
+        referrerId: referrer?.id, // 添加推荐人ID
         transactions: {
           create: {
             digest,
@@ -76,6 +97,9 @@ export async function POST(request: Request) {
             data: {
               amount,
               round: post.auctionRound,
+              ref,
+              referrerId: referrer?.id,
+              postShareCode,
             },
           },
         },

@@ -16,6 +16,7 @@ import {
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useCreateBid } from "@/lib/api/hooks";
 import { useSphereContract } from "@/hooks/useSphereContract";
+import { getRefData } from "@/lib/api/ref";
 
 interface Bid {
   id: string;
@@ -37,6 +38,7 @@ interface BidDialogProps {
   currentHighestBid?: number | null;
   trigger?: React.ReactNode;
   auctionId: string;
+  ref?: string;
 }
 
 export function BidDialog({
@@ -48,6 +50,7 @@ export function BidDialog({
   currentHighestBid,
   trigger,
   auctionId,
+  ref,
 }: BidDialogProps) {
   const [bidAmount, setBidAmount] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
@@ -91,6 +94,24 @@ export function BidDialog({
     }
 
     try {
+      // 如果有 ref，先验证 ref
+      let referrer = null;
+      if (ref) {
+        try {
+          const refData = await getRefData(ref);
+          // 验证 postId 是否匹配
+          if (refData.postId !== postId) {
+            toast.error("Invalid reference code");
+            return;
+          }
+          referrer = refData.walletAddress;
+        } catch (error) {
+          console.error("Failed to validate ref:", error);
+          toast.error("Invalid reference code");
+          return;
+        }
+      }
+
       setCurrentStep('bidding');
       setBidProgress(0);
 
@@ -106,7 +127,7 @@ export function BidDialog({
       }, 100);
 
       // 调用合约的 placeBid 函数
-      const result = await placeBid(auctionId, amount);
+      const result = await placeBid(auctionId, amount, referrer || undefined);
       
       clearInterval(contractProgressInterval);
       setBidProgress(50);
@@ -127,6 +148,7 @@ export function BidDialog({
         postId,
         amount,
         digest: result.digest,
+        ref,
       });
 
       clearInterval(dbProgressInterval);

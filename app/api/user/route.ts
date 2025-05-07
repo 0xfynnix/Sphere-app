@@ -4,15 +4,18 @@ import { GetUserResponse, UserType, UserUpdateInput } from "@/lib/api/types";
 
 export async function GET(request: Request) {
   try {
-    const address = request.headers.get('x-user-address');
-    
+    const address = request.headers.get("x-user-address");
+
     if (!address) {
-      return NextResponse.json<GetUserResponse>({
-        success: false,
-        error: {
-          message: "Unauthorized",
+      return NextResponse.json<GetUserResponse>(
+        {
+          success: false,
+          error: {
+            message: "Unauthorized",
+          },
         },
-      }, { status: 401 });
+        { status: 401 }
+      );
     }
 
     const user = await prisma.user.findUnique({
@@ -21,16 +24,21 @@ export async function GET(request: Request) {
       },
       include: {
         profile: true,
+        sentRewards: true,
+        receivedRewards: true,
       },
     });
 
     if (!user) {
-      return NextResponse.json<GetUserResponse>({
-        success: false,
-        error: {
-          message: "User not found",
+      return NextResponse.json<GetUserResponse>(
+        {
+          success: false,
+          error: {
+            message: "User not found",
+          },
         },
-      }, { status: 404 });
+        { status: 404 }
+      );
     }
 
     return NextResponse.json<GetUserResponse>({
@@ -53,31 +61,39 @@ export async function GET(request: Request) {
           rewardEarnings: user.rewardEarnings,
           rewardSpent: user.rewardSpent,
           nftCount: user.nftCount,
+          sentRewards: user.sentRewards,
+          receivedRewards: user.receivedRewards,
         },
       },
     });
   } catch (error) {
     console.error("Error fetching user:", error);
-    return NextResponse.json<GetUserResponse>({
-      success: false,
-      error: {
-        message: "Internal server error",
+    return NextResponse.json<GetUserResponse>(
+      {
+        success: false,
+        error: {
+          message: "Internal server error",
+        },
       },
-    }, { status: 500 });
+      { status: 500 }
+    );
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    const address = request.headers.get('x-user-address');
-    
+    const address = request.headers.get("x-user-address");
+
     if (!address) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          message: "Unauthorized",
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            message: "Unauthorized",
+          },
         },
-      }, { status: 401 });
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
@@ -85,12 +101,15 @@ export async function PATCH(request: Request) {
 
     // 验证 userType 是否有效
     if (userType && !Object.values(UserType).includes(userType)) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          message: "Invalid user type",
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            message: "Invalid user type",
+          },
         },
-      }, { status: 400 });
+        { status: 400 }
+      );
     }
 
     // 获取用户信息
@@ -101,12 +120,15 @@ export async function PATCH(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          message: "User not found",
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            message: "User not found",
+          },
         },
-      }, { status: 404 });
+        { status: 404 }
+      );
     }
 
     const updateData: UserUpdateInput = {};
@@ -129,8 +151,8 @@ export async function PATCH(request: Request) {
         data: {
           digest: txDigest,
           userId: user.id,
-          type: 'register',
-          status: 'success',
+          type: "register",
+          status: "success",
           data: {
             userType,
             walletAddress: address,
@@ -149,12 +171,14 @@ export async function PATCH(request: Request) {
           userType: updatedUser.userType,
           createdAt: updatedUser.createdAt.toISOString(),
           updatedAt: updatedUser.updatedAt.toISOString(),
-          profile: updatedUser.profile ? {
-            id: updatedUser.profile.id,
-            name: updatedUser.profile.name,
-            avatar: updatedUser.profile.avatar,
-            bio: updatedUser.profile.bio,
-          } : null,
+          profile: updatedUser.profile
+            ? {
+                id: updatedUser.profile.id,
+                name: updatedUser.profile.name,
+                avatar: updatedUser.profile.avatar,
+                bio: updatedUser.profile.bio,
+              }
+            : null,
           auctionEarnings: updatedUser.auctionEarnings,
           rewardEarnings: updatedUser.rewardEarnings,
           rewardSpent: updatedUser.rewardSpent,
@@ -164,11 +188,14 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("Error updating user:", error);
-    return NextResponse.json({
-      success: false,
-      error: {
-        message: "Internal server error",
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          message: "Internal server error",
+        },
       },
-    }, { status: 500 });
+      { status: 500 }
+    );
   }
-} 
+}
