@@ -40,6 +40,10 @@ export default function ProfilePage() {
   const pageSize = 10;
   // const createBid = useCreateBid();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRecipientClaiming, setIsRecipientClaiming] = useState(false);
+  const [isReferrerClaiming, setIsReferrerClaiming] = useState(false);
+  const [isCreatorBidClaiming, setIsCreatorBidClaiming] = useState(false);
+  const [isReferrerBidClaiming, setIsReferrerBidClaiming] = useState(false);
 
   const {
     data: userData,
@@ -100,21 +104,45 @@ export default function ProfilePage() {
 
   const handleClaimReward = async (rewardId: string, type: 'recipient' | 'referrer') => {
     try {
+      if (type === 'recipient') {
+        setIsRecipientClaiming(true);
+      } else {
+        setIsReferrerClaiming(true);
+      }
+      
       await claimReward.mutateAsync({ rewardId, type });
       toast.success('Reward claimed successfully');
     } catch (error) {
       console.error('Failed to claim reward:', error);
       toast.error('Failed to claim reward');
+    } finally {
+      if (type === 'recipient') {
+        setIsRecipientClaiming(false);
+      } else {
+        setIsReferrerClaiming(false);
+      }
     }
   };
 
   const handleClaimBid = async (bidId: string, type: 'creator' | 'referrer') => {
     try {
+      if (type === 'creator') {
+        setIsCreatorBidClaiming(true);
+      } else {
+        setIsReferrerBidClaiming(true);
+      }
+      
       await claimBid.mutateAsync({ bidId, type });
       toast.success('Bid reward claimed successfully');
     } catch (error) {
       console.error('Failed to claim bid reward:', error);
       toast.error('Failed to claim bid reward');
+    } finally {
+      if (type === 'creator') {
+        setIsCreatorBidClaiming(false);
+      } else {
+        setIsReferrerBidClaiming(false);
+      }
     }
   };
 
@@ -514,10 +542,10 @@ export default function ProfilePage() {
                         const rewards = unclaimedRewardsData?.recipientRewards || [];
                         rewards.forEach(reward => handleClaimReward(reward.id, 'recipient'));
                       }}
-                      disabled={!unclaimedRewardsData?.recipientRewards?.length || claimReward.isPending}
+                      disabled={!unclaimedRewardsData?.recipientRewards?.length || isRecipientClaiming}
                       className="bg-purple-500 hover:bg-purple-600"
                     >
-                      {claimReward.isPending ? (
+                      {isRecipientClaiming ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Claiming...
@@ -564,10 +592,10 @@ export default function ProfilePage() {
                         const rewards = unclaimedRewardsData?.referrerRewards || [];
                         rewards.forEach(reward => handleClaimReward(reward.id, 'referrer'));
                       }}
-                      disabled={!unclaimedRewardsData?.referrerRewards?.length || claimReward.isPending}
+                      disabled={!unclaimedRewardsData?.referrerRewards?.length || isReferrerClaiming}
                       className="bg-blue-500 hover:bg-blue-600"
                     >
-                      {claimReward.isPending ? (
+                      {isReferrerClaiming ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Claiming...
@@ -623,10 +651,10 @@ export default function ProfilePage() {
                         const bids = unclaimedBidsData?.creatorBids || [];
                         bids.forEach(bid => handleClaimBid(bid.id, 'creator'));
                       }}
-                      disabled={!unclaimedBidsData?.creatorBids?.length || claimBid.isPending}
+                      disabled={!unclaimedBidsData?.creatorBids?.length || isCreatorBidClaiming}
                       className="bg-green-500 hover:bg-green-600"
                     >
-                      {claimBid.isPending ? (
+                      {isCreatorBidClaiming ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Claiming...
@@ -673,10 +701,10 @@ export default function ProfilePage() {
                         const bids = unclaimedBidsData?.referrerBids || [];
                         bids.forEach(bid => handleClaimBid(bid.id, 'referrer'));
                       }}
-                      disabled={!unclaimedBidsData?.referrerBids?.length || claimBid.isPending}
+                      disabled={!unclaimedBidsData?.referrerBids?.length || isReferrerBidClaiming}
                       className="bg-orange-500 hover:bg-orange-600"
                     >
-                      {claimBid.isPending ? (
+                      {isReferrerBidClaiming ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Claiming...
