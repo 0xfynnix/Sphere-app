@@ -13,8 +13,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useCurrentAccount, useSignPersonalMessage } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useCreateBid } from "@/lib/api/hooks";
+import { useSphereContract } from "@/hooks/useSphereContract";
 
 interface Bid {
   id: string;
@@ -35,6 +36,7 @@ interface BidDialogProps {
   postId: string;
   currentHighestBid?: number | null;
   trigger?: React.ReactNode;
+  auctionId: string;
 }
 
 export function BidDialog({
@@ -45,15 +47,15 @@ export function BidDialog({
   postId,
   currentHighestBid,
   trigger,
+  auctionId,
 }: BidDialogProps) {
   const [bidAmount, setBidAmount] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
-  const [signProgress, setSignProgress] = useState(0);
   const [bidProgress, setBidProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState<'input' | 'signing' | 'bidding'>('input');
+  const [currentStep, setCurrentStep] = useState<'input' | 'bidding'>('input');
   const account = useCurrentAccount();
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const createBid = useCreateBid();
+  const { placeBid } = useSphereContract();
 
   useEffect(() => {
     if (showConfetti) {
@@ -79,29 +81,8 @@ export function BidDialog({
     }
 
     try {
-      // 第一步：获取签名
-      setCurrentStep('signing');
-      setSignProgress(0);
-      const signInterval = setInterval(() => {
-        setSignProgress((prev) => {
-          if (prev >= 50) {
-            clearInterval(signInterval);
-            return 50;
-          }
-          return prev + 5;
-        });
-      }, 100);
-
-      const { signature } = await signPersonalMessage({
-        message: new TextEncoder().encode(`Bid on post: ${amount} SUI`),
-      });
-
-      clearInterval(signInterval);
-      setSignProgress(50);
-
-      // 第二步：创建竞拍
       setCurrentStep('bidding');
-      setBidProgress(50);
+      setBidProgress(0);
       const bidInterval = setInterval(() => {
         setBidProgress((prev) => {
           if (prev >= 100) {
@@ -112,10 +93,14 @@ export function BidDialog({
         });
       }, 100);
 
+      // 调用合约的 placeBid 函数
+      const result = await placeBid(auctionId, amount);
+      
+      // 创建竞拍记录
       await createBid.mutateAsync({
         postId,
         amount,
-        signature,
+        digest: result.digest,
       });
 
       clearInterval(bidInterval);
@@ -128,7 +113,6 @@ export function BidDialog({
       console.error("Failed to place bid:", error);
       toast.error("Failed to place bid");
     } finally {
-      setSignProgress(0);
       setBidProgress(0);
       setCurrentStep('input');
     }
@@ -174,16 +158,6 @@ export function BidDialog({
             </div>
           )}
 
-          {currentStep === 'signing' && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Signing with wallet...</span>
-                <span className="font-medium">{signProgress}%</span>
-              </div>
-              <Progress value={signProgress} className="h-2" />
-            </div>
-          )}
-
           {currentStep === 'bidding' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
@@ -212,9 +186,7 @@ export function BidDialog({
               )}
             </AnimatePresence>
             <span className={showConfetti ? "invisible" : ""}>
-              {currentStep === 'input' ? 'Place Bid' : 
-               currentStep === 'signing' ? 'Signing...' : 
-               'Creating Bid...'}
+              {currentStep === 'input' ? 'Place Bid' : 'Creating Bid...'}
             </span>
           </Button>
         </div>

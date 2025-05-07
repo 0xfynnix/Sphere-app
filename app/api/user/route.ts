@@ -111,7 +111,6 @@ export async function PATCH(request: Request) {
 
     const updateData: UserUpdateInput = {};
     if (userType !== undefined) updateData.userType = userType;
-    if (txDigest !== undefined) updateData.txDigest = txDigest;
 
     // 使用事务来确保数据一致性
     const [updatedUser] = await prisma.$transaction([

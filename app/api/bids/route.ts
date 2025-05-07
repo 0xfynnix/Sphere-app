@@ -16,9 +16,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const { postId, amount, signature } = await request.json();
+    const { postId, amount, digest } = await request.json();
 
-    if (!postId || !amount || !signature) {
+    if (!postId || !amount || !digest) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -65,8 +65,20 @@ export async function POST(request: Request) {
         amount,
         postId,
         userId: user.id,
-        chainId: signature, // 暂时使用签名作为链上ID
-        round: post.auctionRound // 设置当前轮次
+        round: post.auctionRound, // 设置当前轮次
+        transactions: {
+          create: {
+            digest,
+            userId: user.id,
+            postId,
+            type: 'place_bid',
+            status: 'success',
+            data: {
+              amount,
+              round: post.auctionRound,
+            },
+          },
+        },
       },
       include: {
         user: {

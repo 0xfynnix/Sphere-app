@@ -145,7 +145,7 @@ export interface Bid {
 export interface CreateBidRequest {
   postId: string;
   amount: number;
-  signature: string;
+  digest: string;
 }
 
 export interface CreateBidResponse {

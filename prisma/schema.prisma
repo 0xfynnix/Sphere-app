@@ -42,6 +42,8 @@ model SuiTransaction {
   post        Post?    @relation("PostTransactions", fields: [postId], references: [id])
   rewardId    String?  // 打赏记录ID
   reward      Reward?  @relation(fields: [rewardId], references: [id])
+  bidId       String?  // 竞拍记录ID
+  bid         Bid?     @relation(fields: [bidId], references: [id])
   type        String   // 交易类型(register, mint, auction等)
   status      String   // 交易状态(pending, success, failed)
   data        Json?    // 交易相关数据
@@ -54,6 +56,7 @@ model SuiTransaction {
   @@index([status])
   @@index([postId])
   @@index([rewardId])
+  @@index([bidId])
 }
 
 model User {
@@ -289,6 +292,7 @@ model Bid {
   round     Int      @default(1) // 竞拍轮次
   winner    User?    @relation("Winner", fields: [userId], references: [id], map: "BidWinner_fkey")
   creator   User?    @relation("Creator", fields: [postId], references: [id], map: "BidCreator_fkey")
+  transactions SuiTransaction[] // 关联的交易记录
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
