@@ -93,6 +93,7 @@ export async function GET(
       startPrice: post.startPrice,
       shareCode: post.shareCode,
       nftObjectId: post.nftObjectId,
+      auctionObjectId: post.auctionObjectId,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt
     };

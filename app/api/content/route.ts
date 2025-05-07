@@ -131,6 +131,7 @@ export async function POST(request: Request) {
         startPrice: biddingInfo?.startPrice,
         auctionRound: 1, // 初始轮次为1
         nftObjectId: nftObjectId, // 添加 NFT 对象 ID
+        auctionObjectId: biddingInfo?.auctionId, // 添加拍卖对象 ID
         ...(imageInfo.blobId
           ? {
               walrusImages: {

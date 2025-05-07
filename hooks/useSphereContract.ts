@@ -62,20 +62,25 @@ export function useSphereContract() {
   /**
    * 用于在拍卖中出价
    * @param auctionId - 拍卖对象 ID
-   * @param bidAmount - 出价金额
+   * @param bidAmount - 出价金额(SUI)
+   * @param reference - 推荐人地址，如果没有则为 0x0
    * 使用 gas coin 作为出价代币
    * 使用 Clock 对象检查时间
    */
-  const placeBid = async (auctionId: string, bidAmount: number) => {
+  const placeBid = async (auctionId: string, bidAmount: number, reference: string = '0x0') => {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
+    // 从 gas coin 中分割出指定金额的 coin
+    const [bidCoin] = tx.splitCoins(tx.gas, [suiToMist(bidAmount)]);
+    
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::place_bid`,
       arguments: [
         tx.object(auctionId),
-        tx.object('0x6'), // Clock object
-        tx.gas, // Using gas coin for bid
+        tx.object.clock(), // Clock object
+        bidCoin, // 使用分割出的 coin 作为出价
+        tx.pure.address(reference), // Reference address
       ],
     });
 
@@ -168,6 +173,7 @@ export function useSphereContract() {
 
   /**
    * 用于给 NFT 打赏
+   * @param achievementRecord - 成就记录对象 ID
    * @param creatorRecord - 创作者记录对象 ID
    * @param nftAddress - NFT 地址
    * @param revenueTipPool - 收入分成池对象 ID
@@ -179,6 +185,7 @@ export function useSphereContract() {
    * 使用 splitCoins 从 gas 中分割出打赏金额
    */
   const tipNFT = async (
+    achievementRecord: string,
     creatorRecord: string,
     nftAddress: string,
     revenueTipPool: string,
@@ -197,6 +204,7 @@ export function useSphereContract() {
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::tip_nft`,
       arguments: [
+        tx.object(achievementRecord),
         tx.object(creatorRecord),
         tx.pure.address(nftAddress),
         tx.object(revenueTipPool),

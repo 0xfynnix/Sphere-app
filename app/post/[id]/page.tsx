@@ -43,6 +43,23 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const [showConfetti, setShowConfetti] = useState(false);
   const user = useUserStore((state) => state.user);
 
+  // 处理弹窗状态重置
+  const handleBidDialogOpenChange = (open: boolean) => {
+    setIsBidDialogOpen(open);
+    if (!open) {
+      // 当弹窗关闭时，重置相关状态
+      setShowConfetti(false);
+    }
+  };
+
+  const handleRewardDialogOpenChange = (open: boolean) => {
+    setIsRewardDialogOpen(open);
+    if (!open) {
+      // 当弹窗关闭时，重置相关状态
+      setShowConfetti(false);
+    }
+  };
+
   useEffect(() => {
     if (showConfetti) {
       const timer = setTimeout(() => setShowConfetti(false), 2000);
@@ -162,20 +179,23 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                         <Clock className="mr-1 h-4 w-4" />
                         Ends in {formatDistance(new Date(post.biddingDueDate), new Date())}
                       </div>
-                      <BidDialog
-                        isOpen={isBidDialogOpen}
-                        onOpenChange={setIsBidDialogOpen}
-                        startPrice={post.startPrice || 0}
-                        currentBids={bidsData?.bids || []}
-                        postId={id}
-                        currentHighestBid={post.currentHighestBid}
-                        trigger={
-                          <Button>
-                            <Gavel className="mr-2 h-4 w-4" />
-                            Place Bid
-                          </Button>
-                        }
-                      />
+                      {!isAuthor && (
+                        <BidDialog
+                          isOpen={isBidDialogOpen}
+                          onOpenChange={handleBidDialogOpenChange}
+                          startPrice={post.startPrice || 0}
+                          currentBids={bidsData?.bids || []}
+                          postId={id}
+                          currentHighestBid={post.currentHighestBid}
+                          auctionId={post.auctionObjectId}
+                          trigger={
+                            <Button>
+                              <Gavel className="mr-2 h-4 w-4" />
+                              Place Bid
+                            </Button>
+                          }
+                        />
+                      )}
                     </>
                   ) : (
                     <div className="text-sm text-muted-foreground">
@@ -360,7 +380,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
       <RewardDialog
         isOpen={isRewardDialogOpen}
-        onClose={() => setIsRewardDialogOpen(false)}
+        onClose={() => handleRewardDialogOpenChange(false)}
         postId={id}
         ref={user?.shareCode ? `${user.shareCode}-${post.shareCode}` : ''}
         nftObjectId={post.nftObjectId}

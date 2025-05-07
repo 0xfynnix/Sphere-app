@@ -95,6 +95,7 @@ export interface Post {
   chainId?: string;
   contentHash?: string;
   nftObjectId: string;
+  auctionObjectId: string;
   audienceCount: number;
   totalRewards: number;
   postType: 'NORMAL' | 'MEME_LORD';
@@ -231,6 +232,7 @@ export interface AuctionInfo {
   durationHours: number;
   durationMinutes: number;
   auctionDigest: string;
+  auctionId: string;
 }
 
 export interface UpdatePostAuctionRequest {

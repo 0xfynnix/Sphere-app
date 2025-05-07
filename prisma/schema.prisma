@@ -72,6 +72,8 @@ model User {
   followers     Follow[] @relation("Following") // 关注该用户的用户
   following     Follow[] @relation("Follower")  // 该用户关注的用户
   nfts          NFT[]    // 用户拥有的NFT
+  sentRewards   Reward[] @relation("RewardSender") // 用户发出的打赏
+  receivedRewards Reward[] @relation("RewardRecipient") // 用户收到的打赏
   referredRewards Reward[] @relation("Referrer") // 作为推荐人的打赏记录
   referredBids   Bid[]    @relation("BidReferrer") // 作为推荐人的竞拍记录
   bids          Bid[]    @relation("BidUser") // 用户的竞拍记录
@@ -117,6 +119,7 @@ model Post {
   chainId       String?  // 链上帖子ID
   contentHash   String?  // 内容哈希
   nftObjectId   String?  // NFT 对象 ID
+  auctionObjectId String? // 拍卖对象 ID
   audienceCount Int      @default(0) // 观众数量
   totalRewards  Float    @default(0) // 总打赏金额
   postType      PostType @default(NORMAL) // 帖子类型
@@ -231,6 +234,10 @@ model Reward {
   postId        String
   post          Post     @relation(fields: [postId], references: [id])
   amount        Float    // 打赏金额
+  senderId      String   // 打赏人ID
+  sender        User     @relation("RewardSender", fields: [senderId], references: [id])
+  recipientId   String   // 被打赏人ID
+  recipient     User     @relation("RewardRecipient", fields: [recipientId], references: [id])
   referrerId    String?  // 推荐人ID
   referrer      User?    @relation("Referrer", fields: [referrerId], references: [id])
   lotteryPoolId   String?  // 抽奖池ID
@@ -238,6 +245,12 @@ model Reward {
   transactions   SuiTransaction[] // 关联的交易记录
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([postId])
+  @@index([referrerId])
+  @@index([lotteryPoolId])
 }
 
 model WalrusImage {

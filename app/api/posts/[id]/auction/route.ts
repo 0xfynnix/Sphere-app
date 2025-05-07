@@ -46,6 +46,7 @@ export async function POST(
         allowBidding: true,
         startPrice: auctionInfo.startPrice,
         biddingDueDate: biddingDueDate,
+        auctionObjectId: auctionInfo.auctionId,
       },
       include: {
         user: true,
@@ -70,6 +71,7 @@ export async function POST(
         status: 'success',
         data: {
           nftObjectId: post.nftObjectId,
+          auctionObjectId: auctionInfo.auctionId,
           startPrice: auctionInfo.startPrice,
           dueDate: biddingDueDate,
           round: 1,

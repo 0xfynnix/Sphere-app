@@ -99,6 +99,7 @@ export function RewardDialog({
       }, 100);
 
       const result = await tipNFT(
+        process.env.NEXT_PUBLIC_COPY_RIGHT_ACHIEVEMENT_RECORD || "0x0", // TODO: 需要从合约获取 achievementRecord
         process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD || "0x0", // TODO: 需要从合约获取 creatorRecord
         nftObjectId || "0x0", // TODO: 需要从合约获取 nftAddress
         process.env.NEXT_PUBLIC_COPY_RIGHT_REVENUE_TIP_POOL || "0x0", // TODO: 需要从合约获取 revenueTipPool

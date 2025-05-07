@@ -46,6 +46,7 @@ export default function CreatePage() {
     durationMinutes: number;
     startPrice: number;
     auctionDigest?: string;
+    auctionId?: string;
   };
 
   const handleImageChange = (file: File | null) => {
@@ -151,7 +152,7 @@ export default function CreatePage() {
           );
 
           // 等待拍卖创建交易确认
-          await client.waitForTransaction({
+          const auctionTxResponse = await client.waitForTransaction({
             digest: auctionResult.digest,
             options: {
               showEvents: true,
@@ -159,8 +160,24 @@ export default function CreatePage() {
             },
           });
 
-          // 更新 biddingInfo，添加拍卖交易 digest
+          // 查找 AuctionCreated 事件
+          const auctionCreatedEvent = auctionTxResponse.events?.find((event) =>
+            event.type.includes("::copyright_nft::AuctionCreated")
+          );
+
+          if (!auctionCreatedEvent) {
+            throw new Error("Failed to find AuctionCreated event");
+          }
+
+          const auctionId = (auctionCreatedEvent.parsedJson as { auction_id: string })
+            ?.auction_id;
+          if (!auctionId) {
+            throw new Error("Failed to get auction ID from event");
+          }
+
+          // 更新 biddingInfo，添加拍卖交易 digest 和 auction_id
           biddingInfo.auctionDigest = auctionResult.digest;
+          biddingInfo.auctionId = auctionId;
         }
 
         return {
@@ -186,6 +203,7 @@ export default function CreatePage() {
             durationMinutes: number;
             startPrice: number;
             auctionDigest?: string;
+            auctionId?: string;
           };
           nftObjectId: string;
         };

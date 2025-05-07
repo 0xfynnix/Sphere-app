@@ -65,6 +65,8 @@ export async function POST(req: Request) {
         data: {
           postId: post.id,
           amount: amount,
+          senderId: user.id,
+          recipientId: post.userId,
           referrerId: referrer?.id,
           lotteryPoolId: post.lotteryPool?.id,
         }
@@ -83,7 +85,9 @@ export async function POST(req: Request) {
             amount,
             ref,
             referrerId: referrer?.id,
-            postShareCode
+            postShareCode,
+            senderId: user.id,
+            recipientId: post.userId
           }
         }
       });

@@ -57,6 +57,16 @@ export function BidDialog({
   const createBid = useCreateBid();
   const { placeBid } = useSphereContract();
 
+  // 当弹窗打开时重置状态
+  useEffect(() => {
+    if (isOpen) {
+      setBidAmount("");
+      setShowConfetti(false);
+      setBidProgress(0);
+      setCurrentStep('input');
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (showConfetti) {
       const timer = setTimeout(() => setShowConfetti(false), 2000);
@@ -83,19 +93,35 @@ export function BidDialog({
     try {
       setCurrentStep('bidding');
       setBidProgress(0);
-      const bidInterval = setInterval(() => {
+
+      // 第一阶段：调用合约
+      const contractProgressInterval = setInterval(() => {
         setBidProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(bidInterval);
-            return 100;
+          if (prev >= 50) {
+            clearInterval(contractProgressInterval);
+            return 50;
           }
-          return prev + 5;
+          return prev + 2;
         });
       }, 100);
 
       // 调用合约的 placeBid 函数
       const result = await placeBid(auctionId, amount);
       
+      clearInterval(contractProgressInterval);
+      setBidProgress(50);
+
+      // 第二阶段：创建竞拍记录
+      const dbProgressInterval = setInterval(() => {
+        setBidProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(dbProgressInterval);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 100);
+
       // 创建竞拍记录
       await createBid.mutateAsync({
         postId,
@@ -103,7 +129,7 @@ export function BidDialog({
         digest: result.digest,
       });
 
-      clearInterval(bidInterval);
+      clearInterval(dbProgressInterval);
       setBidProgress(100);
       setBidAmount("");
       setShowConfetti(true);
@@ -161,7 +187,9 @@ export function BidDialog({
           {currentStep === 'bidding' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Creating bid...</span>
+                <span className="text-muted-foreground">
+                  {bidProgress <= 50 ? 'Calling contract...' : 'Creating bid record...'}
+                </span>
                 <span className="font-medium">{bidProgress}%</span>
               </div>
               <Progress value={bidProgress} className="h-2" />
