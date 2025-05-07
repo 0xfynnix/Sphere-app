@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Wand2, CalendarIcon } from "lucide-react";
+import { Wand2 } from "lucide-react";
 import { ImageUpload } from "@/components/common/ImageUpload";
 import { toast } from "sonner";
 import { useCreateContent, useUploadImage } from "@/lib/api/hooks";
@@ -15,10 +15,7 @@ import { Post } from "@/lib/api/types";
 import { useRouter } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+
 import { GenerateImageDialog } from "@/components/dialog/GenerateImageDialog";
 import Image from "next/image";
 import { useSphereContract } from "@/hooks/useSphereContract";
@@ -31,7 +28,8 @@ export default function CreatePage() {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [showFlowDialog, setShowFlowDialog] = useState(false);
   const [allowBidding, setAllowBidding] = useState(false);
-  const [biddingDueDate, setBiddingDueDate] = useState<Date>();
+  const [durationHours, setDurationHours] = useState<string>("24");
+  const [durationMinutes, setDurationMinutes] = useState<string>("0");
   const [startPrice, setStartPrice] = useState<string>("");
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const router = useRouter();
@@ -39,8 +37,16 @@ export default function CreatePage() {
   const uploadImage = useUploadImage();
   const account = useCurrentAccount();
   // const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
-  const { mintCopyrightNFT } = useSphereContract();
+  const { mintCopyrightNFT, createAuction } = useSphereContract();
   const client = useSuiClient();
+
+  // 定义 biddingInfo 类型
+  type BiddingInfo = {
+    durationHours: number;
+    durationMinutes: number;
+    startPrice: number;
+    auctionDigest?: string;
+  };
 
   const handleImageChange = (file: File | null) => {
     setImage(file);
@@ -52,8 +58,8 @@ export default function CreatePage() {
       toast.error("Please fill in the title, content and select an image");
       return;
     }
-    if (allowBidding && (!biddingDueDate || !startPrice)) {
-      toast.error("Please select bidding end date and start price");
+    if (allowBidding && (!durationHours || !durationMinutes || !startPrice)) {
+      toast.error("Please select duration and start price");
       return;
     }
     setShowFlowDialog(true);
@@ -70,26 +76,32 @@ export default function CreatePage() {
           address: account?.address || "",
           signature: "",
           imageInfo: result,
-          biddingInfo: allowBidding ? {
-            dueDate: biddingDueDate,
-            startPrice: parseFloat(startPrice)
-          } : null
+          biddingInfo: allowBidding
+            ? {
+                durationHours: parseInt(durationHours),
+                durationMinutes: parseInt(durationMinutes),
+                startPrice: parseFloat(startPrice),
+              }
+            : null,
         };
       },
     },
     {
-      title: "Wallet Signature",
+      title: "Mint NFT",
       description: "Please confirm the signature in your wallet...",
       action: async (data) => {
         if (!account?.address) {
           throw new Error("No wallet connected");
         }
-        const { imageInfo } = data as { imageInfo: { url: string; cid: string } };
-        
+        const { imageInfo, biddingInfo } = data as {
+          imageInfo: { url: string; cid: string };
+          biddingInfo?: BiddingInfo;
+        };
+
         // 调用合约 mint 函数
         const result = await mintCopyrightNFT(
-          process.env.NEXT_PUBLIC_COPY_RIGHT_MINT_RECORD || "", 
-          process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD || "", 
+          process.env.NEXT_PUBLIC_COPY_RIGHT_MINT_RECORD || "",
+          process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD || "",
           title,
           text,
           imageInfo.url,
@@ -109,26 +121,53 @@ export default function CreatePage() {
         });
 
         // 查找 NFTMinted 事件
-        const nftMintedEvent = txResponse.events?.find(
-          (event) => event.type.includes('::copyright_nft::NFTMinted')
+        const nftMintedEvent = txResponse.events?.find((event) =>
+          event.type.includes("::copyright_nft::NFTMinted")
         );
 
         if (!nftMintedEvent) {
-          throw new Error('Failed to find NFTMinted event');
+          throw new Error("Failed to find NFTMinted event");
         }
 
-        const nftObjectId = (nftMintedEvent.parsedJson as { object_id: string })?.object_id;
+        const nftObjectId = (nftMintedEvent.parsedJson as { object_id: string })
+          ?.object_id;
         if (!nftObjectId) {
-          throw new Error('Failed to get NFT object ID from event');
+          throw new Error("Failed to get NFT object ID from event");
+        }
+
+        // 如果有 biddingInfo，创建拍卖
+        if (biddingInfo) {
+          // 计算拍卖持续时间（毫秒）
+          const duration =
+            (biddingInfo.durationHours * 60 * 60 +
+              biddingInfo.durationMinutes * 60) *
+            1000;
+
+          // 创建拍卖
+          const auctionResult = await createAuction(
+            nftObjectId,
+            biddingInfo.startPrice,
+            duration
+          );
+
+          // 等待拍卖创建交易确认
+          await client.waitForTransaction({
+            digest: auctionResult.digest,
+            options: {
+              showEvents: true,
+              showEffects: true,
+            },
+          });
+
+          // 更新 biddingInfo，添加拍卖交易 digest
+          biddingInfo.auctionDigest = auctionResult.digest;
         }
 
         return {
           address: account.address,
           signature: result.digest,
           imageInfo,
-          biddingInfo: (
-            data as { biddingInfo: { dueDate: Date; startPrice: number } }
-          ).biddingInfo,
+          biddingInfo,
           nftObjectId,
         } as unknown;
       },
@@ -142,7 +181,12 @@ export default function CreatePage() {
           address: string;
           signature: string;
           imageInfo: { url: string; cid: string };
-          biddingInfo: { dueDate: Date; startPrice: number };
+          biddingInfo: {
+            durationHours: number;
+            durationMinutes: number;
+            startPrice: number;
+            auctionDigest?: string;
+          };
           nftObjectId: string;
         };
         const result = await createContent.mutateAsync({
@@ -152,7 +196,7 @@ export default function CreatePage() {
           imageInfo,
           biddingInfo,
           nftObjectId,
-        } );
+        });
         return (result as { post: Post }).post;
       },
     },
@@ -214,33 +258,55 @@ export default function CreatePage() {
             {allowBidding && (
               <>
                 <div>
-                  <Label className="mb-0.5" htmlFor="biddingDueDate">Bidding End Date(max 30 days)</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !biddingDueDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {biddingDueDate ? format(biddingDueDate, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={biddingDueDate}
-                        onSelect={setBiddingDueDate}
-                        initialFocus
-                        disabled={(date: Date) => 
-                          date < new Date() || 
-                          date > new Date(new Date().setDate(new Date().getDate() + 30))
-                        }
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Label className="mb-0.5">
+                    Auction Duration (max 30 days)
+                  </Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="720"
+                          value={durationHours}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (
+                              value === "" ||
+                              (parseInt(value) >= 0 && parseInt(value) <= 720)
+                            ) {
+                              setDurationHours(value);
+                            }
+                          }}
+                          placeholder="Hours"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={durationMinutes}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (
+                              value === "" ||
+                              (parseInt(value) >= 0 && parseInt(value) <= 59)
+                            ) {
+                              setDurationMinutes(value);
+                            }
+                          }}
+                          placeholder="Minutes"
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {durationHours === "" ? "0" : durationHours} hours{" "}
+                    {durationMinutes === "" ? "0" : durationMinutes} minutes
+                  </p>
                 </div>
 
                 <div>
@@ -296,10 +362,7 @@ export default function CreatePage() {
           </div>
 
           <div className="flex justify-end">
-            <Button
-              onClick={handlePublish}
-              disabled={createContent.isPending}
-            >
+            <Button onClick={handlePublish} disabled={createContent.isPending}>
               {createContent.isPending ? "Publishing..." : "Publish"}
             </Button>
           </div>

@@ -1,11 +1,17 @@
 import { useSuiClient, useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
 import { CONTRACT_ADDRESS, MODULE_NAMES } from '@/lib/sui/config';
+import { MIST_PER_SUI } from '@mysten/sui/utils';
 
 export function useSphereContract() {
   const client = useSuiClient();
   const account = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+
+  // Utility function to convert SUI to MIST
+  const suiToMist = (sui: number): number => {
+    return Math.floor(sui * Number(MIST_PER_SUI));
+  };
 
   // Identity functions
   const register = async (type: number) => {
@@ -39,8 +45,13 @@ export function useSphereContract() {
     
     const tx = new Transaction();
     tx.moveCall({
-      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.NFT_AUCTION}::create_auction`,
-      arguments: [tx.object(nftId), tx.pure.u64(minPrice), tx.pure.u64(duration)],
+      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::create_auction`,
+      arguments: [
+        tx.object(nftId), 
+        tx.pure.u64(suiToMist(minPrice)), 
+        tx.pure.u64(duration),
+        tx.object.clock(), // Use the Clock object helper
+      ],
     });
 
     return signAndExecute({
@@ -60,7 +71,7 @@ export function useSphereContract() {
     
     const tx = new Transaction();
     tx.moveCall({
-      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.NFT_AUCTION}::place_bid`,
+      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::place_bid`,
       arguments: [
         tx.object(auctionId),
         tx.object('0x6'), // Clock object
@@ -86,7 +97,7 @@ export function useSphereContract() {
     
     const tx = new Transaction();
     tx.moveCall({
-      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.NFT_AUCTION}::end_auction`,
+      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::end_auction`,
       arguments: [
         tx.pure.u64(revenueShare),
         tx.object(auctionCapId),
@@ -110,7 +121,7 @@ export function useSphereContract() {
     
     const tx = new Transaction();
     tx.moveCall({
-      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.NFT_AUCTION}::claim_nft`,
+      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::claim_nft`,
       arguments: [tx.object(auctionId)],
     });
 
@@ -162,7 +173,7 @@ export function useSphereContract() {
    * @param revenueTipPool - 收入分成池对象 ID
    * @param referenceTipPool - 推荐分成池对象 ID
    * @param creatorTipPool - 创作者分成池对象 ID
-   * @param tipAmount - 打赏金额
+   * @param tipAmount - 打赏金额（SUI）
    * @param revenueAddress - 收入地址
    * @param referenceAddress - 推荐地址
    * 使用 splitCoins 从 gas 中分割出打赏金额
@@ -181,7 +192,7 @@ export function useSphereContract() {
     
     const tx = new Transaction();
     // Split coins for tip
-    const [tipCoin] = tx.splitCoins(tx.gas, [tipAmount]);
+    const [tipCoin] = tx.splitCoins(tx.gas, [suiToMist(tipAmount)]);
     
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::tip_nft`,

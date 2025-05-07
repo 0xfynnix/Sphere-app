@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Gift, Clock, Gavel, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { use } from 'react';
+import { use, useMemo } from 'react';
 import { useState, useEffect } from 'react';
 import { RewardDialog } from '@/components/dialog/RewardDialog';
 import { formatDistanceToNow, formatDistance } from 'date-fns';
@@ -21,6 +21,7 @@ import { BidDialog } from "@/components/dialog/BidDialog";
 import { AuctionHistoryDialog } from "@/components/dialog/AuctionHistoryDialog";
 import { ShareDialog } from "@/components/dialog/ShareDialog";
 import { useUserStore } from '@/store/userStore';
+import { StartAuctionButton } from "@/components/auction/StartAuctionButton";
 
 interface CommentFormData {
   content: string;
@@ -34,13 +35,14 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const [isBidDialogOpen, setIsBidDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const { data: post, isLoading, error } = usePost(id);
+  const { data: post, isLoading, error, refetch } = usePost(id);
   // console.log(post);
   const { data: bidsData } = useBids(id, page, pageSize);
   const createComment = useCreateComment();
   const { register, handleSubmit, reset } = useForm<CommentFormData>();
   const [showConfetti, setShowConfetti] = useState(false);
   const user = useUserStore((state) => state.user);
+
   useEffect(() => {
     if (showConfetti) {
       const timer = setTimeout(() => setShowConfetti(false), 2000);
@@ -66,6 +68,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       }
     }
   }, [searchParams, post?.shareCode]);
+  const isAuthor = useMemo(() => user?.walletAddress && user?.walletAddress === post?.author?.walletAddress, [user, post]);
 
   const onSubmit = (data: CommentFormData) => {
     createComment.mutate({ postId: id, content: data.content });
@@ -85,7 +88,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   }
 
   const isBiddingActive = post.allowBidding && post.biddingDueDate && new Date(post.biddingDueDate) > new Date();
-
+  
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* <Button
@@ -143,7 +146,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </div>
 
           {/* Bidding Section */}
-          {post?.allowBidding && (
+          {post?.allowBidding ? (
             <div className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -165,6 +168,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                         startPrice={post.startPrice || 0}
                         currentBids={bidsData?.bids || []}
                         postId={id}
+                        currentHighestBid={post.currentHighestBid}
                         trigger={
                           <Button>
                             <Gavel className="mr-2 h-4 w-4" />
@@ -264,6 +268,25 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          ) : isAuthor && !post.allowBidding && (
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground">Auction</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Start an auction for this Post
+                  </p>
+                </div>
+                <StartAuctionButton
+                  nftObjectId={post.nftObjectId}
+                  postId={id}
+                  onSuccess={() => {
+                    // 刷新帖子数据
+                    refetch();
+                  }}
+                />
               </div>
             </div>
           )}

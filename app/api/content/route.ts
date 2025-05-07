@@ -112,6 +112,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // 计算竞拍截止时间
+    let biddingDueDate = null;
+    if (biddingInfo) {
+      const duration = (biddingInfo.durationHours * 60 * 60 + biddingInfo.durationMinutes * 60) * 1000;
+      biddingDueDate = new Date(Date.now() + duration);
+    }
+
     // 创建数据库记录
     const post = await prisma.post.create({
       data: {
@@ -120,7 +127,7 @@ export async function POST(request: Request) {
         userId: user.id,
         shareCode: nanoid(), // 生成帖子分享码
         allowBidding: !!biddingInfo,
-        biddingDueDate: biddingInfo?.dueDate,
+        biddingDueDate: biddingDueDate,
         startPrice: biddingInfo?.startPrice,
         auctionRound: 1, // 初始轮次为1
         nftObjectId: nftObjectId, // 添加 NFT 对象 ID
@@ -170,17 +177,40 @@ export async function POST(request: Request) {
         digest: digest,
         userId: user.id,
         postId: post.id,
-        type: "mint",
+        type: "create post",
         status: "success",
         data: {
           title,
           text,
           imageInfo,
-          biddingInfo,
+          biddingInfo: biddingInfo ? {
+            ...biddingInfo,
+            dueDate: biddingDueDate
+          } : null,
           round: post.auctionRound
         }
       }
     });
+
+    // 如果有拍卖交易，创建拍卖交易记录
+    if (biddingInfo?.auctionDigest) {
+      await prisma.suiTransaction.create({
+        data: {
+          digest: biddingInfo.auctionDigest,
+          userId: user.id,
+          postId: post.id,
+          type: "create auction",
+          status: "success",
+          data: {
+            nftObjectId,
+            startPrice: biddingInfo.startPrice,
+            duration: (biddingInfo.durationHours * 60 * 60 + biddingInfo.durationMinutes * 60) * 1000,
+            dueDate: biddingDueDate,
+            round: post.auctionRound
+          }
+        }
+      });
+    }
 
     return NextResponse.json({ success: true, post });
   } catch (error) {

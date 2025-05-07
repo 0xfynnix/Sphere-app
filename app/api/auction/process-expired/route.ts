@@ -164,6 +164,7 @@ export async function POST(request: Request) {
         allowBidding: false,
         biddingDueDate: null,
         startPrice: null,
+        currentHighestBid: null,
         status: PostStatus.PUBLISHED,
         auctionRound: {
           increment: 1

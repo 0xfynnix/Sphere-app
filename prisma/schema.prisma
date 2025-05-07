@@ -124,6 +124,7 @@ model Post {
   allowBidding  Boolean  @default(false) // 是否允许竞拍
   biddingDueDate DateTime? // 竞拍截止日期
   startPrice    Float?    // 起拍价（SUI）
+  currentHighestBid Float? // 当前最高竞拍价（SUI）
   bids          Bid[]     @relation("BidPost") // 竞拍记录
   lotteryPool     LotteryPool?     // 当前抽奖池
   auctionRound   Int      @default(1) // 竞拍轮次，从1开始

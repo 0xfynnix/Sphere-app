@@ -33,6 +33,7 @@ interface BidDialogProps {
   startPrice: number;
   currentBids: Bid[];
   postId: string;
+  currentHighestBid?: number | null;
   trigger?: React.ReactNode;
 }
 
@@ -42,6 +43,7 @@ export function BidDialog({
   startPrice,
   currentBids,
   postId,
+  currentHighestBid,
   trigger,
 }: BidDialogProps) {
   const [bidAmount, setBidAmount] = useState<string>("");
@@ -70,7 +72,8 @@ export function BidDialog({
       return;
     }
     const amount = parseFloat(bidAmount);
-    if (amount <= (currentBids[0]?.amount || startPrice || 0)) {
+    const minimumBid = currentHighestBid || currentBids[0]?.amount || startPrice || 0;
+    if (amount <= minimumBid) {
       toast.error("Bid amount must be higher than current highest bid");
       return;
     }

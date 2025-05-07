@@ -10,7 +10,7 @@ export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x3
 // Contract module names
 export const MODULE_NAMES = {
   IDENTITY: 'identity',
-  NFT_AUCTION: 'nft_auction',
+  // NFT_AUCTION: 'nft_auction',
   COPYRIGHT_NFT: 'copyright_nft',
   BADGE_NFT: 'badge_nft',
 } as const; 

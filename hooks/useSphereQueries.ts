@@ -55,7 +55,7 @@ export function useAuction(auctionId?: string) {
         // Check if the object is of the correct type
         if (
           result.data?.type !==
-          `${CONTRACT_ADDRESS}::${MODULE_NAMES.NFT_AUCTION}::Auction`
+          `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::Auction`
         ) {
           return null;
         }

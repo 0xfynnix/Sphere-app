@@ -253,4 +253,10 @@ export const useGenerateImage = () => {
   return useMutation<GenerateImageResponse, Error, GenerateImageRequest>({
     mutationFn: generateImage,
   });
+};
+
+export const useUpdatePostAuction = () => {
+  return useMutation({
+    mutationFn: postsApi.updatePostAuction,
+  });
 }; 

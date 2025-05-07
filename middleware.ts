@@ -17,6 +17,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // 对于 /api/posts/:path* 的非 POST 请求直接放行
+  if (request.nextUrl.pathname.startsWith('/api/posts/') && request.method !== 'POST') {
+    return NextResponse.next()
+  }
+
   // 获取 Authorization header
   const authHeader = request.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) {
@@ -55,6 +60,7 @@ export const config = {
     '/api/bids/:path*',
     '/api/rewards/:path*',
     '/api/auction/process-expired',
+    '/api/posts/:path*',
   ],
 }
 

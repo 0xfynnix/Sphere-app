@@ -83,6 +83,14 @@ export async function POST(request: Request) {
       },
     });
 
+    // 更新帖子的当前最高竞拍价
+    await prisma.post.update({
+      where: { id: postId },
+      data: {
+        currentHighestBid: amount
+      }
+    });
+
     return NextResponse.json({
       success: true,
       bid: {

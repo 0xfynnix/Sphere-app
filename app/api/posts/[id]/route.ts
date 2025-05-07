@@ -58,6 +58,7 @@ export async function GET(
       author: {
         id: post.user.id,
         name: post.user.profile?.name || 'Anonymous',
+        walletAddress: post.user.walletAddress,
         avatar: post.user.profile?.avatar
       },
       likes: post.likes.length,
@@ -67,6 +68,7 @@ export async function GET(
         author: {
           id: comment.user.id,
           name: comment.user.profile?.name || 'Anonymous',
+          walletAddress: comment.user.walletAddress,
           avatar: comment.user.profile?.avatar
         },
         timestamp: comment.createdAt
@@ -87,6 +89,7 @@ export async function GET(
       ],
       allowBidding: post.allowBidding,
       biddingDueDate: post.biddingDueDate,
+      currentHighestBid: post.currentHighestBid,
       startPrice: post.startPrice,
       shareCode: post.shareCode,
       nftObjectId: post.nftObjectId,

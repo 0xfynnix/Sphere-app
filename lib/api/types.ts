@@ -67,6 +67,7 @@ export interface Post {
     id: string;
     name: string;
     avatar?: string;
+    walletAddress: string;
   };
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'DELETED' | 'PENDING' | 'FAILED';
   category?: {
@@ -98,6 +99,7 @@ export interface Post {
   totalRewards: number;
   postType: 'NORMAL' | 'MEME_LORD';
   allowBidding: boolean;
+  currentHighestBid: number;
   biddingDueDate?: string;
   startPrice?: number;
   createdAt: string;
@@ -222,4 +224,16 @@ export interface UpdateProfileResponse {
   error?: {
     message: string;
   };
+}
+
+export interface AuctionInfo {
+  startPrice: number;
+  durationHours: number;
+  durationMinutes: number;
+  auctionDigest: string;
+}
+
+export interface UpdatePostAuctionRequest {
+  postId: string;
+  auctionInfo: AuctionInfo;
 } 
