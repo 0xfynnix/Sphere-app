@@ -127,7 +127,7 @@ export function BidDialog({
       }, 100);
 
       // 调用合约的 placeBid 函数
-      const result = await placeBid(auctionId, amount, referrer || undefined);
+      const result = await placeBid(auctionId, amount, referrer || "0x0");
       
       clearInterval(contractProgressInterval);
       setBidProgress(50);

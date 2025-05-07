@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { User, Pencil, Coins, Loader2 } from "lucide-react";
+import { User, Pencil, Coins, Loader2, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@/lib/api/hooks";
 import { useUserPosts } from "@/lib/api/hooks";
@@ -32,6 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useClaimReward, useUnclaimedRewards, useClaimBid, useUnclaimedBids } from "@/lib/api/hooks";
+import { useTransactions } from "@/lib/api/hooks";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -60,6 +61,11 @@ export default function ProfilePage() {
   const claimReward = useClaimReward();
   const claimBid = useClaimBid();
 
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
+    page: currentPage,
+    pageSize,
+  });
+
   useEffect(() => {
     if (isUserError) {
       toast.error("Please connect and login to view your profile");
@@ -67,12 +73,14 @@ export default function ProfilePage() {
     }
   }, [isUserError, router]);
 
-  if (isUserLoading || isPostsLoading) {
+  if (isUserLoading || isPostsLoading || isTransactionsLoading) {
     return <LoadingSpinner />;
   }
 
   const posts = postsData?.data?.posts || [];
   const pagination = postsData?.data?.pagination;
+  const transactions = transactionsData?.data || [];
+  const transactionsPagination = transactionsData?.pagination;
   // logger.debug('Profile', { profile, posts, pagination });
 
   const handleCancelBidding = async (postId: string) => {
@@ -148,97 +156,134 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <Avatar className="h-20 w-20">
-            {user?.profile?.avatar ? (
-              <AvatarImage src={user.profile.avatar} />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-muted">
-                <User className="h-10 w-10 text-muted-foreground" />
+      <div className="relative mb-12">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-pink-500/10 rounded-3xl -z-10" />
+        <div className="p-8">
+          <div className="flex items-center gap-6 mb-6">
+            <div className="relative">
+              <Avatar className="h-24 w-24 ring-4 ring-background">
+                {user?.profile?.avatar ? (
+                  <AvatarImage src={user.profile.avatar} />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500">
+                    <User className="h-12 w-12 text-white" />
+                  </div>
+                )}
+                {user?.profile?.avatar && (
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-2xl">
+                    {user.profile?.name?.[0] || "U"}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  {user?.profile?.name || "Anonymous"}
+                </h1>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-purple-100">
+                      <Pencil className="h-4 w-4 text-purple-600" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Edit Profile</DialogTitle>
+                    </DialogHeader>
+                    <UpdateProfileForm
+                      profile={{
+                        name: user?.profile?.name || undefined,
+                        bio: user?.profile?.bio || undefined,
+                        avatar: user?.profile?.avatar || undefined,
+                      }}
+                      onSuccess={handleUpdateSuccess}
+                    />
+                  </DialogContent>
+                </Dialog>
               </div>
-            )}
-            {user?.profile?.avatar && (
-              <AvatarFallback>{user.profile?.name?.[0] || "U"}</AvatarFallback>
-            )}
-          </Avatar>
-          <div className="flex items-start gap-2 flex-col">
-            <h1 className="text-3xl font-bold text-foreground">
-              {user?.profile?.name || "Anonymous"}
-            </h1>
-          <p className="text-muted-foreground">
-            @{user?.walletAddress.slice(0, 6)}...{user?.walletAddress.slice(-4)}
-          </p>
+              <p className="text-muted-foreground">
+                @{user?.walletAddress.slice(0, 6)}...{user?.walletAddress.slice(-4)}
+              </p>
+              {user?.profile?.bio && (
+                <p className="mt-2 text-muted-foreground">{user.profile.bio}</p>
+              )}
+            </div>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Edit Profile</DialogTitle>
-              </DialogHeader>
-              <UpdateProfileForm
-                profile={{
-                  name: user?.profile?.name || undefined,
-                  bio: user?.profile?.bio || undefined,
-                  avatar: user?.profile?.avatar || undefined,
-                }}
-                onSuccess={handleUpdateSuccess}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-purple-500/10 to-purple-500/5">
+          <h3 className="text-sm font-semibold mb-2 text-purple-600">
             Content Created
           </h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">
+          <p className="text-2xl sm:text-3xl font-bold text-purple-700">
             {pagination?.total || 0}
           </p>
-          <p className="text-xs text-muted-foreground">Total Posts</p>
+          <p className="text-xs text-purple-500/70">Total Posts</p>
         </Card>
-        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-blue-500/10 to-blue-500/5">
+          <h3 className="text-sm font-semibold mb-2 text-blue-600">
             Total Auction Revenue
           </h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">
+          <p className="text-2xl sm:text-3xl font-bold text-blue-700">
             {userData?.data?.user?.auctionEarnings || 0} SUI
           </p>
-          <p className="text-xs text-muted-foreground">From Auctions</p>
+          <p className="text-xs text-blue-500/70">From Auctions</p>
         </Card>
-        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-green-500/10 to-green-500/5">
+          <h3 className="text-sm font-semibold mb-2 text-green-600">
             Total Received Rewards
           </h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">
+          <p className="text-2xl sm:text-3xl font-bold text-green-700">
             {userData?.data?.user?.rewardEarnings || 0} SUI
           </p>
-          <p className="text-xs text-muted-foreground">From Community</p>
+          <p className="text-xs text-green-500/70">From Community</p>
         </Card>
-        <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">
+        <Card className="p-4 sm:p-6 hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-pink-500/10 to-pink-500/5">
+          <h3 className="text-sm font-semibold mb-2 text-pink-600">
             Total Given Rewards
           </h3>
-          <p className="text-xl sm:text-2xl font-bold text-foreground">
+          <p className="text-2xl sm:text-3xl font-bold text-pink-700">
             {userData?.data?.user?.rewardSpent || 0} SUI
           </p>
-          <p className="text-xs text-muted-foreground">To Community</p>
+          <p className="text-xs text-pink-500/70">To Community</p>
         </Card>
       </div>
 
       <Tabs defaultValue="wallet" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="wallet">Transaction</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="nfts">NFTs</TabsTrigger>
-          <TabsTrigger value="claim">Claim</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1 rounded-xl">
+          <TabsTrigger 
+            value="wallet" 
+            className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/10 data-[state=active]:to-purple-500/5 data-[state=active]:text-purple-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-purple-500/20"
+          >
+            Transaction
+          </TabsTrigger>
+          <TabsTrigger 
+            value="content" 
+            className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-500/5 data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-blue-500/20"
+          >
+            Content
+          </TabsTrigger>
+          <TabsTrigger 
+            value="nfts" 
+            className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-500/5 data-[state=active]:text-green-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-green-500/20"
+          >
+            NFTs
+          </TabsTrigger>
+          <TabsTrigger 
+            value="claim" 
+            className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500/10 data-[state=active]:to-pink-500/5 data-[state=active]:text-pink-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-pink-500/20"
+          >
+            Claim
+          </TabsTrigger>
+          <TabsTrigger 
+            value="settings" 
+            className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-orange-500/5 data-[state=active]:text-orange-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-orange-500/20"
+          >
+            Settings
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="wallet" className="mt-6">
           <div className="space-y-6">
@@ -247,33 +292,104 @@ export default function ProfilePage() {
                 Transaction History On Sphere
               </h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">
-                      Content Creation Reward
-                    </p>
-                    <p className="text-sm text-muted-foreground">2 hours ago</p>
+                {transactions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                      <Coins className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground text-lg">No transactions yet</p>
+                    <p className="text-muted-foreground text-sm mt-2">Your transaction history will appear here</p>
                   </div>
-                  <p className="text-green-500 font-semibold">+5.2 SUI</p>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">
-                      Content Purchase
-                    </p>
-                    <p className="text-sm text-muted-foreground">1 day ago</p>
-                  </div>
-                  <p className="text-red-500 font-semibold">-2.5 SUI</p>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">
-                      Community Reward
-                    </p>
-                    <p className="text-sm text-muted-foreground">3 days ago</p>
-                  </div>
-                  <p className="text-green-500 font-semibold">+1.8 SUI</p>
-                </div>
+                ) : (
+                  <>
+                    {transactions.map((transaction) => (
+                      <div 
+                        key={transaction.id} 
+                        className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`rounded-full p-2 ${
+                            transaction.type === 'reward' ? 'bg-green-100 text-green-600' :
+                            transaction.type === 'bid' ? 'bg-blue-100 text-blue-600' :
+                            'bg-purple-100 text-purple-600'
+                          }`}>
+                            {transaction.type === 'reward' ? (
+                              <ArrowUpRight className="h-5 w-5" />
+                            ) : transaction.type === 'bid' ? (
+                              <ArrowDownLeft className="h-5 w-5" />
+                            ) : (
+                              <Coins className="h-5 w-5" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {transaction.type === 'reward' && 'Content Creation Reward'}
+                              {transaction.type === 'bid' && 'Content Purchase'}
+                              {transaction.type === 'referral' && 'Community Reward'}
+                              {!['reward', 'bid', 'referral'].includes(transaction.type) && transaction.type}
+                            </p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{new Date(transaction.createdAt).toLocaleString()}</span>
+                            </div>
+                            {transaction.post && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Post: {transaction.post.title}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                            transaction.status === 'success' ? 'bg-green-100 text-green-700' :
+                            transaction.status === 'failed' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {transaction.status === 'success' ? (
+                              <CheckCircle2 className="h-3 w-3" />
+                            ) : transaction.status === 'failed' ? (
+                              <XCircle className="h-3 w-3" />
+                            ) : (
+                              <AlertCircle className="h-3 w-3" />
+                            )}
+                            <span className="capitalize">{transaction.status}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {transactionsPagination && transactionsPagination.totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                        <div className="text-sm text-muted-foreground">
+                          Showing {(currentPage - 1) * pageSize + 1}-
+                          {Math.min(currentPage * pageSize, transactionsPagination.total)} of{" "}
+                          {transactionsPagination.total} items
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            Previous
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setCurrentPage((prev) =>
+                                Math.min(transactionsPagination.totalPages, prev + 1)
+                              )
+                            }
+                            disabled={currentPage === transactionsPagination.totalPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </Card>
           </div>

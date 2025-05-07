@@ -18,6 +18,8 @@ import { profileApi } from './profile';
 import { generateImage, type GenerateImageRequest, type GenerateImageResponse } from './ai';
 import { claimReward, getUnclaimedRewards } from './rewards';
 import { RewardClaimRequest, BidClaimRequest } from './types';
+import { getTransactions } from './transactions';
+import { GetTransactionsParams, GetTransactionsResponse } from './types';
 
 // User hooks
 export const useUser = () => {
@@ -291,4 +293,14 @@ export const useUnclaimedBids = () => {
     queryKey: ['unclaimedBids'],
     queryFn: bidsApi.getUnclaimedBids,
   });
-}; 
+};
+
+/**
+ * 获取用户交易记录的hook
+ */
+export function useTransactions(params: GetTransactionsParams = {}) {
+  return useQuery<GetTransactionsResponse>({
+    queryKey: ['transactions', params],
+    queryFn: () => getTransactions(params),
+  });
+} 

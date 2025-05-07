@@ -317,3 +317,40 @@ export interface UnclaimedBidsResponse {
   creatorBids: UnclaimedBid[];
   referrerBids: UnclaimedBid[];
 }
+
+// 交易记录相关类型
+export interface Transaction {
+  id: string;
+  digest: string;
+  type: string;
+  status: string;
+  data?: unknown;
+  post?: {
+    id: string;
+    title: string;
+  };
+  reward?: {
+    id: string;
+    amount: number;
+  };
+  bid?: {
+    id: string;
+    amount: number;
+    isWinner: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetTransactionsResponse {
+  success: boolean;
+  data: Transaction[];
+  pagination: Pagination;
+}
+
+export interface GetTransactionsParams {
+  page?: number;
+  pageSize?: number;
+  type?: string;
+  status?: string;
+}

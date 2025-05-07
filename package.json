@@ -48,6 +48,7 @@
     "nft.storage": "^7.2.0",
     "prisma": "^6.6.0",
     "react": "^19.0.0",
+    "react-countdown": "^2.3.6",
     "react-day-picker": "8.10.1",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.55.0",

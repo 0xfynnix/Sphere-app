@@ -67,13 +67,13 @@ export function useSphereContract() {
    * 使用 gas coin 作为出价代币
    * 使用 Clock 对象检查时间
    */
-  const placeBid = async (auctionId: string, bidAmount: number, reference: string = '0x0') => {
+  const placeBid = async (auctionId: string, bidAmount: number, reference: string) => {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
     // 从 gas coin 中分割出指定金额的 coin
     const [bidCoin] = tx.splitCoins(tx.gas, [suiToMist(bidAmount)]);
-    
+    // console.log(CONTRACT_ADDRESS,MODULE_NAMES.COPYRIGHT_NFT);
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::place_bid`,
       arguments: [

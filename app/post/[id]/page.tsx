@@ -3,12 +3,12 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 // import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Gift, Clock, Gavel, History, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageCircle, Gift, Clock, Gavel, History, ChevronLeft, ChevronRight, Share, Network } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { use, useMemo } from 'react';
 import { useState, useEffect } from 'react';
 import { RewardDialog } from '@/components/dialog/RewardDialog';
-import { formatDistanceToNow, formatDistance } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { usePost, useCreateComment, useBids } from '@/lib/api/hooks';
@@ -22,6 +22,147 @@ import { AuctionHistoryDialog } from "@/components/dialog/AuctionHistoryDialog";
 import { ShareDialog } from "@/components/dialog/ShareDialog";
 import { useUserStore } from '@/store/userStore';
 import { StartAuctionButton } from "@/components/auction/StartAuctionButton";
+import Countdown from 'react-countdown';
+import { motion } from 'framer-motion';
+
+// 获取区块链浏览器 URL
+const getExplorerUrl = (objectId: string) => {
+  const network = process.env.NEXT_PUBLIC_SUI_NETWORK;
+  if (network === 'testnet') {
+    return `https://suiexplorer.com/object/${objectId}?network=testnet`;
+  }
+  return `https://suiexplorer.com/object/${objectId}`;
+};
+
+// 独立的倒计时组件
+interface CountdownDisplayProps {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  completed: boolean;
+  isAuthor: boolean;
+}
+
+const CountdownDisplay = ({ hours, minutes, seconds, completed, isAuthor }: CountdownDisplayProps) => {
+  if (completed) {
+    return (
+      <div className="flex items-center space-x-2">
+        {isAuthor ? (
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none"
+          >
+            Complete Auction
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
+
+  // 将数字拆分为十位和个位
+  const formatNumber = (num: number) => {
+    const str = num.toString().padStart(2, '0');
+    return {
+      tens: str[0],
+      ones: str[1]
+    };
+  };
+
+  const hoursDigits = formatNumber(hours);
+  const minutesDigits = formatNumber(minutes);
+  const secondsDigits = formatNumber(seconds);
+
+  return (
+    <motion.div 
+      className="flex items-center text-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <motion.div
+        animate={{ 
+          rotate: [0, 360],
+          scale: [1, 1.1, 1]
+        }}
+        transition={{ 
+          rotate: { duration: 60, repeat: Infinity, ease: "linear" },
+          scale: { duration: 2, repeat: Infinity }
+        }}
+        className="text-violet-500"
+      >
+        <Clock className="mr-1 h-4 w-4" />
+      </motion.div>
+      <span className="font-medium bg-gradient-to-tr from-violet-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">Ends in </span>
+      <div className="flex ml-1 space-x-1">
+        {hours > 0 && (
+          <div className="flex">
+            <motion.span
+              key={`hours-tens-${hoursDigits.tens}`}
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="font-mono bg-gradient-to-br from-violet-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent"
+            >
+              {hoursDigits.tens}
+            </motion.span>
+            <motion.span
+              key={`hours-ones-${hoursDigits.ones}`}
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="font-mono bg-gradient-to-br from-violet-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent"
+            >
+              {hoursDigits.ones}
+            </motion.span>
+            <span className="font-mono bg-gradient-to-bl from-violet-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">h</span>
+          </div>
+        )}
+        <div className="flex">
+          <motion.span
+            key={`minutes-tens-${minutesDigits.tens}`}
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="font-mono bg-gradient-to-br from-violet-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent"
+          >
+            {minutesDigits.tens}
+          </motion.span>
+          <motion.span
+            key={`minutes-ones-${minutesDigits.ones}`}
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="font-mono bg-gradient-to-br from-violet-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent"
+          >
+            {minutesDigits.ones}
+          </motion.span>
+          <span className="font-mono bg-gradient-to-bl from-violet-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">m</span>
+        </div>
+        <div className="flex">
+          <motion.span
+            key={`seconds-tens-${secondsDigits.tens}`}
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="font-mono bg-gradient-to-br from-violet-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent"
+          >
+            {secondsDigits.tens}
+          </motion.span>
+          <motion.span
+            key={`seconds-ones-${secondsDigits.ones}`}
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="font-mono bg-gradient-to-br from-violet-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent"
+          >
+            {secondsDigits.ones}
+          </motion.span>
+          <span className="font-mono bg-gradient-to-bl from-violet-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">s</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 interface CommentFormData {
   content: string;
@@ -85,7 +226,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       }
     }
   }, [searchParams, post?.shareCode]);
-  const isAuthor = useMemo(() => user?.walletAddress && user?.walletAddress === post?.author?.walletAddress, [user, post]);
+  const isAuthor = useMemo(() => Boolean(user?.walletAddress && user?.walletAddress === post?.author?.walletAddress), [user, post]);
 
   const onSubmit = (data: CommentFormData) => {
     createComment.mutate({ postId: id, content: data.content });
@@ -145,7 +286,20 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
           {/* Post Content */}
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-foreground">{post.title}</h2>
+            <h2 className="text-2xl font-bold mb-2 text-foreground">{post.title}</h2>
+            {post.nftObjectId && (
+              <div className="mb-4">
+                <a
+                  href={getExplorerUrl(post.nftObjectId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-fuchsia-500 transition-colors"
+                >
+                  <Network className="h-4 w-4" />
+                  <span>View on Explorer</span>
+                </a>
+              </div>
+            )}
             <p className="text-muted-foreground mb-6">{post.content}</p>
             {post.images.length > 0 && (
               <PhotoProvider>
@@ -167,45 +321,45 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
             <div className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-foreground">Bidding</h3>
+                  <h3 className="font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">
+                    {isBiddingActive ? 'Bidding' : 'Bidding ended'}
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    Start Price: {post.startPrice} SUI
+                    {isBiddingActive ? (
+                      `Start Price: ${post.startPrice} SUI`
+                    ) : (
+                      isAuthor ? 'Complete the auction to finalize the sale' : 'Waiting for creator to complete the auction'
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center space-x-4">
-                  {isBiddingActive && post.biddingDueDate ? (
-                    <>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Clock className="mr-1 h-4 w-4" />
-                        Ends in {formatDistance(new Date(post.biddingDueDate), new Date())}
-                      </div>
-                      {!isAuthor && (
-                        <BidDialog
-                          isOpen={isBidDialogOpen}
-                          onOpenChange={handleBidDialogOpenChange}
-                          startPrice={post.startPrice || 0}
-                          currentBids={bidsData?.bids || []}
-                          postId={id}
-                          currentHighestBid={post.currentHighestBid}
-                          auctionId={post.auctionObjectId}
-                          trigger={
-                            <Button>
-                              <Gavel className="mr-2 h-4 w-4" />
-                              Place Bid
-                            </Button>
-                          }
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      Bidding ended
-                    </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Countdown
+                      date={new Date(post.biddingDueDate || '')}
+                      renderer={(props) => <CountdownDisplay {...props} isAuthor={isAuthor} />}
+                    />
+                  </div>
+                  {isBiddingActive && !isAuthor && (
+                    <BidDialog
+                      isOpen={isBidDialogOpen}
+                      onOpenChange={handleBidDialogOpenChange}
+                      startPrice={post.startPrice || 0}
+                      currentBids={bidsData?.bids || []}
+                      postId={id}
+                      currentHighestBid={post.currentHighestBid}
+                      auctionId={post.auctionObjectId}
+                      trigger={
+                        <Button className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none">
+                          <Gavel className="mr-2 h-4 w-4" />
+                          Place Bid
+                        </Button>
+                      }
+                    />
                   )}
                   <AuctionHistoryDialog
                     postId={id}
                     trigger={
-                      <Button variant="outline">
+                      <Button variant="outline" className="border-violet-200 text-violet-400 hover:bg-violet-50 hover:text-violet-500">
                         <History className="mr-2 h-4 w-4" />
                         View History
                       </Button>
@@ -314,19 +468,31 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           {/* Actions */}
           <div className="flex items-center justify-between">
             <div className="flex space-x-4">
-              <Button variant="ghost" className="flex items-center">
+              <Button variant="ghost" className="text-violet-400 hover:text-violet-500 hover:bg-violet-50">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {post.comments.length}
               </Button>
               <Button 
                 variant="ghost" 
-                className="flex items-center"
+                className="text-violet-400 hover:text-violet-500 hover:bg-violet-50"
                 onClick={() => setIsRewardDialogOpen(true)}
               >
                 <Gift className="mr-2 h-4 w-4" />
                 Reward
               </Button>
-              <ShareDialog postId={id} postShareCode={post.shareCode} />
+              <ShareDialog 
+                postId={id} 
+                postShareCode={post.shareCode}
+                trigger={
+                  <Button 
+                    variant="ghost" 
+                    className="text-violet-400 hover:text-violet-500 hover:bg-violet-50"
+                  >
+                    <Share className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
+                }
+              />
             </div>
           </div>
 
@@ -337,7 +503,11 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
               placeholder="Write a comment..."
               className="min-h-[100px]"
             />
-            <Button type="submit" disabled={createComment.isPending}>
+            <Button 
+              type="submit" 
+              disabled={createComment.isPending}
+              className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none"
+            >
               {createComment.isPending ? 'Posting...' : 'Post Comment'}
             </Button>
           </form>
