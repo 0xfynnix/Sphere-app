@@ -84,7 +84,7 @@ export async function POST(req: Request) {
           postId: post.id,
           amount: amount,
           senderId: user.id,
-          recipientId: post.creatorId,
+          recipientId: post.userId,
           referrerId: referrer?.id,
           lotteryPoolId: post.lotteryPool?.id,
           // Record amounts for each party
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
             referrerId: referrer?.id,
             postShareCode,
             senderId: user.id,
-            recipientId: post.creatorId,
+            recipientId: post.userId,
             recipientAmount,
             referrerAmount,
             platformAmount,
