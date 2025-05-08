@@ -8,7 +8,7 @@ const nanoid = customAlphabet(
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
   8
 );
-
+// 获取用户帖子列表
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -166,9 +166,21 @@ export async function POST(request: Request) {
             round: 1, // 初始轮次为1
           },
         },
+        // 如果启用了竞拍，创建拍卖历史记录
+        ...(biddingInfo ? {
+          auctionHistory: {
+            create: {
+              round: 1,
+              startPrice: biddingInfo.startPrice,
+              biddingDueDate: biddingDueDate!,
+              totalBids: 0,
+            }
+          }
+        } : {}),
       },
       include: {
         lotteryPool: true,
+        auctionHistory: true,
       },
     });
 
@@ -188,7 +200,8 @@ export async function POST(request: Request) {
             ...biddingInfo,
             dueDate: biddingDueDate
           } : null,
-          round: post.auctionRound
+          round: post.auctionRound,
+          auctionHistoryId: post.auctionHistory?.[0]?.id
         }
       }
     });
@@ -207,7 +220,8 @@ export async function POST(request: Request) {
             startPrice: biddingInfo.startPrice,
             duration: (biddingInfo.durationHours * 60 * 60 + biddingInfo.durationMinutes * 60) * 1000,
             dueDate: biddingDueDate,
-            round: post.auctionRound
+            round: post.auctionRound,
+            auctionHistoryId: post.auctionHistory?.[0]?.id
           }
         }
       });

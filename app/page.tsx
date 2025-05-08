@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Heart, MessageCircle, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useRecommendedPosts } from '@/lib/api/hooks';
 
 export default function Home() {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { data: recommendedData, isLoading: isRecommendedLoading } = useRecommendedPosts();
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -18,49 +20,6 @@ export default function Home() {
       scrollContainerRef.current.scrollLeft += direction === 'left' ? -scrollAmount : scrollAmount;
     }
   };
-
-  const feedPosts = [
-    {
-      id: 1,
-      author: "Alice",
-      authorId: "alice123",
-      title: "My First Digital Art Collection",
-      content: "Just launched my first NFT collection!",
-      likes: 42,
-      rewards: 24,
-      image: "/sample-art.jpg"
-    },
-    {
-      id: 2,
-      author: "Bob",
-      authorId: "bob456",
-      title: "Web3 Development Tutorial",
-      content: "Building decentralized applications",
-      likes: 128,
-      rewards: 56,
-      image: "/sample-code.jpg"
-    },
-    {
-      id: 3,
-      author: "Charlie",
-      authorId: "charlie789",
-      title: "Photography Series",
-      content: "Urban life through my lens",
-      likes: 89,
-      rewards: 31,
-      image: "/sample-photo.jpg"
-    },
-    {
-      id: 4,
-      author: "David",
-      authorId: "david012",
-      title: "AI Art Exploration",
-      content: "Experimenting with AI tools",
-      likes: 156,
-      rewards: 42,
-      image: "/sample-ai.jpg"
-    }
-  ];
 
   const popularPosts = [
     {
@@ -126,7 +85,9 @@ export default function Home() {
               className="flex overflow-x-auto space-x-4 pb-4 px-4 scroll-smooth scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {feedPosts.map((post) => (
+              {isRecommendedLoading ? (
+                <div className="flex-none w-[300px] h-[200px] animate-pulse bg-muted rounded-lg" />
+              ) : recommendedData?.posts.map((post) => (
                 <Card 
                   key={post.id} 
                   className="flex-none w-[300px] cursor-pointer hover:shadow-md transition-shadow"
@@ -137,12 +98,22 @@ export default function Home() {
                       className="flex items-center mb-3 cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/user/${post.authorId}`);
+                        router.push(`/user/${post.user.walletAddress}`);
                       }}
                     >
-                      <div className="w-8 h-8 rounded-full bg-muted mr-2"></div>
+                      <div className="w-8 h-8 rounded-full bg-muted mr-2">
+                        {post.user.profile?.avatar && (
+                          <img 
+                            src={post.user.profile.avatar} 
+                            alt={post.user.profile.name || ''} 
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        )}
+                      </div>
                       <div>
-                        <h3 className="font-semibold text-sm text-foreground">{post.author}</h3>
+                        <h3 className="font-semibold text-sm text-foreground">
+                          {post.user.profile?.name || post.user.walletAddress.slice(0, 6)}
+                        </h3>
                         <p className="text-xs text-muted-foreground">2h ago</p>
                       </div>
                     </div>
@@ -151,17 +122,17 @@ export default function Home() {
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex space-x-3">
                         <Button variant="ghost" size="sm" className="flex items-center px-2">
-                          <Heart className="mr-1 h-4 w-4" />
-                          {post.likes}
+                          <MessageCircle className="mr-1 h-4 w-4" />
+                          {post._count.comments}
                         </Button>
                         <Button variant="ghost" size="sm" className="flex items-center px-2">
-                          <MessageCircle className="mr-1 h-4 w-4" />
-                          Comment
+                          <Heart className="mr-1 h-4 w-4" />
+                          {post._count.bookmarks}
                         </Button>
                       </div>
                       <div className="flex items-center text-amber-500">
                         <Flame className="mr-1 h-4 w-4" />
-                        <span className="font-medium">{post.rewards}</span>
+                        <span className="font-medium">{post.totalRewards}</span>
                       </div>
                     </div>
                   </div>

@@ -46,6 +46,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bidding has ended" }, { status: 400 });
     }
 
+    // 获取当前轮次的拍卖历史
+    const currentAuctionHistory = await prisma.auctionHistory.findFirst({
+      where: {
+        postId: postId,
+        round: post.auctionRound
+      }
+    });
+
+    if (!currentAuctionHistory) {
+      return NextResponse.json(
+        { error: "Auction history not found for current round" },
+        { status: 400 }
+      );
+    }
+
     // 验证出价是否高于当前最高出价或起拍价
     const currentHighestBid =
       post.bids.length > 0
@@ -85,9 +100,11 @@ export async function POST(request: Request) {
         amount,
         postId,
         userId: user.id,
+        creatorId: post.userId, // 设置创作者ID为帖子的创建者
         round: post.auctionRound, // 设置当前轮次
         referrerId: referrer?.id, // 添加推荐人ID
-        platformAmount: amount * 0.1, // 5% platform fee
+        platformAmount: amount * 0.1, // 10% platform fee
+        auctionHistoryId: currentAuctionHistory.id, // 关联到当前轮次的拍卖历史
         transactions: {
           create: {
             digest,
@@ -101,6 +118,7 @@ export async function POST(request: Request) {
               ref,
               referrerId: referrer?.id,
               postShareCode,
+              auctionHistoryId: currentAuctionHistory.id,
             },
           },
         },
@@ -120,13 +138,24 @@ export async function POST(request: Request) {
       },
     });
 
-    // 更新帖子的当前最高竞拍价
-    await prisma.post.update({
-      where: { id: postId },
-      data: {
-        currentHighestBid: amount
-      }
-    });
+    // 更新帖子的当前最高竞拍价和拍卖历史的总竞拍次数
+    await Promise.all([
+      prisma.post.update({
+        where: { id: postId },
+        data: {
+          currentHighestBid: amount
+        }
+      }),
+      prisma.auctionHistory.update({
+        where: { id: currentAuctionHistory.id },
+        data: {
+          totalBids: {
+            increment: 1
+          },
+          finalPrice: amount // 更新最终价格
+        }
+      })
+    ]);
 
     return NextResponse.json({
       success: true,

@@ -303,4 +303,14 @@ export function useTransactions(params: GetTransactionsParams = {}) {
     queryKey: ['transactions', params],
     queryFn: () => getTransactions(params),
   });
+}
+
+/**
+ * 获取推荐帖子的 Hook
+ */
+export function useRecommendedPosts() {
+  return useQuery({
+    queryKey: ['recommendedPosts'],
+    queryFn: () => postsApi.getRecommendedPosts(),
+  });
 } 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// 获取帖子详情
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

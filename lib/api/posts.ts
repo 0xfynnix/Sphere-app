@@ -1,6 +1,6 @@
 import { request } from "./requests";
 import { API_ENDPOINTS } from "./requests";
-import { Post, Comment, Pagination, UpdatePostAuctionRequest } from "./types";
+import { Post, Comment, Pagination, UpdatePostAuctionRequest, RecommendResponse } from "./types";
 
 export interface GetUserPostsResponse {
   success: boolean;
@@ -83,5 +83,16 @@ export const postsApi = {
       method: "POST",
       body: JSON.stringify(data.auctionInfo),
     });
+  },
+
+  /**
+   * 获取推荐帖子
+   */
+  getRecommendedPosts: async (): Promise<RecommendResponse> => {
+    const response = await fetch('/api/posts/recommend');
+    if (!response.ok) {
+      throw new Error('Failed to fetch recommended posts');
+    }
+    return response.json();
   },
 };

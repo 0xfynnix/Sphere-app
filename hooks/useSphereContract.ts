@@ -70,22 +70,54 @@ export function useSphereContract() {
   const placeBid = async (auctionId: string, bidAmount: number, reference: string) => {
     if (!account) throw new Error('No account connected');
     
-    const tx = new Transaction();
-    // 从 gas coin 中分割出指定金额的 coin
-    const [bidCoin] = tx.splitCoins(tx.gas, [suiToMist(bidAmount)]);
-    // console.log(CONTRACT_ADDRESS,MODULE_NAMES.COPYRIGHT_NFT);
-    tx.moveCall({
+    // First transaction: Split coin from gas
+    const splitTx = new Transaction();
+    const [bidCoin] = splitTx.splitCoins(splitTx.gas, [suiToMist(bidAmount)]);
+    splitTx.transferObjects([bidCoin], account.address);
+
+    const splitResult = await signAndExecute({
+      transaction: splitTx,
+    });
+
+    // Wait for the split transaction to be confirmed
+    await client.waitForTransaction({
+      digest: splitResult.digest,
+      options: {
+        showEffects: true,
+        showEvents: true,
+      },
+    });
+
+    // Get the created coin object ID from the transaction effects
+    const effects = await client.getTransactionBlock({
+      digest: splitResult.digest,
+      options: {
+        showEffects: true,
+        showEvents: true,
+      },
+    });
+
+    const createdCoins = effects.effects?.created || [];
+    const bidCoinId = createdCoins[0]?.reference?.objectId;
+
+    if (!bidCoinId) {
+      throw new Error('Failed to get split coin ID');
+    }
+
+    // Second transaction: Place bid using the split coin
+    const bidTx = new Transaction();
+    bidTx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::place_bid`,
       arguments: [
-        tx.object(auctionId),
-        tx.object.clock(), // Clock object
-        bidCoin, // 使用分割出的 coin 作为出价
-        tx.pure.address(reference), // Reference address
+        bidTx.object(auctionId),
+        bidTx.object.clock(),
+        bidTx.object(bidCoinId),
+        bidTx.pure.address(reference),
       ],
     });
 
     return signAndExecute({
-      transaction: tx,
+      transaction: bidTx,
     });
   };
 

@@ -1,5 +1,27 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { AuctionHistory, Bid } from '@prisma/client';
+
+type AuctionHistoryWithRelations = AuctionHistory & {
+  bids: (Bid & {
+    user: {
+      id: string;
+      walletAddress: string;
+      profile: {
+        name: string | null;
+        avatar: string | null;
+      } | null;
+    };
+  })[];
+  winner: {
+    id: string;
+    walletAddress: string;
+    profile: {
+      name: string | null;
+      avatar: string | null;
+    } | null;
+  } | null;
+};
 
 export async function GET(
   request: Request,
@@ -16,13 +38,32 @@ export async function GET(
       );
     }
 
-    // 获取帖子的所有竞拍记录，按轮次和金额排序
-    const bids = await prisma.bid.findMany({
+    // 获取帖子的所有拍卖历史记录，按轮次排序
+    const auctionHistories = await prisma.auctionHistory.findMany({
       where: {
         postId
       },
       include: {
-        user: {
+        bids: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                walletAddress: true,
+                profile: {
+                  select: {
+                    name: true,
+                    avatar: true
+                  }
+                }
+              }
+            }
+          },
+          orderBy: {
+            amount: 'desc'
+          }
+        },
+        winner: {
           select: {
             id: true,
             walletAddress: true,
@@ -35,35 +76,37 @@ export async function GET(
           }
         }
       },
-      orderBy: [
-        { round: 'desc' },
-        { amount: 'desc' }
-      ]
-    });
-
-    // 按轮次分组
-    const history = bids.reduce((acc, bid) => {
-      if (!acc[bid.round]) {
-        acc[bid.round] = {
-          round: bid.round,
-          bids: [],
-          winner: null
-        };
+      orderBy: {
+        round: 'desc'
       }
-      acc[bid.round].bids.push(bid);
-      if (bid.isWinner) {
-        acc[bid.round].winner = bid.user;
-      }
-      return acc;
-    }, {} as Record<number, {
-      round: number;
-      bids: typeof bids;
-      winner: typeof bids[0]['user'] | null;
-    }>);
+    }) as AuctionHistoryWithRelations[];
 
-    return NextResponse.json({ 
-      history: Object.values(history).sort((a, b) => b.round - a.round)
-    });
+    // 格式化返回数据
+    const history = auctionHistories.map(history => ({
+      id: history.id,
+      round: history.round,
+      startPrice: history.startPrice,
+      finalPrice: history.finalPrice,
+      totalBids: history.totalBids,
+      biddingDueDate: history.biddingDueDate,
+      bids: history.bids.map(bid => ({
+        ...bid,
+        user: {
+          id: bid.user.id,
+          walletAddress: bid.user.walletAddress,
+          name: bid.user.profile?.name || 'Anonymous',
+          avatar: bid.user.profile?.avatar
+        }
+      })),
+      winner: history.winner ? {
+        id: history.winner.id,
+        walletAddress: history.winner.walletAddress,
+        name: history.winner.profile?.name || 'Anonymous',
+        avatar: history.winner.profile?.avatar
+      } : null
+    }));
+
+    return NextResponse.json({ history });
   } catch (error) {
     console.error('Error fetching auction history:', error);
     return NextResponse.json(

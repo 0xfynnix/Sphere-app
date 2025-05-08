@@ -319,7 +319,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           {/* Bidding Section */}
           {post?.allowBidding ? (
             <div className="border rounded-lg p-4 space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h3 className="font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">
                     {isBiddingActive ? 'Bidding' : 'Bidding ended'}
@@ -332,46 +332,48 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                     )}
                   </p>
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Countdown
                       date={new Date(post.biddingDueDate || '')}
                       renderer={(props) => <CountdownDisplay {...props} isAuthor={isAuthor} />}
                     />
                   </div>
-                  {isBiddingActive && !isAuthor && (
-                    <BidDialog
-                      isOpen={isBidDialogOpen}
-                      onOpenChange={handleBidDialogOpenChange}
-                      startPrice={post.startPrice || 0}
-                      currentBids={bidsData?.bids || []}
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    {isBiddingActive && !isAuthor && (
+                      <BidDialog
+                        isOpen={isBidDialogOpen}
+                        onOpenChange={handleBidDialogOpenChange}
+                        startPrice={post.startPrice || 0}
+                        currentBids={bidsData?.bids || []}
+                        postId={id}
+                        currentHighestBid={post.currentHighestBid}
+                        auctionId={post.auctionObjectId}
+                        trigger={
+                          <Button className="w-full sm:w-auto bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none">
+                            <Gavel className="mr-2 h-4 w-4" />
+                            Place Bid
+                          </Button>
+                        }
+                      />
+                    )}
+                    <AuctionHistoryDialog
                       postId={id}
-                      currentHighestBid={post.currentHighestBid}
-                      auctionId={post.auctionObjectId}
                       trigger={
-                        <Button className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none">
-                          <Gavel className="mr-2 h-4 w-4" />
-                          Place Bid
+                        <Button variant="outline" className="w-full sm:w-auto border-violet-200 text-violet-400 hover:bg-violet-50 hover:text-violet-500">
+                          <History className="mr-2 h-4 w-4" />
+                          View History
                         </Button>
                       }
                     />
-                  )}
-                  <AuctionHistoryDialog
-                    postId={id}
-                    trigger={
-                      <Button variant="outline" className="border-violet-200 text-violet-400 hover:bg-violet-50 hover:text-violet-500">
-                        <History className="mr-2 h-4 w-4" />
-                        View History
-                      </Button>
-                    }
-                  />
+                  </div>
                 </div>
               </div>
 
               {/* Bidding History */}
               <div className="space-y-2">
                 <h4 className="font-medium">Bidding History</h4>
-                <div className="border rounded-lg">
+                <div className="border rounded-lg overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -395,11 +397,11 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                                     </AvatarFallback>
                                   )}
                                 </Avatar>
-                                <span>{bid.user.name}</span>
+                                <span className="truncate max-w-[120px] sm:max-w-none">{bid.user.name}</span>
                               </div>
                             </TableCell>
                             <TableCell className="font-medium">{bid.amount} SUI</TableCell>
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
                               {formatDistanceToNow(new Date(bid.createdAt), { addSuffix: true })}
                             </TableCell>
                           </TableRow>
@@ -414,7 +416,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                     </TableBody>
                   </Table>
                   {bidsData?.pagination && bidsData.pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t gap-2">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
@@ -446,7 +448,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
             </div>
           ) : isAuthor && !post.allowBidding && (
             <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h3 className="font-semibold text-foreground">Auction</h3>
                   <p className="text-sm text-muted-foreground">

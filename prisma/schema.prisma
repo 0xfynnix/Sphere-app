@@ -79,6 +79,7 @@ model User {
   bids          Bid[]    @relation("BidUser") // 用户的竞拍记录
   winningBids   Bid[]    @relation("Winner") // 用户获胜的竞拍记录
   soldBids      Bid[]    @relation("Creator") // 作为创作者被竞拍的记录
+  wonAuctions   AuctionHistory[] // 用户获胜的拍卖历史
   nftCount      Int      @default(0) // 拥有的NFT数量
   rewardEarnings Float   @default(0) // 获得的打赏收益（SUI）
   referredRewardEarnings Float @default(0) // 作为推荐人获得的打赏收益（SUI）
@@ -91,6 +92,7 @@ model User {
   updatedAt     DateTime @updatedAt
   lotteryPools     LotteryPool[]     // 作为中奖者的抽奖池
   transactions   SuiTransaction[]    // 用户的Sui交易记录
+  bookmarks      Bookmark[]         // 添加收藏关系
 }
 
 model Profile {
@@ -137,8 +139,10 @@ model Post {
   lotteryPool     LotteryPool?     // 当前抽奖池
   auctionRound   Int      @default(1) // 竞拍轮次，从1开始
   transactions   SuiTransaction[] @relation("PostTransactions") // 帖子关联的交易记录
+  auctionHistory AuctionHistory[] // 拍卖历史记录
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  bookmarks     Bookmark[] // 添加收藏关系
 }
 
 // 帖子状态枚举
@@ -321,8 +325,11 @@ model Bid {
   chainId   String?  // 链上竞拍记录ID
   round     Int      @default(1) // 竞拍轮次
   winner    User?    @relation("Winner", fields: [userId], references: [id], map: "BidWinner_fkey")
-  creator   User?    @relation("Creator", fields: [postId], references: [id], map: "BidCreator_fkey")
+  creatorId String?  // 创作者ID
+  creator   User?    @relation("Creator", fields: [creatorId], references: [id], map: "BidCreator_fkey")
   transactions SuiTransaction[] @relation("BidTransactions") // 关联的交易记录
+  auctionHistoryId String? // 拍卖历史ID
+  auctionHistory AuctionHistory? @relation(fields: [auctionHistoryId], references: [id]) // 关联的拍卖历史
 
   // 各方可获得的金额
   creatorAmount Float?   // 创作者可获得的金额
@@ -344,6 +351,8 @@ model Bid {
   @@index([referrerId])
   @@index([lotteryPoolId])
   @@index([round])
+  @@index([creatorId])
+  @@index([auctionHistoryId])
 }
 
 // 抽奖池模型
@@ -363,4 +372,40 @@ model LotteryPool {
   @@index([postId])
   @@index([winnerId])
   @@index([round])
+}
+
+// 拍卖历史记录模型
+model AuctionHistory {
+  id            String   @id @default(cuid())
+  postId        String
+  post          Post     @relation(fields: [postId], references: [id])
+  round         Int      // 拍卖轮次
+  startPrice    Float    // 起拍价
+  finalPrice    Float?   // 最终成交价
+  totalBids     Int      @default(0) // 总竞拍次数
+  winnerId      String?  // 获胜者ID
+  winner        User?    @relation(fields: [winnerId], references: [id])
+  bids          Bid[]    // 关联的竞拍记录
+  biddingDueDate DateTime // 竞拍截止时间
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([postId])
+  @@index([winnerId])
+  @@index([round])
+}
+
+// 收藏模型
+model Bookmark {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([postId, userId]) // 确保用户对同一帖子只能收藏一次
+  @@index([postId])
+  @@index([userId])
 } 

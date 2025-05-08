@@ -107,6 +107,10 @@ export interface Post {
   startPrice?: number;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    comments: number;
+    bookmarks: number;
+  };
 }
 
 export interface Comment {
@@ -173,18 +177,19 @@ export interface GetBidsResponse {
 export interface AuctionHistory {
   id: string;
   postId: string;
-  winnerId: string;
+  round: number;
+  startPrice: number;
+  finalPrice: number | null;
+  totalBids: number;
+  winnerId: string | null;
   winner: {
     id: string;
     walletAddress: string;
     profile?: {
-      name: string;
-      avatar?: string;
+      name: string | null;
+      avatar: string | null;
     };
-  };
-  finalPrice: number;
-  totalBids: number;
-  startPrice: number;
+  } | null;
   biddingDueDate: string;
   createdAt: string;
   updatedAt: string;
@@ -353,4 +358,39 @@ export interface GetTransactionsParams {
   pageSize?: number;
   type?: string;
   status?: string;
+}
+
+// 推荐帖子响应类型
+export interface RecommendedPost {
+  id: string;
+  title: string;
+  content: string;
+  totalRewards: number;
+  audienceCount: number;
+  user: {
+    id: string;
+    walletAddress: string;
+    profile: {
+      name: string | null;
+      avatar: string | null;
+    };
+  };
+  category: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
+  tags: {
+    id: string;
+    name: string;
+  }[];
+  _count: {
+    comments: number;
+    bookmarks: number;
+  };
+}
+
+export interface RecommendResponse {
+  posts: RecommendedPost[];
+  total: number;
 }

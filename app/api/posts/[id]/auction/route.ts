@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { AuctionInfo } from '@/lib/api/types';
 
+
+// 启动拍卖
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
@@ -39,6 +41,17 @@ export async function POST(
     // 计算拍卖结束时间
     const biddingDueDate = new Date(Date.now() + auctionInfo.durationHours * 60 * 60 * 1000 + auctionInfo.durationMinutes * 60 * 1000);
 
+    // 创建拍卖历史记录
+    const auctionHistory = await prisma.auctionHistory.create({
+      data: {
+        postId: postId,
+        round: 1,
+        startPrice: auctionInfo.startPrice,
+        biddingDueDate: biddingDueDate,
+        totalBids: 0,
+      },
+    });
+
     // 更新帖子拍卖信息
     const updatedPost = await prisma.post.update({
       where: { id: postId },
@@ -75,6 +88,7 @@ export async function POST(
           startPrice: auctionInfo.startPrice,
           dueDate: biddingDueDate,
           round: 1,
+          auctionHistoryId: auctionHistory.id,
         },
       },
     });
