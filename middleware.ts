@@ -16,6 +16,9 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/content') && request.method !== 'POST') {
     return NextResponse.next()
   }
+  if ((request.nextUrl.pathname === '/api/bids' || request.nextUrl.pathname === '/api/bids/history' )&& request.method !== 'POST') {
+    return NextResponse.next()
+  }
 
   // 对于 /api/posts/:path* 的非 POST 请求直接放行
   if (request.nextUrl.pathname.startsWith('/api/posts/') && request.method !== 'POST') {

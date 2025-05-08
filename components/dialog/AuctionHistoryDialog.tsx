@@ -37,20 +37,20 @@ export function AuctionHistoryDialog({ postId, trigger }: AuctionHistoryDialogPr
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Round</TableHead>
-                  <TableHead>Winner</TableHead>
-                  <TableHead>Final Price</TableHead>
-                  <TableHead>Total Bids</TableHead>
-                  <TableHead>Start Price</TableHead>
+                  <TableHead className="w-[80px]">Round</TableHead>
+                  <TableHead className="w-[200px]">Winner</TableHead>
+                  <TableHead className="w-[120px]">Final Price</TableHead>
+                  <TableHead className="w-[100px]">Total Bids</TableHead>
+                  <TableHead className="w-[120px]">Start Price</TableHead>
                   <TableHead>End Time</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {historyData.history.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell>#{record.round}</TableCell>
+                    <TableCell className="font-medium">#{record.round}</TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           {record.winner?.profile?.avatar ? (
                             <AvatarImage src={record.winner.profile.avatar} />
@@ -60,24 +60,32 @@ export function AuctionHistoryDialog({ postId, trigger }: AuctionHistoryDialogPr
                             </AvatarFallback>
                           )}
                         </Avatar>
-                        <span>{record.winner?.profile?.name || record.winner?.walletAddress || 'No winner'}</span>
+                        <span className="truncate">{record.winner?.profile?.name || record.winner?.walletAddress || 'No winner'}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium flex items-center gap-1">
-                      <Coins className="h-4 w-4 text-yellow-500" />
-                      {record.finalPrice || 0} SUI
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Coins className="h-4 w-4 text-yellow-500" />
+                        <span>{record.finalPrice || 0} SUI</span>
+                      </div>
                     </TableCell>
                     <TableCell>{record.totalBids}</TableCell>
-                    <TableCell className="flex items-center gap-1">
-                      <Coins className="h-4 w-4 text-muted-foreground" />
-                      {record.startPrice} SUI
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Coins className="h-4 w-4 text-muted-foreground" />
+                        <span>{record.startPrice} SUI</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {record.biddingDueDate && !isNaN(new Date(record.biddingDueDate).getTime()) 
-                        ? formatDistanceToNow(new Date(record.biddingDueDate), { addSuffix: true })
-                        : 'N/A'
-                      }
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>
+                          {record.biddingDueDate && !isNaN(new Date(record.biddingDueDate).getTime()) 
+                            ? formatDistanceToNow(new Date(record.biddingDueDate), { addSuffix: true })
+                            : 'N/A'
+                          }
+                        </span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
