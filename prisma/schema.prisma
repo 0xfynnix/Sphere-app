@@ -67,6 +67,7 @@ model User {
   profile       Profile? // 用户资料
   shareCode     String   @unique @default("") // 用户分享码
   posts         Post[]   // 用户发布的帖子
+  createdPosts  Post[]   @relation("PostCreator") // 用户创作的帖子
   comments      Comment[] // 用户发表的评论
   likes         Like[]   // 用户点赞的帖子
   followers     Follow[] @relation("Following") // 关注该用户的用户
@@ -110,8 +111,10 @@ model Post {
   id            String   @id @default(cuid())
   title         String   // 帖子标题
   content       String   // 帖子内容
-  userId        String
+  userId        String   // 拥有者ID
   user          User     @relation(fields: [userId], references: [id])
+  creatorId     String   // 创作者ID
+  creator       User     @relation("PostCreator", fields: [creatorId], references: [id])
   shareCode     String   @unique @default("") // 帖子分享码
   status        PostStatus @default(DRAFT) // 帖子状态
   category      Category? @relation(fields: [categoryId], references: [id])

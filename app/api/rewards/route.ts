@@ -30,6 +30,7 @@ export async function POST(req: Request) {
       },
       include: {
         user: true,
+        creator: true,
         lotteryPool: true
       }
     });
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
           postId: post.id,
           amount: amount,
           senderId: user.id,
-          recipientId: post.userId,
+          recipientId: post.creatorId,
           referrerId: referrer?.id,
           lotteryPoolId: post.lotteryPool?.id,
           // Record amounts for each party
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
             referrerId: referrer?.id,
             postShareCode,
             senderId: user.id,
-            recipientId: post.userId,
+            recipientId: post.creatorId,
             recipientAmount,
             referrerAmount,
             platformAmount,

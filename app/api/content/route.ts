@@ -125,6 +125,7 @@ export async function POST(request: Request) {
         content: text,
         title: title,
         userId: user.id,
+        creatorId: user.id,
         shareCode: nanoid(), // 生成帖子分享码
         allowBidding: !!biddingInfo,
         biddingDueDate: biddingDueDate,
