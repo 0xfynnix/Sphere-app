@@ -5,7 +5,7 @@ export const NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet') as 'te
 export const RPC_URL = getFullnodeUrl(NETWORK);
 
 // Contract address
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x3919abf59f55712c2ba4749376377e1ed813f19cc91354b473e74d045ba34988';
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 
 // Contract module names
 export const MODULE_NAMES = {
