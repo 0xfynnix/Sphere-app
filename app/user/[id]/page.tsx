@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 // import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Flame, Settings, Share2, Edit2 } from 'lucide-react';
+import { MessageCircle, Flame, Settings, Share2, Edit2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
 import { useUserPosts } from '@/lib/api/hooks';
@@ -73,7 +73,19 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
       <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-8">
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
           <div className="relative">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-muted border-4 border-background absolute -top-12 sm:-top-16"></div>
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-muted border-4 border-background absolute -top-12 sm:-top-16 overflow-hidden">
+              {user.profile?.avatar ? (
+                <img 
+                  src={user.profile.avatar} 
+                  alt={user.profile?.name || 'User avatar'} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted">
+                  <User className="w-1/2 h-1/2 text-muted-foreground" />
+                </div>
+              )}
+            </div>
           </div>
           <div className="space-y-2 mt-12 sm:mt-16">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">

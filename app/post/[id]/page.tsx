@@ -263,7 +263,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           {/* Author Info */}
           <div 
             className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => router.push(`/user/${post.author.id}`)}
+            onClick={() => router.push(`/user/${post.author.walletAddress}`)}
           >
             <Avatar className="h-10 w-10 mr-3">
               {post.author.avatar ? (

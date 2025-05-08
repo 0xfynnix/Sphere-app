@@ -91,7 +91,7 @@ export default function Home() {
                 <Card 
                   key={post.id} 
                   className="flex-none w-[300px] cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => router.push(`/posts/${post.id}`)}
+                  onClick={() => router.push(`/post/${post.id}`)}
                 >
                   <div className="p-4">
                     <div 
