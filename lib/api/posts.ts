@@ -2,10 +2,51 @@ import { request } from "./requests";
 import { API_ENDPOINTS } from "./requests";
 import { Post, Comment, Pagination, UpdatePostAuctionRequest, RecommendResponse } from "./types";
 
+export interface PostListItem {
+  id: string;
+  title: string;
+  content: string;
+  totalRewards: number;
+  comments: {
+    id: string;
+    content: string;
+    author: {
+      id: string;
+      name: string;
+      avatar?: string;
+    };
+    timestamp: string;
+  }[];
+  createdAt: string;
+  status: string;
+  allowBidding: boolean;
+  biddingDueDate: string | null;
+  nftObjectId: string | null;
+  auctionRound: number;
+  auctionHistory: {
+    id: string;
+    round: number;
+    startPrice: number;
+    biddingDueDate: string;
+    totalBids: number;
+    auctionObjectId: string;
+    auctionCapObjectId: string;
+    finalPrice: number | null;
+    winner: {
+      name: string;
+      avatar: string | null;
+    } | null;
+  }[];
+  images: {
+    url: string;
+    cid: string;
+  }[];
+}
+
 export interface GetUserPostsResponse {
   success: boolean;
   data: {
-    posts: Post[];
+    posts: PostListItem[];
     pagination: Pagination;
   };
 }
@@ -32,6 +73,7 @@ export const postsApi = {
       durationMinutes: number;
       startPrice: number;
       auctionDigest?: string;
+      auctionId?: string;
       auctionCapId?: string;
     };
     nftObjectId: string;

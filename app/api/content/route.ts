@@ -51,6 +51,8 @@ export async function GET(request: Request) {
         vercelBlobImages: true,
         filebaseImages: true,
         lotteryPools: true,
+        auctionHistory: true,
+        comments: true,
       },
       orderBy: {
         createdAt: "desc",

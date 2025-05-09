@@ -41,6 +41,7 @@ import { useUserStore } from "@/store/userStore";
 import { StartAuctionButton } from "@/components/auction/StartAuctionButton";
 import Countdown from "react-countdown";
 import { motion } from "framer-motion";
+import { CompleteAuctionDialog } from "@/components/dialog/CompleteAuctionDialog";
 
 // 获取区块链浏览器 URL
 const getExplorerUrl = (objectId: string) => {
@@ -58,6 +59,7 @@ interface CountdownDisplayProps {
   seconds: number;
   completed: boolean;
   isAuthor: boolean;
+  postId: string;
 }
 
 const CountdownDisplay = ({
@@ -66,18 +68,37 @@ const CountdownDisplay = ({
   seconds,
   completed,
   isAuthor,
+  postId,
 }: CountdownDisplayProps) => {
+  const [isCompleteAuctionOpen, setIsCompleteAuctionOpen] = useState(false);
+  const { data: post } = usePost(postId);
+
   if (completed) {
     return (
       <div className="flex items-center space-x-2">
-        {isAuthor ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none"
-          >
-            Complete Auction
-          </Button>
+        {isAuthor && post?.currentAuction ? (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none"
+              onClick={() => setIsCompleteAuctionOpen(true)}
+            >
+              Complete Auction
+            </Button>
+            <CompleteAuctionDialog
+              isOpen={isCompleteAuctionOpen}
+              onOpenChange={setIsCompleteAuctionOpen}
+              postId={post.id}
+              auctionId={post.currentAuction.auctionObjectId}
+              auctionCapId={post.currentAuction.auctionCapObjectId}
+              currentHighestBid={post.currentAuction.finalPrice || undefined}
+              highestBidder={post.currentAuction.winner ? {
+                name: post.currentAuction.winner.name,
+                avatar: post.currentAuction.winner.avatar
+              } : undefined}
+            />
+          </>
         ) : null}
       </div>
     );
@@ -211,7 +232,7 @@ export default function PostDetail({
   const [isBidDialogOpen, setIsBidDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const { data: post, isLoading, error, refetch } = usePost(id);
+  const { data: post, isLoading, error, refetch: refetchPost } = usePost(id);
   // console.log(post);
   const { data: bidsData } = useBids(id, page, pageSize);
   const createComment = useCreateComment();
@@ -393,7 +414,7 @@ export default function PostDetail({
                     <Countdown
                       date={new Date(post.biddingDueDate || "")}
                       renderer={(props) => (
-                        <CountdownDisplay {...props} isAuthor={isAuthor} />
+                        <CountdownDisplay {...props} isAuthor={isAuthor} postId={post.id} />
                       )}
                     />
                   </div>
@@ -561,7 +582,9 @@ export default function PostDetail({
                     postId={id}
                     onSuccess={() => {
                       // 刷新帖子数据
-                      refetch();
+                      refetchPost();
+                      // 刷新路由数据
+                      router.refresh();
                     }}
                   />
                 </div>

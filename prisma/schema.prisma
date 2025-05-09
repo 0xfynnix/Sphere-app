@@ -34,21 +34,22 @@ enum UserType {
 
 // Sui交易记录模型
 model SuiTransaction {
-  id          String   @id @default(cuid())
-  digest      String   @unique // 交易哈希
-  userId      String   // 用户ID
-  user        User     @relation(fields: [userId], references: [id])
-  postId      String?  // 帖子ID
-  post        Post?    @relation("PostTransactions", fields: [postId], references: [id])
-  rewardId    String?  // 打赏记录ID
-  reward      Reward?  @relation(fields: [rewardId], references: [id])
-  bidId       String?  // 竞拍记录ID
-  bid         Bid?     @relation("BidTransactions", fields: [bidId], references: [id])
-  type        String   // 交易类型(register, mint, auction等)
-  status      String   // 交易状态(pending, success, failed)
-  data        Json?    // 交易相关数据
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  digest        String   @unique
+  type          String   // 交易类型
+  status        String   // 交易状态
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  postId        String?  // 帖子ID
+  post          Post?    @relation("PostTransactions", fields: [postId], references: [id])
+  rewardId      String?  // 打赏记录ID
+  reward        Reward?  @relation(fields: [rewardId], references: [id])
+  bidId         String?  // 竞拍记录ID
+  bid           Bid?     @relation("BidTransactions", fields: [bidId], references: [id])
+  data          Json?    // 交易相关数据
+  auctionHistory AuctionHistory? @relation("AuctionHistoryTransaction") // 关联的拍卖历史记录
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([userId])
   @@index([digest])
@@ -394,12 +395,16 @@ model AuctionHistory {
   biddingDueDate DateTime // 竞拍截止时间
   auctionObjectId String? // 拍卖对象 ID
   auctionCapObjectId String? // 拍卖权限对象 ID
+  transactionId String?  @unique // 关联的交易记录ID
+  transaction   SuiTransaction? @relation("AuctionHistoryTransaction", fields: [transactionId], references: [id]) // 关联的交易记录
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([postId])
   @@index([winnerId])
   @@index([round])
+  @@index([transactionId])
+  @@unique([postId, round]) // 确保每个帖子的每个轮次只有一个拍卖历史记录
 }
 
 // 收藏模型

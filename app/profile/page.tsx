@@ -10,10 +10,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { User, Pencil, Coins, Loader2, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import {
+  User,
+  Pencil,
+  Coins,
+  Loader2,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@/lib/api/hooks";
 import { useUserPosts } from "@/lib/api/hooks";
+import { PostListItem } from "@/lib/api/posts";
 import {
   Table,
   TableBody,
@@ -31,8 +43,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useClaimReward, useUnclaimedRewards, useClaimBid, useUnclaimedBids, useUnclaimedLotteryPools, useClaimLotteryPool } from "@/lib/api/hooks";
+import {
+  useClaimReward,
+  useUnclaimedRewards,
+  useClaimBid,
+  useUnclaimedBids,
+  useUnclaimedLotteryPools,
+  useClaimLotteryPool,
+} from "@/lib/api/hooks";
 import { useTransactions } from "@/lib/api/hooks";
+import { StartAuctionButton } from "@/components/auction/StartAuctionButton";
+import { CompleteAuctionDialog } from "@/components/dialog/CompleteAuctionDialog";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -41,6 +62,7 @@ export default function ProfilePage() {
   const pageSize = 10;
   // const createBid = useCreateBid();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<{id: string, auctionId: string, auctionCapId: string} | null>(null);
   const [isRecipientClaiming, setIsRecipientClaiming] = useState(false);
   const [isReferrerClaiming, setIsReferrerClaiming] = useState(false);
   const [isCreatorBidClaiming, setIsCreatorBidClaiming] = useState(false);
@@ -52,7 +74,7 @@ export default function ProfilePage() {
     isLoading: isUserLoading,
     isError: isUserError,
   } = useUser();
-  const { data: postsData, isLoading: isPostsLoading } = useUserPosts(
+  const { data: postsData, isLoading: isPostsLoading, refetch: refetchPosts } = useUserPosts(
     user?.walletAddress || "",
     currentPage,
     pageSize
@@ -64,10 +86,11 @@ export default function ProfilePage() {
   const { data: unclaimedLotteryPoolsData } = useUnclaimedLotteryPools();
   const claimLotteryPool = useClaimLotteryPool();
 
-  const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
-    page: currentPage,
-    pageSize,
-  });
+  const { data: transactionsData, isLoading: isTransactionsLoading } =
+    useTransactions({
+      page: currentPage,
+      pageSize,
+    });
 
   useEffect(() => {
     if (isUserError) {
@@ -86,48 +109,29 @@ export default function ProfilePage() {
   const transactionsPagination = transactionsData?.pagination;
   // logger.debug('Profile', { profile, posts, pagination });
 
-  const handleCancelBidding = async (postId: string) => {
-    try {
-      // TODO: 实现取消竞拍的 API 调用
-      console.log("postId", postId);
-      toast.success("Bidding cancelled successfully");
-    } catch (error) {
-      console.error("Failed to cancel bidding", error);
-      toast.error("Failed to cancel bidding");
-    }
-  };
-
-  const handleStartBidding = async (postId: string) => {
-    try {
-      // TODO: 实现开始竞拍的 API 调用
-      console.log("postId", postId);
-      toast.success("Bidding started successfully");
-    } catch (error) {
-      console.error("Failed to start bidding", error);
-      toast.error("Failed to start bidding");
-    }
-  };
-
   const handleUpdateSuccess = () => {
     setIsDialogOpen(false);
     router.refresh();
   };
 
-  const handleClaimReward = async (rewardId: string, type: 'recipient' | 'referrer') => {
+  const handleClaimReward = async (
+    rewardId: string,
+    type: "recipient" | "referrer"
+  ) => {
     try {
-      if (type === 'recipient') {
+      if (type === "recipient") {
         setIsRecipientClaiming(true);
       } else {
         setIsReferrerClaiming(true);
       }
-      
+
       await claimReward.mutateAsync({ rewardId, type });
-      toast.success('Reward claimed successfully');
+      toast.success("Reward claimed successfully");
     } catch (error) {
-      console.error('Failed to claim reward:', error);
-      toast.error('Failed to claim reward');
+      console.error("Failed to claim reward:", error);
+      toast.error("Failed to claim reward");
     } finally {
-      if (type === 'recipient') {
+      if (type === "recipient") {
         setIsRecipientClaiming(false);
       } else {
         setIsReferrerClaiming(false);
@@ -135,21 +139,24 @@ export default function ProfilePage() {
     }
   };
 
-  const handleClaimBid = async (bidId: string, type: 'creator' | 'referrer') => {
+  const handleClaimBid = async (
+    bidId: string,
+    type: "creator" | "referrer"
+  ) => {
     try {
-      if (type === 'creator') {
+      if (type === "creator") {
         setIsCreatorBidClaiming(true);
       } else {
         setIsReferrerBidClaiming(true);
       }
-      
+
       await claimBid.mutateAsync({ bidId, type });
-      toast.success('Bid reward claimed successfully');
+      toast.success("Bid reward claimed successfully");
     } catch (error) {
-      console.error('Failed to claim bid reward:', error);
-      toast.error('Failed to claim bid reward');
+      console.error("Failed to claim bid reward:", error);
+      toast.error("Failed to claim bid reward");
     } finally {
-      if (type === 'creator') {
+      if (type === "creator") {
         setIsCreatorBidClaiming(false);
       } else {
         setIsReferrerBidClaiming(false);
@@ -161,10 +168,10 @@ export default function ProfilePage() {
     try {
       setIsLotteryClaiming(true);
       await claimLotteryPool.mutateAsync(postId);
-      toast.success('Lottery pool claimed successfully');
+      toast.success("Lottery pool claimed successfully");
     } catch (error) {
-      console.error('Failed to claim lottery pool:', error);
-      toast.error('Failed to claim lottery pool');
+      console.error("Failed to claim lottery pool:", error);
+      toast.error("Failed to claim lottery pool");
     } finally {
       setIsLotteryClaiming(false);
     }
@@ -199,7 +206,11 @@ export default function ProfilePage() {
                 </h1>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-purple-100">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-purple-100"
+                    >
                       <Pencil className="h-4 w-4 text-purple-600" />
                     </Button>
                   </DialogTrigger>
@@ -219,7 +230,8 @@ export default function ProfilePage() {
                 </Dialog>
               </div>
               <p className="text-muted-foreground">
-                @{user?.walletAddress.slice(0, 6)}...{user?.walletAddress.slice(-4)}
+                @{user?.walletAddress.slice(0, 6)}...
+                {user?.walletAddress.slice(-4)}
               </p>
               {user?.profile?.bio && (
                 <p className="mt-2 text-muted-foreground">{user.profile.bio}</p>
@@ -270,32 +282,32 @@ export default function ProfilePage() {
 
       <Tabs defaultValue="wallet" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1 rounded-xl">
-          <TabsTrigger 
-            value="wallet" 
+          <TabsTrigger
+            value="wallet"
             className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/10 data-[state=active]:to-purple-500/5 data-[state=active]:text-purple-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-purple-500/20"
           >
             Transaction
           </TabsTrigger>
-          <TabsTrigger 
-            value="content" 
+          <TabsTrigger
+            value="content"
             className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-500/5 data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-blue-500/20"
           >
             Content
           </TabsTrigger>
-          <TabsTrigger 
-            value="nfts" 
+          <TabsTrigger
+            value="nfts"
             className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-500/5 data-[state=active]:text-green-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-green-500/20"
           >
             NFTs
           </TabsTrigger>
-          <TabsTrigger 
-            value="claim" 
+          <TabsTrigger
+            value="claim"
             className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500/10 data-[state=active]:to-pink-500/5 data-[state=active]:text-pink-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-pink-500/20"
           >
             Claim
           </TabsTrigger>
-          <TabsTrigger 
-            value="settings" 
+          <TabsTrigger
+            value="settings"
             className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-orange-500/5 data-[state=active]:text-orange-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-orange-500/20"
           >
             Settings
@@ -313,25 +325,33 @@ export default function ProfilePage() {
                     <div className="rounded-full bg-muted p-4 mb-4">
                       <Coins className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <p className="text-muted-foreground text-lg">No transactions yet</p>
-                    <p className="text-muted-foreground text-sm mt-2">Your transaction history will appear here</p>
+                    <p className="text-muted-foreground text-lg">
+                      No transactions yet
+                    </p>
+                    <p className="text-muted-foreground text-sm mt-2">
+                      Your transaction history will appear here
+                    </p>
                   </div>
                 ) : (
                   <>
                     {transactions.map((transaction) => (
-                      <div 
-                        key={transaction.id} 
+                      <div
+                        key={transaction.id}
                         className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`rounded-full p-2 ${
-                            transaction.type === 'reward' ? 'bg-green-100 text-green-600' :
-                            transaction.type === 'bid' ? 'bg-blue-100 text-blue-600' :
-                            'bg-purple-100 text-purple-600'
-                          }`}>
-                            {transaction.type === 'reward' ? (
+                          <div
+                            className={`rounded-full p-2 ${
+                              transaction.type === "reward"
+                                ? "bg-green-100 text-green-600"
+                                : transaction.type === "bid"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : "bg-purple-100 text-purple-600"
+                            }`}
+                          >
+                            {transaction.type === "reward" ? (
                               <ArrowUpRight className="h-5 w-5" />
-                            ) : transaction.type === 'bid' ? (
+                            ) : transaction.type === "bid" ? (
                               <ArrowDownLeft className="h-5 w-5" />
                             ) : (
                               <Coins className="h-5 w-5" />
@@ -339,14 +359,22 @@ export default function ProfilePage() {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">
-                              {transaction.type === 'reward' && 'Content Creation Reward'}
-                              {transaction.type === 'bid' && 'Content Purchase'}
-                              {transaction.type === 'referral' && 'Community Reward'}
-                              {!['reward', 'bid', 'referral'].includes(transaction.type) && transaction.type}
+                              {transaction.type === "reward" &&
+                                "Content Creation Reward"}
+                              {transaction.type === "bid" && "Content Purchase"}
+                              {transaction.type === "referral" &&
+                                "Community Reward"}
+                              {!["reward", "bid", "referral"].includes(
+                                transaction.type
+                              ) && transaction.type}
                             </p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                               <Clock className="h-3 w-3" />
-                              <span>{new Date(transaction.createdAt).toLocaleString()}</span>
+                              <span>
+                                {new Date(
+                                  transaction.createdAt
+                                ).toLocaleString()}
+                              </span>
                             </div>
                             {transaction.post && (
                               <p className="text-sm text-muted-foreground mt-1">
@@ -356,54 +384,72 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.status === 'success' ? 'bg-green-100 text-green-700' :
-                            transaction.status === 'failed' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {transaction.status === 'success' ? (
+                          <div
+                            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                              transaction.status === "success"
+                                ? "bg-green-100 text-green-700"
+                                : transaction.status === "failed"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {transaction.status === "success" ? (
                               <CheckCircle2 className="h-3 w-3" />
-                            ) : transaction.status === 'failed' ? (
+                            ) : transaction.status === "failed" ? (
                               <XCircle className="h-3 w-3" />
                             ) : (
                               <AlertCircle className="h-3 w-3" />
                             )}
-                            <span className="capitalize">{transaction.status}</span>
+                            <span className="capitalize">
+                              {transaction.status}
+                            </span>
                           </div>
                         </div>
                       </div>
                     ))}
-                    {transactionsPagination && transactionsPagination.totalPages > 1 && (
-                      <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                        <div className="text-sm text-muted-foreground">
-                          Showing {(currentPage - 1) * pageSize + 1}-
-                          {Math.min(currentPage * pageSize, transactionsPagination.total)} of{" "}
-                          {transactionsPagination.total} items
+                    {transactionsPagination &&
+                      transactionsPagination.totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                          <div className="text-sm text-muted-foreground">
+                            Showing {(currentPage - 1) * pageSize + 1}-
+                            {Math.min(
+                              currentPage * pageSize,
+                              transactionsPagination.total
+                            )}{" "}
+                            of {transactionsPagination.total} items
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setCurrentPage((prev) => Math.max(1, prev - 1))
+                              }
+                              disabled={currentPage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setCurrentPage((prev) =>
+                                  Math.min(
+                                    transactionsPagination.totalPages,
+                                    prev + 1
+                                  )
+                                )
+                              }
+                              disabled={
+                                currentPage ===
+                                transactionsPagination.totalPages
+                              }
+                            >
+                              Next
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                          >
-                            Previous
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setCurrentPage((prev) =>
-                                Math.min(transactionsPagination.totalPages, prev + 1)
-                              )
-                            }
-                            disabled={currentPage === transactionsPagination.totalPages}
-                          >
-                            Next
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                      )}
                   </>
                 )}
               </div>
@@ -427,7 +473,7 @@ export default function ProfilePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {posts.map((post) => (
+                    {posts.map((post: PostListItem) => (
                       <TableRow key={post.id}>
                         <TableCell className="font-medium">
                           {post.title}
@@ -453,25 +499,63 @@ export default function ProfilePage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/post/${post.id}`)}
+                            >
                               View Details
                             </Button>
-                            {post.allowBidding ? (
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleCancelBidding(post.id)}
-                              >
-                                Cancel Bidding
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => handleStartBidding(post.id)}
-                              >
-                                Start Bidding
-                              </Button>
+                            {!post.allowBidding && !post.auctionHistory?.length && post.nftObjectId && (
+                              <StartAuctionButton
+                                nftObjectId={post.nftObjectId}
+                                postId={post.id}
+                                onSuccess={() => {
+                                  router.refresh();
+                                  refetchPosts();
+                                }}
+                              />
+                            )}
+                            {post.allowBidding && post.auctionHistory?.length > 0 && new Date(post.biddingDueDate || "") < new Date() && (
+                              <CompleteAuctionDialog
+                                isOpen={isDialogOpen && selectedPost?.id === post.id}
+                                onOpenChange={(open) => {
+                                  setIsDialogOpen(open);
+                                  if (!open) {
+                                    setSelectedPost(null);
+                                    router.refresh();
+                                    refetchPosts();
+                                  }
+                                }}
+                                postId={post.id}
+                                auctionId={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.auctionObjectId || ""}
+                                auctionCapId={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.auctionCapObjectId || ""}
+                                currentHighestBid={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.finalPrice || undefined}
+                                highestBidder={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.winner ? {
+                                  name: post.auctionHistory.find(auction => auction.round === post.auctionRound)?.winner?.name || "",
+                                  avatar: post.auctionHistory.find(auction => auction.round === post.auctionRound)?.winner?.avatar || undefined
+                                } : undefined}
+                                trigger={
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none"
+                                    onClick={() => {
+                                      const currentAuction = post.auctionHistory.find(auction => auction.round === post.auctionRound);
+                                      if (currentAuction) {
+                                        setSelectedPost({
+                                          id: post.id,
+                                          auctionId: currentAuction.auctionObjectId,
+                                          auctionCapId: currentAuction.auctionCapObjectId
+                                        });
+                                        setIsDialogOpen(true);
+                                      }
+                                    }}
+                                  >
+                                    Complete Auction
+                                  </Button>
+                                }
+                              />
                             )}
                           </div>
                         </TableCell>
@@ -671,10 +755,16 @@ export default function ProfilePage() {
                     </h3>
                     <Button
                       onClick={() => {
-                        const rewards = unclaimedRewardsData?.recipientRewards || [];
-                        rewards.forEach(reward => handleClaimReward(reward.id, 'recipient'));
+                        const rewards =
+                          unclaimedRewardsData?.recipientRewards || [];
+                        rewards.forEach((reward) =>
+                          handleClaimReward(reward.id, "recipient")
+                        );
                       }}
-                      disabled={!unclaimedRewardsData?.recipientRewards?.length || isRecipientClaiming}
+                      disabled={
+                        !unclaimedRewardsData?.recipientRewards?.length ||
+                        isRecipientClaiming
+                      }
                       className="bg-purple-500 hover:bg-purple-600"
                     >
                       {isRecipientClaiming ? (
@@ -683,7 +773,7 @@ export default function ProfilePage() {
                           Claiming...
                         </div>
                       ) : (
-                        'Claim All'
+                        "Claim All"
                       )}
                     </Button>
                   </div>
@@ -692,18 +782,28 @@ export default function ProfilePage() {
                       <div className="rounded-full bg-purple-500/10 p-3 mb-3">
                         <Coins className="h-6 w-6 text-purple-500" />
                       </div>
-                      <p className="text-muted-foreground">No unclaimed rewards as recipient</p>
+                      <p className="text-muted-foreground">
+                        No unclaimed rewards as recipient
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {unclaimedRewardsData.recipientRewards.map((reward) => (
-                        <div key={reward.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                        <div
+                          key={reward.id}
+                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
                           <div className="space-y-1">
                             <p className="font-medium">{reward.post.title}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>From: {reward.sender.walletAddress.slice(0, 6)}...{reward.sender.walletAddress.slice(-4)}</span>
+                              <span>
+                                From: {reward.sender.walletAddress.slice(0, 6)}
+                                ...{reward.sender.walletAddress.slice(-4)}
+                              </span>
                               <span>•</span>
-                              <span className="text-purple-500 font-medium">{reward.recipientAmount} SUI</span>
+                              <span className="text-purple-500 font-medium">
+                                {reward.recipientAmount} SUI
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -721,10 +821,16 @@ export default function ProfilePage() {
                     </h3>
                     <Button
                       onClick={() => {
-                        const rewards = unclaimedRewardsData?.referrerRewards || [];
-                        rewards.forEach(reward => handleClaimReward(reward.id, 'referrer'));
+                        const rewards =
+                          unclaimedRewardsData?.referrerRewards || [];
+                        rewards.forEach((reward) =>
+                          handleClaimReward(reward.id, "referrer")
+                        );
                       }}
-                      disabled={!unclaimedRewardsData?.referrerRewards?.length || isReferrerClaiming}
+                      disabled={
+                        !unclaimedRewardsData?.referrerRewards?.length ||
+                        isReferrerClaiming
+                      }
                       className="bg-blue-500 hover:bg-blue-600"
                     >
                       {isReferrerClaiming ? (
@@ -733,7 +839,7 @@ export default function ProfilePage() {
                           Claiming...
                         </div>
                       ) : (
-                        'Claim All'
+                        "Claim All"
                       )}
                     </Button>
                   </div>
@@ -742,18 +848,28 @@ export default function ProfilePage() {
                       <div className="rounded-full bg-blue-500/10 p-3 mb-3">
                         <Coins className="h-6 w-6 text-blue-500" />
                       </div>
-                      <p className="text-muted-foreground">No unclaimed rewards as referrer</p>
+                      <p className="text-muted-foreground">
+                        No unclaimed rewards as referrer
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {unclaimedRewardsData.referrerRewards.map((reward) => (
-                        <div key={reward.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                        <div
+                          key={reward.id}
+                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
                           <div className="space-y-1">
                             <p className="font-medium">{reward.post.title}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>From: {reward.sender.walletAddress.slice(0, 6)}...{reward.sender.walletAddress.slice(-4)}</span>
+                              <span>
+                                From: {reward.sender.walletAddress.slice(0, 6)}
+                                ...{reward.sender.walletAddress.slice(-4)}
+                              </span>
                               <span>•</span>
-                              <span className="text-blue-500 font-medium">{reward.referrerAmount} SUI</span>
+                              <span className="text-blue-500 font-medium">
+                                {reward.referrerAmount} SUI
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -781,9 +897,14 @@ export default function ProfilePage() {
                     <Button
                       onClick={() => {
                         const bids = unclaimedBidsData?.creatorBids || [];
-                        bids.forEach(bid => handleClaimBid(bid.id, 'creator'));
+                        bids.forEach((bid) =>
+                          handleClaimBid(bid.id, "creator")
+                        );
                       }}
-                      disabled={!unclaimedBidsData?.creatorBids?.length || isCreatorBidClaiming}
+                      disabled={
+                        !unclaimedBidsData?.creatorBids?.length ||
+                        isCreatorBidClaiming
+                      }
                       className="bg-green-500 hover:bg-green-600"
                     >
                       {isCreatorBidClaiming ? (
@@ -792,7 +913,7 @@ export default function ProfilePage() {
                           Claiming...
                         </div>
                       ) : (
-                        'Claim All'
+                        "Claim All"
                       )}
                     </Button>
                   </div>
@@ -801,18 +922,28 @@ export default function ProfilePage() {
                       <div className="rounded-full bg-green-500/10 p-3 mb-3">
                         <Coins className="h-6 w-6 text-green-500" />
                       </div>
-                      <p className="text-muted-foreground">No unclaimed bid rewards as creator</p>
+                      <p className="text-muted-foreground">
+                        No unclaimed bid rewards as creator
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {unclaimedBidsData.creatorBids.map((bid) => (
-                        <div key={bid.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                        <div
+                          key={bid.id}
+                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
                           <div className="space-y-1">
                             <p className="font-medium">{bid.post.title}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>From: {bid.user.walletAddress.slice(0, 6)}...{bid.user.walletAddress.slice(-4)}</span>
+                              <span>
+                                From: {bid.user.walletAddress.slice(0, 6)}...
+                                {bid.user.walletAddress.slice(-4)}
+                              </span>
                               <span>•</span>
-                              <span className="text-green-500 font-medium">{bid.creatorAmount} SUI</span>
+                              <span className="text-green-500 font-medium">
+                                {bid.creatorAmount} SUI
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -831,9 +962,14 @@ export default function ProfilePage() {
                     <Button
                       onClick={() => {
                         const bids = unclaimedBidsData?.referrerBids || [];
-                        bids.forEach(bid => handleClaimBid(bid.id, 'referrer'));
+                        bids.forEach((bid) =>
+                          handleClaimBid(bid.id, "referrer")
+                        );
                       }}
-                      disabled={!unclaimedBidsData?.referrerBids?.length || isReferrerBidClaiming}
+                      disabled={
+                        !unclaimedBidsData?.referrerBids?.length ||
+                        isReferrerBidClaiming
+                      }
                       className="bg-orange-500 hover:bg-orange-600"
                     >
                       {isReferrerBidClaiming ? (
@@ -842,7 +978,7 @@ export default function ProfilePage() {
                           Claiming...
                         </div>
                       ) : (
-                        'Claim All'
+                        "Claim All"
                       )}
                     </Button>
                   </div>
@@ -851,18 +987,28 @@ export default function ProfilePage() {
                       <div className="rounded-full bg-orange-500/10 p-3 mb-3">
                         <Coins className="h-6 w-6 text-orange-500" />
                       </div>
-                      <p className="text-muted-foreground">No unclaimed bid rewards as referrer</p>
+                      <p className="text-muted-foreground">
+                        No unclaimed bid rewards as referrer
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {unclaimedBidsData.referrerBids.map((bid) => (
-                        <div key={bid.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                        <div
+                          key={bid.id}
+                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
                           <div className="space-y-1">
                             <p className="font-medium">{bid.post.title}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>From: {bid.user.walletAddress.slice(0, 6)}...{bid.user.walletAddress.slice(-4)}</span>
+                              <span>
+                                From: {bid.user.walletAddress.slice(0, 6)}...
+                                {bid.user.walletAddress.slice(-4)}
+                              </span>
                               <span>•</span>
-                              <span className="text-orange-500 font-medium">{bid.referrerAmount} SUI</span>
+                              <span className="text-orange-500 font-medium">
+                                {bid.referrerAmount} SUI
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -887,10 +1033,16 @@ export default function ProfilePage() {
                   </h3>
                   <Button
                     onClick={() => {
-                      const pools = unclaimedLotteryPoolsData?.lotteryPools || [];
-                      pools.forEach(pool => handleClaimLotteryPool(pool.postId));
+                      const pools =
+                        unclaimedLotteryPoolsData?.lotteryPools || [];
+                      pools.forEach((pool) =>
+                        handleClaimLotteryPool(pool.postId)
+                      );
                     }}
-                    disabled={!unclaimedLotteryPoolsData?.lotteryPools?.length || isLotteryClaiming}
+                    disabled={
+                      !unclaimedLotteryPoolsData?.lotteryPools?.length ||
+                      isLotteryClaiming
+                    }
                     className="bg-indigo-500 hover:bg-indigo-600"
                   >
                     {isLotteryClaiming ? (
@@ -899,7 +1051,7 @@ export default function ProfilePage() {
                         Claiming...
                       </div>
                     ) : (
-                      'Claim All'
+                      "Claim All"
                     )}
                   </Button>
                 </div>
@@ -908,18 +1060,27 @@ export default function ProfilePage() {
                     <div className="rounded-full bg-indigo-500/10 p-3 mb-3">
                       <Coins className="h-6 w-6 text-indigo-500" />
                     </div>
-                    <p className="text-muted-foreground">No unclaimed lottery pools</p>
+                    <p className="text-muted-foreground">
+                      No unclaimed lottery pools
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {unclaimedLotteryPoolsData.lotteryPools.map((pool) => (
-                      <div key={pool.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      <div
+                        key={pool.id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      >
                         <div className="space-y-1">
-                          <p className="font-medium">{pool.post?.title || 'Untitled Post'}</p>
+                          <p className="font-medium">
+                            {pool.post?.title || "Untitled Post"}
+                          </p>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <span>Round: {pool.round}</span>
                             <span>•</span>
-                            <span className="text-indigo-500 font-medium">{pool.amount} SUI</span>
+                            <span className="text-indigo-500 font-medium">
+                              {pool.amount} SUI
+                            </span>
                           </div>
                         </div>
                         <Button
@@ -931,7 +1092,7 @@ export default function ProfilePage() {
                           {isLotteryClaiming ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            'Claim'
+                            "Claim"
                           )}
                         </Button>
                       </div>

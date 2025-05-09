@@ -353,3 +353,18 @@ export const useClaimAuction = () => {
     },
   });
 }; 
+
+// 完成竞拍
+export const useCompleteAuction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: { postId: string; digest: string }) => bidsApi.completeAuction(params),
+    onSuccess: () => {
+      // 使相关查询失效，触发重新获取
+      queryClient.invalidateQueries({ queryKey: ['post'] });
+      queryClient.invalidateQueries({ queryKey: ['bids'] });
+      queryClient.invalidateQueries({ queryKey: ['auctionHistory'] });
+    },
+  });
+}; 

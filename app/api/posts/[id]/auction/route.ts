@@ -82,7 +82,7 @@ export async function POST(
         digest: auctionInfo.auctionDigest,
         userId: post.user.id,
         postId: postId,
-        type: 'create_auction',
+        type: 'create auction',
         status: 'success',
         data: {
           nftObjectId: post.nftObjectId,

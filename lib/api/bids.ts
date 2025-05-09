@@ -42,4 +42,12 @@ export const bidsApi = {
     });
     return response;
   },
+
+  // 完成竞拍
+  completeAuction: async (params: { postId: string; digest: string }): Promise<{ success: boolean; message: string }> => {
+    return request('/api/auction/process-expired', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
 }

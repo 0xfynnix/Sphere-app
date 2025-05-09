@@ -119,7 +119,7 @@ export async function POST(request: Request) {
             digest,
             userId: user.id,
             postId,
-            type: "place_bid",
+            type: "place bid",
             status: "success",
             data: {
               amount,

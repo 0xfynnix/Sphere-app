@@ -80,10 +80,10 @@ export function StartAuctionButton({
 
         // Extract auction_id and AuctionCapId from objectChanges
         const auctionObject = txResponse.objectChanges?.find(
-          (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::Auction')
+          (change) => change.type === 'created' && change.objectType.endsWith('::copyright_nft::Auction')
         ) as { objectId: string } | undefined;
         const auctionCapObject = txResponse.objectChanges?.find(
-          (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::AuctionCap')
+          (change) => change.type === 'created' && change.objectType.endsWith('::copyright_nft::AuctionCap')
         ) as { objectId: string } | undefined;
 
         if (!auctionObject || !auctionCapObject) {
@@ -95,7 +95,7 @@ export function StartAuctionButton({
 
         return {
           digest: result.digest,
-          auctionId: auctionId,
+          auctionId,
           auctionCapId,
           startPrice: auctionConfig.startPrice,
           durationHours: auctionConfig.durationHours,
@@ -138,7 +138,10 @@ export function StartAuctionButton({
       {trigger ? (
         <div onClick={handleStartAuction}>{trigger}</div>
       ) : (
-        <Button onClick={handleStartAuction}>
+        <Button 
+          onClick={handleStartAuction}
+          className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none"
+        >
           Start Auction
         </Button>
       )}

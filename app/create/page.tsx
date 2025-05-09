@@ -165,10 +165,10 @@ export default function CreatePage() {
 
           // Extract auction_id and AuctionCapId from objectChanges
           const auctionObject = auctionTxResponse.objectChanges?.find(
-            (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::Auction')
+            (change) => change.type === 'created' && change.objectType.endsWith('::copyright_nft::Auction')
           ) as { objectId: string } | undefined;
           const auctionCapObject = auctionTxResponse.objectChanges?.find(
-            (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::AuctionCap')
+            (change) => change.type === 'created' && change.objectType.endsWith('::copyright_nft::AuctionCap')
           ) as { objectId: string } | undefined;
 
           if (!auctionObject || !auctionCapObject) {

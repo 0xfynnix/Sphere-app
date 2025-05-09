@@ -19,11 +19,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 获取请求体中的竞拍ID
-    const { postId } = await request.json();
+    // 获取请求体中的竞拍ID和交易digest
+    const { postId, digest } = await request.json();
     if (!postId) {
       return NextResponse.json(
         { error: "Post ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!digest) {
+      return NextResponse.json(
+        { error: "Transaction digest is required" },
         { status: 400 }
       );
     }
@@ -97,6 +104,17 @@ export async function POST(request: Request) {
     // 获取最高出价者
     const winningBid = post.bids[0];
 
+    // 创建交易记录
+    const transaction = await prisma.suiTransaction.create({
+      data: {
+        digest,
+        type: "complete_auction",
+        status: "success",
+        userId: user.id,
+        postId: post.id,
+      },
+    });
+
     // 更新获胜者的竞拍记录
     await prisma.bid.update({
       where: { id: winningBid.id },
@@ -134,6 +152,19 @@ export async function POST(request: Request) {
         currentHighestBid: null,
         status: PostStatus.WAITING_CLAIM,
       },
+    });
+
+    // 更新当前轮次的拍卖历史记录
+    await prisma.auctionHistory.updateMany({
+      where: {
+        postId: post.id,
+        round: post.auctionRound,
+      },
+      data: {
+        finalPrice: winningBid.amount,
+        winnerId: winningBid.userId,
+        transactionId: transaction.id
+      }
     });
 
     return NextResponse.json({
