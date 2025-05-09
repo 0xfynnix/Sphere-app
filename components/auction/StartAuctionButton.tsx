@@ -74,27 +74,29 @@ export function StartAuctionButton({
           options: {
             showEvents: true,
             showEffects: true,
+            showObjectChanges: true,
           },
         });
 
-        // 查找 AuctionCreated 事件
-        const auctionCreatedEvent = txResponse.events?.find((event) =>
-          event.type.includes("::copyright_nft::AuctionCreated")
-        );
+        // Extract auction_id and AuctionCapId from objectChanges
+        const auctionObject = txResponse.objectChanges?.find(
+          (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::Auction')
+        ) as { objectId: string } | undefined;
+        const auctionCapObject = txResponse.objectChanges?.find(
+          (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::AuctionCap')
+        ) as { objectId: string } | undefined;
 
-        if (!auctionCreatedEvent) {
-          throw new Error("Failed to find AuctionCreated event");
+        if (!auctionObject || !auctionCapObject) {
+          throw new Error('Failed to get auction or auction cap ID');
         }
 
-        const auctionId = (auctionCreatedEvent.parsedJson as { auction_id: string })
-          ?.auction_id;
-        if (!auctionId) {
-          throw new Error("Failed to get auction ID from event");
-        }
+        const auctionId = auctionObject.objectId;
+        const auctionCapId = auctionCapObject.objectId;
 
         return {
           digest: result.digest,
-          auctionId,
+          auctionId: auctionId,
+          auctionCapId,
           startPrice: auctionConfig.startPrice,
           durationHours: auctionConfig.durationHours,
           durationMinutes: auctionConfig.durationMinutes,
@@ -105,12 +107,13 @@ export function StartAuctionButton({
       title: "Update Post",
       description: "Updating post auction status...",
       action: async (data) => {
-        const { digest, auctionId, startPrice, durationHours, durationMinutes } = data as {
+        const { digest, auctionId, startPrice, durationHours, durationMinutes, auctionCapId } = data as {
           digest: string;
           auctionId: string;
           startPrice: number;
           durationHours: number;
           durationMinutes: number;
+          auctionCapId: string;
         };
 
         const result = await updatePostAuction.mutateAsync({
@@ -119,6 +122,7 @@ export function StartAuctionButton({
             startPrice,
             auctionDigest: digest,
             auctionId,
+            auctionCapId,
             durationHours,
             durationMinutes,
           },

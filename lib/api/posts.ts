@@ -32,6 +32,7 @@ export const postsApi = {
       durationMinutes: number;
       startPrice: number;
       auctionDigest?: string;
+      auctionCapId?: string;
     };
     nftObjectId: string;
   }) => {

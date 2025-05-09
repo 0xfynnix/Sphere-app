@@ -85,7 +85,6 @@ export async function POST(request: Request) {
           allowBidding: false,
           biddingDueDate: null,
           startPrice: null,
-          auctionObjectId: null,
         },
       });
 

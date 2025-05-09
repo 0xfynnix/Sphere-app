@@ -73,7 +73,7 @@ export interface Post {
     avatar?: string;
     walletAddress: string;
   };
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED" | "DELETED" | "PENDING" | "FAILED";
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED" | "DELETED" | "PENDING" | "FAILED" | "WAITING_CLAIM";
   category?: {
     id: string;
     name: string;
@@ -99,7 +99,6 @@ export interface Post {
   chainId?: string;
   contentHash?: string;
   nftObjectId: string;
-  auctionObjectId: string;
   audienceCount: number;
   totalRewards: number;
   postType: "NORMAL" | "MEME_LORD";
@@ -113,6 +112,36 @@ export interface Post {
     comments: number;
     bookmarks: number;
   };
+  // 当前轮次的奖池信息
+  currentLotteryPool?: {
+    id: string;
+    amount: number;
+    round: number;
+    claimed: boolean;
+    winner?: {
+      id: string;
+      walletAddress: string;
+      name: string;
+      avatar?: string;
+    } | null;
+  } | null;
+  // 当前轮次的拍卖信息
+  currentAuction?: {
+    id: string;
+    round: number;
+    startPrice: number;
+    finalPrice: number | null;
+    totalBids: number;
+    biddingDueDate: string;
+    auctionObjectId: string;
+    auctionCapObjectId: string;
+    winner?: {
+      id: string;
+      walletAddress: string;
+      name: string;
+      avatar?: string;
+    } | null;
+  } | null;
 }
 
 export interface Comment {
@@ -243,10 +272,11 @@ export interface UpdateProfileResponse {
 
 export interface AuctionInfo {
   startPrice: number;
-  durationHours: number;
-  durationMinutes: number;
   auctionDigest: string;
   auctionId: string;
+  auctionCapId: string;
+  durationHours: number;
+  durationMinutes: number;
 }
 
 export interface UpdatePostAuctionRequest {

@@ -132,7 +132,6 @@ export async function POST(request: Request) {
         startPrice: biddingInfo?.startPrice,
         auctionRound: biddingInfo?.auctionId ? 1 : 0, // 初始轮次为1
         nftObjectId: nftObjectId, // 添加 NFT 对象 ID
-        auctionObjectId: biddingInfo?.auctionId, // 添加拍卖对象 ID
         ...(imageInfo.blobId
           ? {
               walrusImages: {
@@ -177,6 +176,8 @@ export async function POST(request: Request) {
                 startPrice: biddingInfo.startPrice || 0,
                 biddingDueDate: biddingDueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 默认7天
                 totalBids: 0,
+                auctionObjectId: biddingInfo.auctionId,
+                auctionCapObjectId: biddingInfo.auctionCapId,
               },
             }
           : undefined,
@@ -226,7 +227,9 @@ export async function POST(request: Request) {
             dueDate: biddingDueDate,
             round: post.auctionRound,
             auctionHistoryId: post.auctionHistory?.[0]?.id,
-            lotteryPoolId: post.lotteryPools?.[0]?.id
+            lotteryPoolId: post.lotteryPools?.[0]?.id,
+            auctionObjectId: biddingInfo.auctionId,
+            auctionCapObjectId: biddingInfo.auctionCapId
           }
         }
       });

@@ -46,7 +46,9 @@ export default function CreatePage() {
     durationMinutes: number;
     startPrice: number;
     auctionDigest?: string;
+    auctionCapObjectId?: string;
     auctionId?: string;
+    auctionCapId?: string;
   };
 
   const handleImageChange = (file: File | null) => {
@@ -157,27 +159,29 @@ export default function CreatePage() {
             options: {
               showEvents: true,
               showEffects: true,
+              showObjectChanges: true,
             },
           });
 
-          // 查找 AuctionCreated 事件
-          const auctionCreatedEvent = auctionTxResponse.events?.find((event) =>
-            event.type.includes("::copyright_nft::AuctionCreated")
-          );
+          // Extract auction_id and AuctionCapId from objectChanges
+          const auctionObject = auctionTxResponse.objectChanges?.find(
+            (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::Auction')
+          ) as { objectId: string } | undefined;
+          const auctionCapObject = auctionTxResponse.objectChanges?.find(
+            (change) => change.type === 'created' && change.objectType.includes('::copyright_nft::AuctionCap')
+          ) as { objectId: string } | undefined;
 
-          if (!auctionCreatedEvent) {
-            throw new Error("Failed to find AuctionCreated event");
+          if (!auctionObject || !auctionCapObject) {
+            throw new Error('Failed to get auction or auction cap ID');
           }
 
-          const auctionId = (auctionCreatedEvent.parsedJson as { auction_id: string })
-            ?.auction_id;
-          if (!auctionId) {
-            throw new Error("Failed to get auction ID from event");
-          }
+          const auctionId = auctionObject.objectId;
+          const auctionCapId = auctionCapObject.objectId;
 
           // 更新 biddingInfo，添加拍卖交易 digest 和 auction_id
           biddingInfo.auctionDigest = auctionResult.digest;
           biddingInfo.auctionId = auctionId;
+          biddingInfo.auctionCapId = auctionCapId;
         }
 
         return {
@@ -203,6 +207,7 @@ export default function CreatePage() {
             durationMinutes: number;
             startPrice: number;
             auctionDigest?: string;
+            auctionCapId?: string;
             auctionId?: string;
           };
           nftObjectId: string;

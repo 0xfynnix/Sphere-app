@@ -127,7 +127,6 @@ model Post {
   chainId       String?  // 链上帖子ID
   contentHash   String?  // 内容哈希
   nftObjectId   String?  // NFT 对象 ID
-  auctionObjectId String? // 拍卖对象 ID
   audienceCount Int      @default(0) // 观众数量
   totalRewards  Float    @default(0) // 总打赏金额
   postType      PostType @default(NORMAL) // 帖子类型
@@ -393,6 +392,8 @@ model AuctionHistory {
   winner        User?    @relation(fields: [winnerId], references: [id])
   bids          Bid[]    // 关联的竞拍记录
   biddingDueDate DateTime // 竞拍截止时间
+  auctionObjectId String? // 拍卖对象 ID
+  auctionCapObjectId String? // 拍卖权限对象 ID
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

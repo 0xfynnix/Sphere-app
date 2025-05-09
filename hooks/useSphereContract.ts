@@ -130,19 +130,19 @@ export function useSphereContract() {
    * @param achievementRecordId - 成就记录对象 ID
    * 使用 Clock 对象检查时间
    */
-  const endAuction = async (auctionId: string, auctionCapId: string, revenueShare: number, revenueCapId: string, achievementRecordId: string) => {
+  const endAuction = async (auctionId: string, auctionCapId: string) => {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::end_auction`,
       arguments: [
-        tx.object(achievementRecordId),
-        tx.pure.u64(revenueShare),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_ACHIEVEMENT_RECORD!),
+        tx.pure.u64(10),
         tx.object(auctionCapId),
         tx.object(auctionId),
         tx.object.clock(),
-        tx.object(revenueCapId),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_REVENUE_CAP!),
       ],
     });
 

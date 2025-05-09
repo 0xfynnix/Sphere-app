@@ -49,6 +49,8 @@ export async function POST(
         startPrice: auctionInfo.startPrice,
         biddingDueDate: biddingDueDate,
         totalBids: 0,
+        auctionObjectId: auctionInfo.auctionId,
+        auctionCapObjectId: auctionInfo.auctionCapId,
       },
     });
 
@@ -59,7 +61,6 @@ export async function POST(
         allowBidding: true,
         startPrice: auctionInfo.startPrice,
         biddingDueDate: biddingDueDate,
-        auctionObjectId: auctionInfo.auctionId,
         auctionRound: post.auctionRound + 1,
       },
       include: {
@@ -86,6 +87,7 @@ export async function POST(
         data: {
           nftObjectId: post.nftObjectId,
           auctionObjectId: auctionInfo.auctionId,
+          auctionCapObjectId: auctionInfo.auctionCapId,
           startPrice: auctionInfo.startPrice,
           dueDate: biddingDueDate,
           round: post.auctionRound + 1,
