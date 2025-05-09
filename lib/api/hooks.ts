@@ -336,4 +336,20 @@ export const useClaimLotteryPool = () => {
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
   });
+};
+
+// 领取竞拍奖励
+export const useClaimAuction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (postId: string) => bidsApi.claimAuction(postId),
+    onSuccess: () => {
+      // 使相关查询失效，触发重新获取
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['bids'] });
+      queryClient.invalidateQueries({ queryKey: ['lotteryPools'] });
+    },
+  });
 }; 

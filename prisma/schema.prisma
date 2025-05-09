@@ -140,8 +140,9 @@ model Post {
   startPrice    Float?    // 起拍价（SUI）
   currentHighestBid Float? // 当前最高竞拍价（SUI）
   bids          Bid[]     @relation("BidPost") // 竞拍记录
-  lotteryPools  LotteryPool[]   // 奖池记录（每个轮次一个）
   auctionRound   Int      @default(0) // 竞拍轮次，从0开始
+  lotteryRound   Int      @default(1) // 奖池轮次，从1开始
+  lotteryPools  LotteryPool[]   // 奖池记录（每个轮次一个）
   transactions   SuiTransaction[] @relation("PostTransactions") // 帖子关联的交易记录
   auctionHistory AuctionHistory[] // 拍卖历史记录
   createdAt     DateTime @default(now())
@@ -361,7 +362,7 @@ model Bid {
 // 抽奖池模型
 model LotteryPool {
   id        String   @id @default(cuid())
-  postId    String   @unique // 一个帖子只能有一个抽奖池
+  postId    String   // 移除 @unique 约束，允许一个帖子有多个轮次的奖池
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   amount    Float    @default(0) // 奖池金额
   winnerId  String?  // 中奖者ID
@@ -376,6 +377,7 @@ model LotteryPool {
   @@index([postId])
   @@index([winnerId])
   @@index([round])
+  @@unique([postId, round]) // 确保每个帖子的每个轮次只有一个奖池
 }
 
 // 拍卖历史记录模型

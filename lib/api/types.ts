@@ -1,3 +1,5 @@
+import { PostStatus } from "@prisma/client";
+
 // API 响应基础类型
 export interface ApiResponse<T> {
   data?: T;
@@ -419,4 +421,23 @@ export interface ClaimLotteryPoolResponse {
 
 export interface UnclaimedLotteryPoolsResponse {
   lotteryPools: LotteryPool[];
+}
+
+export interface ClaimAuctionResponse {
+  success: boolean;
+  message: string;
+  data: {
+    post: {
+      id: string;
+      status: PostStatus;
+      lotteryRound: number;
+    };
+    lotteryPool: {
+      id: string;
+      postId: string;
+      amount: number;
+      round: number;
+      claimed: boolean;
+    };
+  };
 }

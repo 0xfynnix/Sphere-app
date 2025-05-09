@@ -661,7 +661,7 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-bold">Unclaimed Rewards</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 {/* Recipient Rewards */}
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -770,7 +770,7 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-bold">Unclaimed Bid Rewards</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 {/* Creator Bids */}
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-4">

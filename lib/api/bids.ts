@@ -1,5 +1,5 @@
 import { request } from './requests';
-import { CreateBidRequest, CreateBidResponse, GetBidsResponse, GetAuctionHistoryResponse, BidClaimRequest, BidClaimResponse, UnclaimedBidsResponse } from './types';
+import { CreateBidRequest, CreateBidResponse, GetBidsResponse, GetAuctionHistoryResponse, BidClaimRequest, BidClaimResponse, UnclaimedBidsResponse, ClaimAuctionResponse } from './types';
 export const bidsApi = {
   // 创建竞拍
   createBid: async (params: CreateBidRequest): Promise<CreateBidResponse> => {
@@ -32,5 +32,14 @@ export const bidsApi = {
     return request('/api/bids/claim', {
       method: 'GET',
     });
+  },
+
+  // 领取竞拍奖励
+  claimAuction: async (postId: string): Promise<ClaimAuctionResponse> => {
+    const response = await request<ClaimAuctionResponse>('/api/auction/claim', {
+      method: 'POST',
+      body: JSON.stringify({ postId }),
+    });
+    return response;
   },
 }

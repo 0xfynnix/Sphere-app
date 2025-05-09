@@ -161,23 +161,25 @@ export async function POST(request: Request) {
                 },
               }),
         status: PostStatus.PUBLISHED,
+        lotteryRound: 1, // 初始化奖池轮次为1
         lotteryPools: {
           create: {
             amount: 0, // 初始金额为0
             round: 1, // 初始轮次为1
+            claimed: false, // 初始状态为未领取
           },
         },
         // 如果启用了竞拍，创建拍卖历史记录
-        ...(biddingInfo ? {
-          auctionHistory: {
-            create: {
-              round: 1,
-              startPrice: biddingInfo.startPrice,
-              biddingDueDate: biddingDueDate!,
-              totalBids: 0,
+        auctionHistory: biddingInfo
+          ? {
+              create: {
+                round: 1,
+                startPrice: biddingInfo.startPrice || 0,
+                biddingDueDate: biddingDueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 默认7天
+                totalBids: 0,
+              },
             }
-          }
-        } : {}),
+          : undefined,
       },
       include: {
         lotteryPools: true,
