@@ -20,6 +20,7 @@ import { claimReward, getUnclaimedRewards } from './rewards';
 import { RewardClaimRequest, BidClaimRequest } from './types';
 import { getTransactions } from './transactions';
 import { GetTransactionsParams, GetTransactionsResponse } from './types';
+import { getUnclaimedLotteryPools, claimLotteryPool } from './lottery';
 
 // User hooks
 export const useUser = () => {
@@ -313,4 +314,26 @@ export function useRecommendedPosts() {
     queryKey: ['recommendedPosts'],
     queryFn: () => postsApi.getRecommendedPosts(),
   });
-} 
+}
+
+// 奖池相关 hooks
+export const useUnclaimedLotteryPools = () => {
+  return useQuery({
+    queryKey: ['unclaimedLotteryPools'],
+    queryFn: getUnclaimedLotteryPools,
+  });
+};
+
+export const useClaimLotteryPool = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: claimLotteryPool,
+    onSuccess: () => {
+      // 更新未领取奖池列表
+      queryClient.invalidateQueries({ queryKey: ['unclaimedLotteryPools'] });
+      // 更新用户信息
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+}; 

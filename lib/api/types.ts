@@ -394,3 +394,29 @@ export interface RecommendResponse {
   posts: RecommendedPost[];
   total: number;
 }
+
+// 奖池相关类型
+export interface LotteryPool {
+  id: string;
+  postId: string;
+  amount: number;
+  winnerId: string | null;
+  claimed: boolean;
+  round: number;
+  post?: {
+    title: string;
+    shareCode: string;
+  };
+}
+
+export interface ClaimLotteryPoolResponse {
+  success: boolean;
+  data: {
+    lotteryPool: LotteryPool;
+    user: UserProfile;
+  };
+}
+
+export interface UnclaimedLotteryPoolsResponse {
+  lotteryPools: LotteryPool[];
+}

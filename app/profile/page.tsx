@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useClaimReward, useUnclaimedRewards, useClaimBid, useUnclaimedBids } from "@/lib/api/hooks";
+import { useClaimReward, useUnclaimedRewards, useClaimBid, useUnclaimedBids, useUnclaimedLotteryPools, useClaimLotteryPool } from "@/lib/api/hooks";
 import { useTransactions } from "@/lib/api/hooks";
 
 export default function ProfilePage() {
@@ -45,6 +45,7 @@ export default function ProfilePage() {
   const [isReferrerClaiming, setIsReferrerClaiming] = useState(false);
   const [isCreatorBidClaiming, setIsCreatorBidClaiming] = useState(false);
   const [isReferrerBidClaiming, setIsReferrerBidClaiming] = useState(false);
+  const [isLotteryClaiming, setIsLotteryClaiming] = useState(false);
 
   const {
     data: userData,
@@ -60,6 +61,8 @@ export default function ProfilePage() {
   const { data: unclaimedBidsData } = useUnclaimedBids();
   const claimReward = useClaimReward();
   const claimBid = useClaimBid();
+  const { data: unclaimedLotteryPoolsData } = useUnclaimedLotteryPools();
+  const claimLotteryPool = useClaimLotteryPool();
 
   const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
     page: currentPage,
@@ -151,6 +154,19 @@ export default function ProfilePage() {
       } else {
         setIsReferrerBidClaiming(false);
       }
+    }
+  };
+
+  const handleClaimLotteryPool = async (postId: string) => {
+    try {
+      setIsLotteryClaiming(true);
+      await claimLotteryPool.mutateAsync(postId);
+      toast.success('Lottery pool claimed successfully');
+    } catch (error) {
+      console.error('Failed to claim lottery pool:', error);
+      toast.error('Failed to claim lottery pool');
+    } finally {
+      setIsLotteryClaiming(false);
     }
   };
 
@@ -855,6 +871,74 @@ export default function ProfilePage() {
                   )}
                 </Card>
               </div>
+            </div>
+
+            {/* Unclaimed Lottery Pools Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Unclaimed Lottery Pools</h2>
+              </div>
+
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                    Lottery Pools
+                  </h3>
+                  <Button
+                    onClick={() => {
+                      const pools = unclaimedLotteryPoolsData?.lotteryPools || [];
+                      pools.forEach(pool => handleClaimLotteryPool(pool.postId));
+                    }}
+                    disabled={!unclaimedLotteryPoolsData?.lotteryPools?.length || isLotteryClaiming}
+                    className="bg-indigo-500 hover:bg-indigo-600"
+                  >
+                    {isLotteryClaiming ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Claiming...
+                      </div>
+                    ) : (
+                      'Claim All'
+                    )}
+                  </Button>
+                </div>
+                {!unclaimedLotteryPoolsData?.lotteryPools?.length ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="rounded-full bg-indigo-500/10 p-3 mb-3">
+                      <Coins className="h-6 w-6 text-indigo-500" />
+                    </div>
+                    <p className="text-muted-foreground">No unclaimed lottery pools</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {unclaimedLotteryPoolsData.lotteryPools.map((pool) => (
+                      <div key={pool.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                        <div className="space-y-1">
+                          <p className="font-medium">{pool.post?.title || 'Untitled Post'}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>Round: {pool.round}</span>
+                            <span>•</span>
+                            <span className="text-indigo-500 font-medium">{pool.amount} SUI</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleClaimLotteryPool(pool.postId)}
+                          disabled={isLotteryClaiming}
+                        >
+                          {isLotteryClaiming ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            'Claim'
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
             </div>
           </div>
         </TabsContent>

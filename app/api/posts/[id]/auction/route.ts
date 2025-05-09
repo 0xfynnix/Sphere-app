@@ -45,7 +45,7 @@ export async function POST(
     const auctionHistory = await prisma.auctionHistory.create({
       data: {
         postId: postId,
-        round: 1,
+        round: post.auctionRound + 1,
         startPrice: auctionInfo.startPrice,
         biddingDueDate: biddingDueDate,
         totalBids: 0,
@@ -60,6 +60,7 @@ export async function POST(
         startPrice: auctionInfo.startPrice,
         biddingDueDate: biddingDueDate,
         auctionObjectId: auctionInfo.auctionId,
+        auctionRound: post.auctionRound + 1,
       },
       include: {
         user: true,
@@ -87,7 +88,7 @@ export async function POST(
           auctionObjectId: auctionInfo.auctionId,
           startPrice: auctionInfo.startPrice,
           dueDate: biddingDueDate,
-          round: 1,
+          round: post.auctionRound + 1,
           auctionHistoryId: auctionHistory.id,
         },
       },

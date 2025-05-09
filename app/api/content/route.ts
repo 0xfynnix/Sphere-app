@@ -50,7 +50,7 @@ export async function GET(request: Request) {
         walrusImages: true,
         vercelBlobImages: true,
         filebaseImages: true,
-        lotteryPool: true,
+        lotteryPools: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
         allowBidding: !!biddingInfo,
         biddingDueDate: biddingDueDate,
         startPrice: biddingInfo?.startPrice,
-        auctionRound: 1, // 初始轮次为1
+        auctionRound: biddingInfo?.auctionId ? 1 : 0, // 初始轮次为1
         nftObjectId: nftObjectId, // 添加 NFT 对象 ID
         auctionObjectId: biddingInfo?.auctionId, // 添加拍卖对象 ID
         ...(imageInfo.blobId
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
                 },
               }),
         status: PostStatus.PUBLISHED,
-        lotteryPool: {
+        lotteryPools: {
           create: {
             amount: 0, // 初始金额为0
             round: 1, // 初始轮次为1
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
         } : {}),
       },
       include: {
-        lotteryPool: true,
+        lotteryPools: true,
         auctionHistory: true,
       },
     });
@@ -202,7 +202,8 @@ export async function POST(request: Request) {
             dueDate: biddingDueDate
           } : null,
           round: post.auctionRound,
-          auctionHistoryId: post.auctionHistory?.[0]?.id
+          auctionHistoryId: post.auctionHistory?.[0]?.id,
+          lotteryPoolId: post.lotteryPools?.[0]?.id
         }
       }
     });
@@ -222,7 +223,8 @@ export async function POST(request: Request) {
             duration: (biddingInfo.durationHours * 60 * 60 + biddingInfo.durationMinutes * 60) * 1000,
             dueDate: biddingDueDate,
             round: post.auctionRound,
-            auctionHistoryId: post.auctionHistory?.[0]?.id
+            auctionHistoryId: post.auctionHistory?.[0]?.id,
+            lotteryPoolId: post.lotteryPools?.[0]?.id
           }
         }
       });

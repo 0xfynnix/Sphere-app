@@ -35,6 +35,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
+    // 获取当前轮次的奖池
+    const currentLotteryPool = await prisma.lotteryPool.findFirst({
+      where: {
+        postId: post.id,
+        round: post.auctionRound
+      }
+    });
+
     if (!post.allowBidding) {
       return NextResponse.json(
         { error: "Bidding is not allowed for this post" },
@@ -50,8 +58,8 @@ export async function POST(request: Request) {
     const currentAuctionHistory = await prisma.auctionHistory.findFirst({
       where: {
         postId: postId,
-        round: post.auctionRound
-      }
+        round: post.auctionRound,
+      },
     });
 
     if (!currentAuctionHistory) {
@@ -79,7 +87,7 @@ export async function POST(request: Request) {
 
     // If ref is provided, try to find referrer and validate post share code
     if (ref) {
-      const [userShareCode, refPostShareCode] = ref.split('-');
+      const [userShareCode, refPostShareCode] = ref.split("-");
       if (userShareCode && refPostShareCode) {
         // Validate post share code
         if (post.shareCode === refPostShareCode) {
@@ -87,8 +95,8 @@ export async function POST(request: Request) {
           // Find referrer
           referrer = await prisma.user.findFirst({
             where: {
-              shareCode: userShareCode
-            }
+              shareCode: userShareCode,
+            },
           });
         }
       }
@@ -105,13 +113,14 @@ export async function POST(request: Request) {
         referrerId: referrer?.id, // 添加推荐人ID
         platformAmount: amount * 0.1, // 10% platform fee
         auctionHistoryId: currentAuctionHistory.id, // 关联到当前轮次的拍卖历史
+        lotteryPoolId: currentLotteryPool?.id, // 关联到当前轮次的抽奖池
         transactions: {
           create: {
             digest,
             userId: user.id,
             postId,
-            type: 'place_bid',
-            status: 'success',
+            type: "place_bid",
+            status: "success",
             data: {
               amount,
               round: post.auctionRound,
@@ -143,18 +152,18 @@ export async function POST(request: Request) {
       prisma.post.update({
         where: { id: postId },
         data: {
-          currentHighestBid: amount
-        }
+          currentHighestBid: amount,
+        },
       }),
       prisma.auctionHistory.update({
         where: { id: currentAuctionHistory.id },
         data: {
           totalBids: {
-            increment: 1
+            increment: 1,
           },
-          finalPrice: amount // 更新最终价格
-        }
-      })
+          finalPrice: amount, // 更新最终价格
+        },
+      }),
     ]);
 
     return NextResponse.json({
@@ -212,8 +221,8 @@ export async function GET(request: Request) {
         },
       }),
       prisma.bid.count({
-        where: { postId }
-      })
+        where: { postId },
+      }),
     ]);
 
     return NextResponse.json({
@@ -230,8 +239,8 @@ export async function GET(request: Request) {
         total,
         page,
         pageSize,
-        totalPages: Math.ceil(total / pageSize)
-      }
+        totalPages: Math.ceil(total / pageSize),
+      },
     });
   } catch (error) {
     console.error("Error getting bids:", error);
