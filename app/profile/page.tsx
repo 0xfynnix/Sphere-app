@@ -23,8 +23,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
-import { useUser } from "@/lib/api/hooks";
-import { useUserPosts } from "@/lib/api/hooks";
+import { useUser, useUserAllPosts } from "@/lib/api/hooks";
 import { PostListItem } from "@/lib/api/posts";
 import {
   Table,
@@ -74,7 +73,7 @@ export default function ProfilePage() {
     isLoading: isUserLoading,
     isError: isUserError,
   } = useUser();
-  const { data: postsData, isLoading: isPostsLoading, refetch: refetchPosts } = useUserPosts(
+  const { data: postsData, isLoading: isPostsLoading, refetch: refetchPosts } = useUserAllPosts(
     user?.walletAddress || "",
     currentPage,
     pageSize

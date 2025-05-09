@@ -140,9 +140,7 @@ export async function GET(req: Request) {
     // Get unclaimed bids as creator
     const unclaimedCreatorBids = await prisma.bid.findMany({
       where: {
-        post: {
-          userId: user.id
-        },
+        creatorId: user.id,
         creatorClaimed: false,
         creatorAmount: {
           gt: 0

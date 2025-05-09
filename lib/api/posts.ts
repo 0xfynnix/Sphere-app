@@ -120,6 +120,21 @@ export const postsApi = {
       }
     );
   },
+    // 获取用户帖子列表
+    getUserAllPosts: async (params: {
+      page?: number;
+      pageSize?: number;
+      address: string;
+    }) => {
+      const { page = 1, pageSize = 10, address } = params;
+      return request<GetUserPostsResponse>(
+        API_ENDPOINTS.CONTENT.ALL(page, pageSize, address),
+        {
+          method: "GET",
+        }
+      );
+    },
+  
 
   updatePostAuction: async (data: UpdatePostAuctionRequest): Promise<Post> => {
     return request(`/api/posts/${data.postId}/auction`, {

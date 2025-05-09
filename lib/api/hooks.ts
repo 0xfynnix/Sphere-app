@@ -224,6 +224,14 @@ export const useUserPosts = (address: string, page: number = 1, pageSize: number
     enabled: !!address,
   });
 };
+export const useUserAllPosts = (address: string, page: number = 1, pageSize: number = 10) => {
+  return useQuery<GetUserPostsResponse>({
+    queryKey: ['user-all-posts', address, page, pageSize],
+    queryFn: () => postsApi.getUserAllPosts({ address, page, pageSize }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!address,
+  });
+};
 
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();

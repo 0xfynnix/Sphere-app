@@ -23,6 +23,8 @@ export const API_ENDPOINTS = {
     CREATE: '/api/content',
     LIST: (page?: number, pageSize?: number, address?: string) => 
       `/api/content?${address ? `address=${address}` : ''}${page ? `&page=${page}` : ''}${pageSize ? `&pageSize=${pageSize}` : ''}`,
+    ALL: (page?: number, pageSize?: number, address?: string) => 
+      `/api/content/all?${address ? `address=${address}` : ''}${page ? `&page=${page}` : ''}${pageSize ? `&pageSize=${pageSize}` : ''}`,
   },
   // Images endpoints
   IMAGES: {
