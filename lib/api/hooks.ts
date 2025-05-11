@@ -351,7 +351,7 @@ export const useClaimAuction = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (postId: string) => bidsApi.claimAuction(postId),
+    mutationFn: (data: { postId: string; digest: string }) => bidsApi.claimAuction(data.postId, data.digest),
     onSuccess: () => {
       // 使相关查询失效，触发重新获取
       queryClient.invalidateQueries({ queryKey: ['user'] });

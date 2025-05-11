@@ -63,6 +63,7 @@ export const config = {
     '/api/bids/:path*',
     '/api/rewards/:path*',
     '/api/auction/process-expired',
+    '/api/auction/claim',
     '/api/posts/:path*',
     '/api/lottery-pool/:path*',
   ],

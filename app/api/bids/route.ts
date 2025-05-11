@@ -108,7 +108,7 @@ export async function POST(request: Request) {
         amount,
         postId,
         userId: user.id,
-        creatorId: post.userId, // 设置创作者ID为帖子的创建者
+        creatorId: post.userId, // 设置当前拥有者ID为帖子的创建者
         round: post.auctionRound, // 设置当前轮次
         referrerId: referrer?.id, // 添加推荐人ID
         platformAmount: amount * 0.1, // 10% platform fee

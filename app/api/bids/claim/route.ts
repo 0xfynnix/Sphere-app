@@ -9,9 +9,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { bidId, type } = await req.json();
+    const { type, digest } = await req.json();
     
-    if (!bidId || !type) {
+    if (!type || !digest) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
@@ -26,9 +26,23 @@ export async function POST(req: Request) {
 
     // Start transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Find bid
-      const bid = await tx.bid.findUnique({
-        where: { id: bidId },
+      // Find all unclaimed bids based on type
+      const unclaimedBids = await tx.bid.findMany({
+        where: {
+          ...(type === 'creator' ? {
+            creatorId: user.id,
+            creatorClaimed: false,
+            creatorAmount: {
+              gt: 0
+            }
+          } : {
+            referrerId: user.id,
+            referrerClaimed: false,
+            referrerAmount: {
+              gt: 0
+            }
+          }),
+        },
         include: {
           post: {
             include: {
@@ -39,55 +53,51 @@ export async function POST(req: Request) {
         }
       });
 
-      if (!bid) {
-        throw new Error('Bid not found');
+      if (unclaimedBids.length === 0) {
+        throw new Error('No unclaimed rewards found');
       }
 
-      let amount = 0;
-      const updateData = {
-        creatorClaimed: false,
-        referrerClaimed: false,
-      };
+      let totalAmount = 0;
 
-      // 根据类型处理不同的领取逻辑
-      switch (type) {
-        case 'creator':
+      // Process each bid
+      for (const bid of unclaimedBids) {
+        const updateData = {
+          creatorClaimed: false,
+          referrerClaimed: false,
+        };
+
+        if (type === 'creator') {
           if (bid.post?.user.id !== user.id) {
-            throw new Error('Not authorized to claim this reward');
+            continue; // Skip if not authorized
           }
           if (bid.creatorClaimed) {
-            throw new Error('Reward already claimed');
+            continue; // Skip if already claimed
           }
           if (!bid.creatorAmount) {
-            throw new Error('No creator amount available');
+            continue; // Skip if no amount available
           }
-          amount = bid.creatorAmount;
+          totalAmount += bid.creatorAmount;
           updateData.creatorClaimed = true;
-          break;
-
-        case 'referrer':
+        } else {
           if (bid.referrerId !== user.id) {
-            throw new Error('Not authorized to claim this reward');
+            continue; // Skip if not authorized
           }
           if (bid.referrerClaimed) {
-            throw new Error('Reward already claimed');
+            continue; // Skip if already claimed
           }
           if (!bid.referrerAmount) {
-            throw new Error('No referrer amount available');
+            continue; // Skip if no amount available
           }
-          amount = bid.referrerAmount;
+          totalAmount += bid.referrerAmount;
           updateData.referrerClaimed = true;
-          break;
+        }
 
-        default:
-          throw new Error('Invalid claim type');
+        // Update bid claim status
+        await tx.bid.update({
+          where: { id: bid.id },
+          data: updateData
+        });
       }
-
-      // Update bid claim status
-      await tx.bid.update({
-        where: { id: bidId },
-        data: updateData
-      });
 
       // Update user earnings
       if (type === 'creator') {
@@ -95,7 +105,7 @@ export async function POST(req: Request) {
           where: { id: user.id },
           data: {
             auctionEarnings: {
-              increment: amount
+              increment: totalAmount
             }
           }
         });
@@ -104,19 +114,39 @@ export async function POST(req: Request) {
           where: { id: user.id },
           data: {
             referredAuctionEarnings: {
-              increment: amount
+              increment: totalAmount
             }
           }
         });
       }
 
-      return { success: true, amount };
+      // Create SuiTransaction record
+      const transaction = await tx.suiTransaction.create({
+        data: {
+          digest,
+          type: type === 'creator' ? 'claim creator bid' : 'claim referrer bid',
+          status: 'SUCCESS',
+          userId: user.id,
+          data: {
+            totalAmount,
+            processedCount: unclaimedBids.length,
+            type
+          }
+        }
+      });
+
+      return { 
+        success: true, 
+        totalAmount, 
+        processedCount: unclaimedBids.length,
+        transaction 
+      };
     });
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error claiming bid reward:', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to claim bid reward' }, { status: 500 });
+    console.error('Error claiming bid rewards:', error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to claim bid rewards' }, { status: 500 });
   }
 }
 
@@ -157,6 +187,12 @@ export async function GET(req: Request) {
           select: {
             walletAddress: true
           }
+        },
+        auctionHistory: {
+          select: {
+            id: true,
+            auctionObjectId: true
+          }
         }
       }
     });
@@ -180,6 +216,12 @@ export async function GET(req: Request) {
         user: {
           select: {
             walletAddress: true
+          }
+        },
+        auctionHistory: {
+          select: {
+            id: true,
+            auctionObjectId: true
           }
         }
       }

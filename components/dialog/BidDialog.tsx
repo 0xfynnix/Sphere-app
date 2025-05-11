@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useCreateBid } from "@/lib/api/hooks";
 import { useSphereContract } from "@/hooks/useSphereContract";
 import { getRefData } from "@/lib/api/ref";
@@ -57,6 +57,7 @@ export function BidDialog({
   const [bidProgress, setBidProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<'input' | 'bidding'>('input');
   const account = useCurrentAccount();
+  const client = useSuiClient();
   const createBid = useCreateBid();
   const { placeBid } = useSphereContract();
 
@@ -128,6 +129,16 @@ export function BidDialog({
 
       // 调用合约的 placeBid 函数
       const result = await placeBid(auctionId, amount, referrer || "0x0");
+      
+      // 等待交易确认
+      await client.waitForTransaction({
+        digest: result.digest,
+        options: {
+          showEvents: true,
+          showEffects: true,
+          showObjectChanges: true,
+        },
+      });
       
       clearInterval(contractProgressInterval);
       setBidProgress(50);

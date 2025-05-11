@@ -19,11 +19,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 获取请求体中的帖子ID
-    const { postId } = await request.json();
+    // 获取请求体中的帖子ID和交易digest
+    const { postId, digest } = await request.json();
     if (!postId) {
       return NextResponse.json(
         { error: "Post ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!digest) {
+      return NextResponse.json(
+        { error: "Transaction digest is required" },
         { status: 400 }
       );
     }
@@ -87,9 +94,21 @@ export async function POST(request: Request) {
         },
       });
 
+      // 创建交易记录
+      const transaction = await tx.suiTransaction.create({
+        data: {
+          digest,
+          type: 'claim content',
+          status: 'SUCCESS',
+          userId: user.id,
+          postId: post.id,
+        },
+      });
+
       return {
         post: updatedPost,
         lotteryPool: newLotteryPool,
+        transaction,
       };
     });
 

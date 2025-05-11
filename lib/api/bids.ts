@@ -35,10 +35,10 @@ export const bidsApi = {
   },
 
   // 领取竞拍奖励
-  claimAuction: async (postId: string): Promise<ClaimAuctionResponse> => {
+  claimAuction: async (postId: string, digest: string): Promise<ClaimAuctionResponse> => {
     const response = await request<ClaimAuctionResponse>('/api/auction/claim', {
       method: 'POST',
-      body: JSON.stringify({ postId }),
+      body: JSON.stringify({ postId, digest }),
     });
     return response;
   },

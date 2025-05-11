@@ -292,13 +292,13 @@ export type BidClaimType = 'creator' | 'referrer';
 
 // 打赏奖励领取请求
 export interface RewardClaimRequest {
-  rewardId: string;
+  digest: string;
   type: RewardClaimType;
 }
 
 // 竞拍奖励领取请求
 export interface BidClaimRequest {
-  bidId: string;
+  digest: string;
   type: BidClaimType;
 }
 
@@ -342,6 +342,8 @@ export interface UnclaimedBid {
   user: {
     walletAddress: string;
   };
+  auctionHistoryId?: string;
+  auctionObjectId?: string;
 }
 
 // 未领取奖励响应

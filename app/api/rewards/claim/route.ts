@@ -9,9 +9,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { rewardId, type } = await req.json();
+    const { type, digest } = await req.json();
     
-    if (!rewardId || !type) {
+    if (!type || !digest) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
@@ -26,61 +26,68 @@ export async function POST(req: Request) {
 
     // Start transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Find reward
-      const reward = await tx.reward.findUnique({
-        where: { id: rewardId },
+      // Find all unclaimed rewards based on type
+      const unclaimedRewards = await tx.reward.findMany({
+        where: {
+          ...(type === 'recipient' ? {
+            recipientId: user.id,
+            recipientClaimed: false
+          } : {
+            referrerId: user.id,
+            referrerClaimed: false,
+            referrerAmount: {
+              gt: 0
+            }
+          }),
+        },
         include: {
           recipient: true,
           referrer: true,
         }
       });
 
-      if (!reward) {
-        throw new Error('Reward not found');
+      if (unclaimedRewards.length === 0) {
+        throw new Error('No unclaimed rewards found');
       }
 
-      let amount = 0;
-      const updateData = {
-        recipientClaimed: false,
-        referrerClaimed: false,
-      };
+      let totalAmount = 0;
 
-      // 根据类型处理不同的领取逻辑
-      switch (type) {
-        case 'recipient':
+      // Process each reward
+      for (const reward of unclaimedRewards) {
+        const updateData = {
+          recipientClaimed: false,
+          referrerClaimed: false,
+        };
+
+        if (type === 'recipient') {
           if (reward.recipientId !== user.id) {
-            throw new Error('Not authorized to claim this reward');
+            continue; // Skip if not authorized
           }
           if (reward.recipientClaimed) {
-            throw new Error('Reward already claimed');
+            continue; // Skip if already claimed
           }
-          amount = reward.recipientAmount;
+          totalAmount += reward.recipientAmount;
           updateData.recipientClaimed = true;
-          break;
-
-        case 'referrer':
+        } else {
           if (reward.referrerId !== user.id) {
-            throw new Error('Not authorized to claim this reward');
+            continue; // Skip if not authorized
           }
           if (reward.referrerClaimed) {
-            throw new Error('Reward already claimed');
+            continue; // Skip if already claimed
           }
           if (!reward.referrerAmount) {
-            throw new Error('No referrer amount available');
+            continue; // Skip if no amount available
           }
-          amount = reward.referrerAmount;
+          totalAmount += reward.referrerAmount;
           updateData.referrerClaimed = true;
-          break;
+        }
 
-        default:
-          throw new Error('Invalid claim type');
+        // Update reward claim status
+        await tx.reward.update({
+          where: { id: reward.id },
+          data: updateData
+        });
       }
-
-      // Update reward claim status
-      await tx.reward.update({
-        where: { id: rewardId },
-        data: updateData
-      });
 
       // Update user earnings
       if (type === 'recipient') {
@@ -88,7 +95,7 @@ export async function POST(req: Request) {
           where: { id: user.id },
           data: {
             rewardEarnings: {
-              increment: amount
+              increment: totalAmount
             }
           }
         });
@@ -97,19 +104,39 @@ export async function POST(req: Request) {
           where: { id: user.id },
           data: {
             referredRewardEarnings: {
-              increment: amount
+              increment: totalAmount
             }
           }
         });
       }
 
-      return { success: true, amount };
+      // Create SuiTransaction record
+      const transaction = await tx.suiTransaction.create({
+        data: {
+          digest,
+          type: type === 'recipient' ? 'claim recipient reward' : 'claim referrer reward',
+          status: 'SUCCESS',
+          userId: user.id,
+          data: {
+            totalAmount,
+            processedCount: unclaimedRewards.length,
+            type
+          }
+        }
+      });
+
+      return { 
+        success: true, 
+        totalAmount, 
+        processedCount: unclaimedRewards.length,
+        transaction 
+      };
     });
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error claiming reward:', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to claim reward' }, { status: 500 });
+    console.error('Error claiming rewards:', error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to claim rewards' }, { status: 500 });
   }
 }
 

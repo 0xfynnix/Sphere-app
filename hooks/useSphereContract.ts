@@ -274,7 +274,7 @@ export function useSphereContract() {
   };
 
   /**
-   * 用于领取推荐分成
+   * 用于推荐者领取打赏推荐分成
    * @param referenceTipPool - 推荐分成池对象 ID
    */
   const claimReferenceTip = async (referenceTipPool: string) => {
@@ -292,7 +292,7 @@ export function useSphereContract() {
   };
 
   /**
-   * 用于创作者领取打赏
+   * 用于创作者领取打赏分成
    * @param creatorTipPool - 创作者分成池对象 ID
    */
   const claimCreatorTip = async (creatorTipPool: string) => {
@@ -302,6 +302,24 @@ export function useSphereContract() {
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::creator_claim_tip`,
       arguments: [tx.object(creatorTipPool)],
+    });
+
+    return signAndExecute({
+      transaction: tx,
+    });
+  };
+
+  /**
+   * 用于领取拍卖奖励
+   * @param auctionId - 拍卖对象 ID
+   */
+  const claimReward = async (auctionId: string) => {
+    if (!account) throw new Error('No account connected');
+    
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::claim_reward`,
+      arguments: [tx.object(auctionId)],
     });
 
     return signAndExecute({
@@ -335,6 +353,7 @@ export function useSphereContract() {
     claimRevenueTip,
     claimReferenceTip,
     claimCreatorTip,
+    claimReward,
     createRevenueCap,
   };
 } 

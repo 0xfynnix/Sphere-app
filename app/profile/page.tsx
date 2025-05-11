@@ -43,9 +43,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  useClaimReward,
   useUnclaimedRewards,
-  useClaimBid,
   useUnclaimedBids,
   useUnclaimedLotteryPools,
   useClaimLotteryPool,
@@ -53,6 +51,8 @@ import {
 import { useTransactions } from "@/lib/api/hooks";
 import { StartAuctionButton } from "@/components/auction/StartAuctionButton";
 import { CompleteAuctionDialog } from "@/components/dialog/CompleteAuctionDialog";
+import { ClaimContentDialog } from "@/components/dialog/ClaimContentDialog";
+import { ClaimRewardDialog } from "@/components/dialog/ClaimRewardDialog";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -62,11 +62,13 @@ export default function ProfilePage() {
   // const createBid = useCreateBid();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<{id: string, auctionId: string, auctionCapId: string} | null>(null);
-  const [isRecipientClaiming, setIsRecipientClaiming] = useState(false);
-  const [isReferrerClaiming, setIsReferrerClaiming] = useState(false);
-  const [isCreatorBidClaiming, setIsCreatorBidClaiming] = useState(false);
-  const [isReferrerBidClaiming, setIsReferrerBidClaiming] = useState(false);
   const [isLotteryClaiming, setIsLotteryClaiming] = useState(false);
+  const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
+  const [selectedClaimPost, setSelectedClaimPost] = useState<{id: string, auctionId: string} | null>(null);
+  const [isRecipientClaimDialogOpen, setIsRecipientClaimDialogOpen] = useState(false);
+  const [isReferrerClaimDialogOpen, setIsReferrerClaimDialogOpen] = useState(false);
+  const [isCreatorBidClaimDialogOpen, setIsCreatorBidClaimDialogOpen] = useState(false);
+  const [isReferrerBidClaimDialogOpen, setIsReferrerBidClaimDialogOpen] = useState(false);
 
   const {
     data: userData,
@@ -80,8 +82,6 @@ export default function ProfilePage() {
   );
   const { data: unclaimedRewardsData } = useUnclaimedRewards();
   const { data: unclaimedBidsData } = useUnclaimedBids();
-  const claimReward = useClaimReward();
-  const claimBid = useClaimBid();
   const { data: unclaimedLotteryPoolsData } = useUnclaimedLotteryPools();
   const claimLotteryPool = useClaimLotteryPool();
 
@@ -111,56 +111,6 @@ export default function ProfilePage() {
   const handleUpdateSuccess = () => {
     setIsDialogOpen(false);
     router.refresh();
-  };
-
-  const handleClaimReward = async (
-    rewardId: string,
-    type: "recipient" | "referrer"
-  ) => {
-    try {
-      if (type === "recipient") {
-        setIsRecipientClaiming(true);
-      } else {
-        setIsReferrerClaiming(true);
-      }
-
-      await claimReward.mutateAsync({ rewardId, type });
-      toast.success("Reward claimed successfully");
-    } catch (error) {
-      console.error("Failed to claim reward:", error);
-      toast.error("Failed to claim reward");
-    } finally {
-      if (type === "recipient") {
-        setIsRecipientClaiming(false);
-      } else {
-        setIsReferrerClaiming(false);
-      }
-    }
-  };
-
-  const handleClaimBid = async (
-    bidId: string,
-    type: "creator" | "referrer"
-  ) => {
-    try {
-      if (type === "creator") {
-        setIsCreatorBidClaiming(true);
-      } else {
-        setIsReferrerBidClaiming(true);
-      }
-
-      await claimBid.mutateAsync({ bidId, type });
-      toast.success("Bid reward claimed successfully");
-    } catch (error) {
-      console.error("Failed to claim bid reward:", error);
-      toast.error("Failed to claim bid reward");
-    } finally {
-      if (type === "creator") {
-        setIsCreatorBidClaiming(false);
-      } else {
-        setIsReferrerBidClaiming(false);
-      }
-    }
   };
 
   const handleClaimLotteryPool = async (postId: string) => {
@@ -556,6 +506,40 @@ export default function ProfilePage() {
                                 }
                               />
                             )}
+                            {post.status === "WAITING_CLAIM" && post.auctionHistory?.length > 0 && (
+                              <ClaimContentDialog
+                                isOpen={isClaimDialogOpen && selectedClaimPost?.id === post.id}
+                                onOpenChange={(open) => {
+                                  setIsClaimDialogOpen(open);
+                                  if (!open) {
+                                    setSelectedClaimPost(null);
+                                    router.refresh();
+                                    refetchPosts();
+                                  }
+                                }}
+                                postId={post.id}
+                                auctionId={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.auctionObjectId || ""}
+                                trigger={
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 border-none"
+                                    onClick={() => {
+                                      const currentAuction = post.auctionHistory.find(auction => auction.round === post.auctionRound);
+                                      if (currentAuction) {
+                                        setSelectedClaimPost({
+                                          id: post.id,
+                                          auctionId: currentAuction.auctionObjectId
+                                        });
+                                        setIsClaimDialogOpen(true);
+                                      }
+                                    }}
+                                  >
+                                    Claim Content
+                                  </Button>
+                                }
+                              />
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -752,29 +736,20 @@ export default function ProfilePage() {
                       <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                       As Recipient
                     </h3>
-                    <Button
-                      onClick={() => {
-                        const rewards =
-                          unclaimedRewardsData?.recipientRewards || [];
-                        rewards.forEach((reward) =>
-                          handleClaimReward(reward.id, "recipient")
-                        );
-                      }}
-                      disabled={
-                        !unclaimedRewardsData?.recipientRewards?.length ||
-                        isRecipientClaiming
+                    <ClaimRewardDialog
+                      isOpen={isRecipientClaimDialogOpen}
+                      onOpenChange={setIsRecipientClaimDialogOpen}
+                      type="recipient"
+                      creatorTipPoolId={process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_TIP_POOL}
+                      trigger={
+                        <Button
+                          disabled={!unclaimedRewardsData?.recipientRewards?.length}
+                          className="bg-purple-500 hover:bg-purple-600"
+                        >
+                          Claim All
+                        </Button>
                       }
-                      className="bg-purple-500 hover:bg-purple-600"
-                    >
-                      {isRecipientClaiming ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Claiming...
-                        </div>
-                      ) : (
-                        "Claim All"
-                      )}
-                    </Button>
+                    />
                   </div>
                   {!unclaimedRewardsData?.recipientRewards?.length ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -818,29 +793,20 @@ export default function ProfilePage() {
                       <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                       As Referrer
                     </h3>
-                    <Button
-                      onClick={() => {
-                        const rewards =
-                          unclaimedRewardsData?.referrerRewards || [];
-                        rewards.forEach((reward) =>
-                          handleClaimReward(reward.id, "referrer")
-                        );
-                      }}
-                      disabled={
-                        !unclaimedRewardsData?.referrerRewards?.length ||
-                        isReferrerClaiming
+                    <ClaimRewardDialog
+                      isOpen={isReferrerClaimDialogOpen}
+                      onOpenChange={setIsReferrerClaimDialogOpen}
+                      type="referrer"
+                      referenceTipPoolId={process.env.NEXT_PUBLIC_COPY_RIGHT_REFERENCE_TIP_POOL}
+                      trigger={
+                        <Button
+                          disabled={!unclaimedRewardsData?.referrerRewards?.length}
+                          className="bg-blue-500 hover:bg-blue-600"
+                        >
+                          Claim All
+                        </Button>
                       }
-                      className="bg-blue-500 hover:bg-blue-600"
-                    >
-                      {isReferrerClaiming ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Claiming...
-                        </div>
-                      ) : (
-                        "Claim All"
-                      )}
-                    </Button>
+                    />
                   </div>
                   {!unclaimedRewardsData?.referrerRewards?.length ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -893,28 +859,6 @@ export default function ProfilePage() {
                       <span className="h-2 w-2 rounded-full bg-green-500"></span>
                       As Creator
                     </h3>
-                    <Button
-                      onClick={() => {
-                        const bids = unclaimedBidsData?.creatorBids || [];
-                        bids.forEach((bid) =>
-                          handleClaimBid(bid.id, "creator")
-                        );
-                      }}
-                      disabled={
-                        !unclaimedBidsData?.creatorBids?.length ||
-                        isCreatorBidClaiming
-                      }
-                      className="bg-green-500 hover:bg-green-600"
-                    >
-                      {isCreatorBidClaiming ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Claiming...
-                        </div>
-                      ) : (
-                        "Claim All"
-                      )}
-                    </Button>
                   </div>
                   {!unclaimedBidsData?.creatorBids?.length ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -945,6 +889,32 @@ export default function ProfilePage() {
                               </span>
                             </div>
                           </div>
+                          <ClaimRewardDialog
+                            isOpen={isCreatorBidClaimDialogOpen && selectedClaimPost?.id === bid.id}
+                            onOpenChange={(open) => {
+                              setIsCreatorBidClaimDialogOpen(open);
+                              if (!open) {
+                                setSelectedClaimPost(null);
+                              }
+                            }}
+                            type="creator"
+                            auctionId={bid.auctionObjectId}
+                            trigger={
+                              <Button
+                                size="sm"
+                                className="bg-green-500 hover:bg-green-600"
+                                onClick={() => {
+                                  setSelectedClaimPost({
+                                    id: bid.id,
+                                    auctionId: bid.auctionObjectId || ""
+                                  });
+                                  setIsCreatorBidClaimDialogOpen(true);
+                                }}
+                              >
+                                Claim
+                              </Button>
+                            }
+                          />
                         </div>
                       ))}
                     </div>
@@ -958,28 +928,6 @@ export default function ProfilePage() {
                       <span className="h-2 w-2 rounded-full bg-orange-500"></span>
                       As Referrer
                     </h3>
-                    <Button
-                      onClick={() => {
-                        const bids = unclaimedBidsData?.referrerBids || [];
-                        bids.forEach((bid) =>
-                          handleClaimBid(bid.id, "referrer")
-                        );
-                      }}
-                      disabled={
-                        !unclaimedBidsData?.referrerBids?.length ||
-                        isReferrerBidClaiming
-                      }
-                      className="bg-orange-500 hover:bg-orange-600"
-                    >
-                      {isReferrerBidClaiming ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Claiming...
-                        </div>
-                      ) : (
-                        "Claim All"
-                      )}
-                    </Button>
                   </div>
                   {!unclaimedBidsData?.referrerBids?.length ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -1010,6 +958,32 @@ export default function ProfilePage() {
                               </span>
                             </div>
                           </div>
+                          <ClaimRewardDialog
+                            isOpen={isReferrerBidClaimDialogOpen && selectedClaimPost?.id === bid.id}
+                            onOpenChange={(open) => {
+                              setIsReferrerBidClaimDialogOpen(open);
+                              if (!open) {
+                                setSelectedClaimPost(null);
+                              }
+                            }}
+                            type="referrer"
+                            auctionId={bid.auctionObjectId}
+                            trigger={
+                              <Button
+                                size="sm"
+                                className="bg-orange-500 hover:bg-orange-600"
+                                onClick={() => {
+                                  setSelectedClaimPost({
+                                    id: bid.id,
+                                    auctionId: bid.auctionObjectId || ""
+                                  });
+                                  setIsReferrerBidClaimDialogOpen(true);
+                                }}
+                              >
+                                Claim
+                              </Button>
+                            }
+                          />
                         </div>
                       ))}
                     </div>
