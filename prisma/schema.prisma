@@ -96,6 +96,7 @@ model User {
   lotteryPools     LotteryPool[]     // 作为中奖者的抽奖池
   transactions   SuiTransaction[]    // 用户的Sui交易记录
   bookmarks      Bookmark[]         // 添加收藏关系
+  notifications  Notification[]
 }
 
 model Profile {
@@ -146,9 +147,13 @@ model Post {
   lotteryPools  LotteryPool[]   // 奖池记录（每个轮次一个）
   transactions   SuiTransaction[] @relation("PostTransactions") // 帖子关联的交易记录
   auctionHistory AuctionHistory[] // 拍卖历史记录
+  bookmarks     Bookmark[] // 添加收藏关系
+  notifications Notification[] // 添加通知关系
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  bookmarks     Bookmark[] // 添加收藏关系
+
+  @@index([userId])
+  @@index([creatorId])
 }
 
 // 帖子状态枚举
@@ -421,4 +426,23 @@ model Bookmark {
   @@unique([postId, userId]) // 确保用户对同一帖子只能收藏一次
   @@index([postId])
   @@index([userId])
+}
+
+// 通知模型
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String   // "auction end" | "auction win"
+  content   String
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([postId])
+  @@index([type])
+  @@index([read])
 } 

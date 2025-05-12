@@ -6,15 +6,17 @@ import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, User, PlusCircle } from "lucide-react";
+import { Home, User, PlusCircle, Bell } from "lucide-react";
 import { AuthButton } from "../auth/AuthButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { useUserStore } from "@/store/userStore";
+import { useNotificationStore } from "@/store/notificationStore";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useUserStore();
+  const { unreadCount } = useNotificationStore();
 
   // 检查是否是从侧边栏进入的用户页面
   const isUserPageFromSidebar =
@@ -54,20 +56,41 @@ export default function Sidebar() {
             </Button>
           </Link>
           {user && (
-            <Link href={`/user/${user.walletAddress}`}>
-              <Button
-                variant={isUserPageFromSidebar ? "default" : "ghost"}
-                className={cn(
-                  "w-full justify-start transition-colors",
-                  isUserPageFromSidebar
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
-                    : "hover:bg-sidebar-accent"
-                )}
-              >
-                <User className="mr-2 h-4 w-4" />
-                My Page
-              </Button>
-            </Link>
+            <>
+              <Link href={`/user/${user.walletAddress}`}>
+                <Button
+                  variant={isUserPageFromSidebar ? "default" : "ghost"}
+                  className={cn(
+                    "w-full justify-start transition-colors",
+                    isUserPageFromSidebar
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                      : "hover:bg-sidebar-accent"
+                  )}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  My Page
+                </Button>
+              </Link>
+              <Link href="/notifications">
+                <Button
+                  variant={pathname === "/notifications" ? "default" : "ghost"}
+                  className={cn(
+                    "w-full justify-start transition-colors relative",
+                    pathname === "/notifications"
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                      : "hover:bg-sidebar-accent"
+                  )}
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  Notifications
+                  {unreadCount > 0 && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            </>
           )}
         </nav>
 

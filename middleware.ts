@@ -72,6 +72,7 @@ export const config = {
     "/api/posts/:path*",
     "/api/lottery-pool/:path*",
     "/api/follow/:path*",
+    "/api/notifications/:path*",
   ],
 };
 

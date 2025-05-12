@@ -25,6 +25,8 @@ import { RecommendedPost } from './types';
 import { followUser, unfollowUser, checkFollowStatus } from './follow';
 import { bookmarkPost, unbookmarkPost, getUserBookmarks, checkBookmarkStatus } from './bookmarks';
 import { PaginatedPostsResponse } from './types';
+import { notificationsApi } from './notifications';
+import { useNotificationStore } from '@/store/notificationStore';
 
 // User hooks
 export const useUser = () => {
@@ -490,5 +492,45 @@ export const useFollowedUsersPosts = (address: string, page: number = 1, pageSiz
     queryKey: ['followed-users-posts', address, page, pageSize],
     queryFn: () => postsApi.getFollowedUsersPosts({ address, page, pageSize }),
     enabled: !!address,
+  });
+};
+
+// Notifications hooks
+export const useNotifications = () => {
+  const setNotifications = useNotificationStore((state) => state.setNotifications);
+
+  return useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const response = await notificationsApi.getNotifications();
+      setNotifications(response.notifications);
+      return response;
+    },
+  });
+};
+
+export const useMarkNotificationAsRead = () => {
+  const queryClient = useQueryClient();
+  const markAsRead = useNotificationStore((state) => state.markAsRead);
+
+  return useMutation({
+    mutationFn: async (notificationId: number) => {
+      await notificationsApi.markAsRead(notificationId);
+      markAsRead(notificationId);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+};
+
+export const useMarkAllNotificationsAsRead = () => {
+  const queryClient = useQueryClient();
+  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+
+  return useMutation({
+    mutationFn: async () => {
+      await notificationsApi.markAllAsRead();
+      markAllAsRead();
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
   });
 }; 

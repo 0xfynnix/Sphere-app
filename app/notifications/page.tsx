@@ -10,11 +10,16 @@ import { User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
+import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/lib/api/hooks';
 
 export default function NotificationsPage() {
   const { user } = useUserStore();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
+  const { notifications, setNotifications } = useNotificationStore();
   const router = useRouter();
+
+  const { data: notificationsData, isLoading } = useNotifications();
+  const { mutate: markAsRead } = useMarkNotificationAsRead();
+  const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead();
 
   useEffect(() => {
     if (!user) {
@@ -22,30 +27,51 @@ export default function NotificationsPage() {
     }
   }, [user, router]);
 
+  useEffect(() => {
+    if (notificationsData) {
+      setNotifications(notificationsData.notifications);
+    }
+  }, [notificationsData, setNotifications]);
+
   if (!user) {
     return null;
   }
 
-  const handleMarkAsRead = (id: number) => {
-    markAsRead(id);
-    // TODO: Call API to mark notification as read
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await markAsRead(id);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    markAllAsRead();
-    // TODO: Call API to mark all notifications as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead();
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
 
   const handleViewPost = (postId: string) => {
-    // TODO: Navigate to post
-    console.log('View post:', postId);
+    router.push(`/post/${postId}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="text-center py-8 text-muted-foreground">
+          Loading notifications...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Notifications</h1>
-        {unreadCount > 0 && (
+        {notifications.some(n => !n.read) && (
           <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
             Mark all as read
           </Button>
@@ -82,7 +108,7 @@ export default function NotificationsPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{notification.user.name}</h3>
                     <span className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                      {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
                     </span>
                   </div>
                   {notification.postTitle && (
@@ -92,8 +118,8 @@ export default function NotificationsPage() {
                   )}
                   <p className="text-sm">{notification.content}</p>
                   <div className="mt-2 flex items-center gap-2">
-                    {notification.postTitle && (
-                      <Button variant="outline" size="sm" onClick={() => handleViewPost(notification.id.toString())}>
+                    {notification.postId && (
+                      <Button variant="outline" size="sm" onClick={() => handleViewPost(notification.postId)}>
                         View Post
                       </Button>
                     )}

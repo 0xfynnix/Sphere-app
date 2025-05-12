@@ -167,6 +167,27 @@ export async function POST(request: Request) {
       }
     });
 
+    // 创建通知
+    // 1. 给竞拍胜利者发送通知
+    await prisma.notification.create({
+      data: {
+        type: "auction win",
+        content: `Congratulations! You won the auction for "${post.title}" with a bid of ${winningBid.amount} SUI`,
+        userId: winningBid.userId,
+        postId: post.id,
+      },
+    });
+
+    // 2. 给发起竞拍者（原创作者）发送通知
+    await prisma.notification.create({
+      data: {
+        type: "auction end",
+        content: `Your auction for "${post.title}" has ended. The winning bid was ${winningBid.amount} SUI`,
+        userId: post.creatorId,
+        postId: post.id,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       message: "Successfully processed auction",
