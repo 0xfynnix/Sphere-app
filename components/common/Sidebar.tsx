@@ -6,17 +6,15 @@ import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, User, PlusCircle, Bell } from "lucide-react";
+import { Home, User, PlusCircle } from "lucide-react";
 import { AuthButton } from "../auth/AuthButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { useUserStore } from "@/store/userStore";
-import { useNotificationStore } from "@/store/notificationStore";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useUserStore();
-  const { unreadCount } = useNotificationStore();
 
   // 检查是否是从侧边栏进入的用户页面
   const isUserPageFromSidebar =
