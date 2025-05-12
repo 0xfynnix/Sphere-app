@@ -401,18 +401,18 @@ export interface RecommendedPost {
   content: string;
   totalRewards: number;
   audienceCount: number;
+  createdAt: string;
   user: {
     id: string;
     walletAddress: string;
     profile: {
       name: string | null;
       avatar: string | null;
-    };
+    } | null;
   };
   category: {
     id: string;
     name: string;
-    description: string | null;
   } | null;
   tags: {
     id: string;
@@ -422,6 +422,11 @@ export interface RecommendedPost {
     comments: number;
     bookmarks: number;
   };
+  images: {
+    id: string;
+    url: string;
+  }[];
+  rank?: number;
 }
 
 export interface RecommendResponse {

@@ -51,6 +51,46 @@ export interface GetUserPostsResponse {
   };
 }
 
+export interface PopularPost {
+  id: string;
+  title: string;
+  content: string;
+  totalRewards: number;
+  audienceCount: number;
+  createdAt: string;
+  user: {
+    id: string;
+    walletAddress: string;
+    profile: {
+      name: string | null;
+      avatar: string | null;
+    };
+  };
+  category: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
+  tags: {
+    id: string;
+    name: string;
+  }[];
+  _count: {
+    comments: number;
+    bookmarks: number;
+  };
+  images: {
+    id: string;
+    url: string;
+  }[];
+  rank: number;
+}
+
+export interface PopularPostsResponse {
+  posts: PopularPost[];
+  total: number;
+}
+
 export const postsApi = {
   // 上传图片
   uploadImage: async (image: File): Promise<{ url: string; cid: string }> => {
@@ -91,7 +131,12 @@ export const postsApi = {
     });
   },
 
-  // 创建评论
+  /**
+   * 创建评论
+   * @param postId 帖子ID
+   * @param content 评论内容
+   * @returns 创建的评论
+   */
   createComment: async (postId: string, content: string): Promise<Comment> => {
     return request<Comment>(API_ENDPOINTS.POSTS.COMMENT(postId), {
       method: "POST",
@@ -146,11 +191,44 @@ export const postsApi = {
   /**
    * 获取推荐帖子
    */
-  getRecommendedPosts: async (): Promise<RecommendResponse> => {
-    const response = await fetch('/api/posts/recommend');
-    if (!response.ok) {
-      throw new Error('Failed to fetch recommended posts');
-    }
-    return response.json();
+  getRecommendedPosts: async () => {
+    return request<RecommendResponse>(API_ENDPOINTS.POSTS.RECOMMEND, {
+      method: "GET",
+    });
+  },
+
+  getComments: async (postId: string, page: number = 1, pageSize: number = 10) => {
+    return request<{
+      comments: Array<{
+        id: string;
+        content: string;
+        createdAt: string;
+        user: {
+          id: string;
+          walletAddress: string;
+          profile: {
+            name: string | null;
+            avatar: string | null;
+          } | null;
+        };
+      }>;
+      pagination: {
+        total: number;
+        page: number;
+        pageSize: number;
+        totalPages: number;
+      };
+    }>(API_ENDPOINTS.POSTS.COMMENTS(postId, page, pageSize), {
+      method: "GET",
+    });
+  },
+
+  /**
+   * 获取热门帖子
+   */
+  getPopularPosts: async (): Promise<PopularPostsResponse> => {
+    return request<PopularPostsResponse>(API_ENDPOINTS.POSTS.POPULAR, {
+      method: "GET",
+    });
   },
 };

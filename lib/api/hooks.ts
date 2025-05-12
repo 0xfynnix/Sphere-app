@@ -21,6 +21,7 @@ import { RewardClaimRequest, BidClaimRequest } from './types';
 import { getTransactions } from './transactions';
 import { GetTransactionsParams, GetTransactionsResponse } from './types';
 import { getUnclaimedLotteryPools, claimLotteryPool } from './lottery';
+import { RecommendedPost } from './types';
 
 // User hooks
 export const useUser = () => {
@@ -318,8 +319,8 @@ export function useTransactions(params: GetTransactionsParams = {}) {
  * 获取推荐帖子的 Hook
  */
 export function useRecommendedPosts() {
-  return useQuery({
-    queryKey: ['recommendedPosts'],
+  return useQuery<{ posts: RecommendedPost[]; total: number }>({
+    queryKey: ['popularPosts'],
     queryFn: () => postsApi.getRecommendedPosts(),
   });
 }
@@ -376,3 +377,38 @@ export const useCompleteAuction = () => {
     },
   });
 }; 
+
+export function useComments(postId: string, page: number = 1, pageSize: number = 10) {
+  return useQuery<{
+    comments: Array<{
+      id: string;
+      content: string;
+      createdAt: string;
+      user: {
+        id: string;
+        walletAddress: string;
+        profile: {
+          name: string | null;
+          avatar: string | null;
+        } | null;
+      };
+    }>;
+    pagination: {
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    };
+  }>({
+    queryKey: ['comments', postId, page, pageSize],
+    queryFn: () => postsApi.getComments(postId, page, pageSize),
+    enabled: !!postId,
+  });
+}
+
+export function usePopularPosts() {
+  return useQuery<{ posts: RecommendedPost[]; total: number }>({
+    queryKey: ['popularPosts'],
+    queryFn: () => postsApi.getPopularPosts(),
+  });
+} 

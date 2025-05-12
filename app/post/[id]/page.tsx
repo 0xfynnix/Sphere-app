@@ -21,7 +21,7 @@ import { RewardDialog } from "@/components/dialog/RewardDialog";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
-import { usePost, useCreateComment, useBids } from "@/lib/api/hooks";
+import { usePost, useCreateComment, useBids, useComments } from "@/lib/api/hooks";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { PhotoProvider, PhotoView } from "react-photo-view";
@@ -42,6 +42,7 @@ import { StartAuctionButton } from "@/components/auction/StartAuctionButton";
 import Countdown from "react-countdown";
 import { motion } from "framer-motion";
 import { CompleteAuctionDialog } from "@/components/dialog/CompleteAuctionDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 // 获取区块链浏览器 URL
 const getExplorerUrl = (objectId: string) => {
@@ -239,6 +240,10 @@ export default function PostDetail({
   const { register, handleSubmit, reset } = useForm<CommentFormData>();
   const [showConfetti, setShowConfetti] = useState(false);
   const user = useUserStore((state) => state.user);
+  const [commentPage, setCommentPage] = useState(1);
+  const commentPageSize = 10;
+  const { data: commentsData } = useComments(id, commentPage, commentPageSize);
+  const queryClient = useQueryClient();
 
   // 处理弹窗状态重置
   const handleBidDialogOpenChange = (open: boolean) => {
@@ -294,8 +299,16 @@ export default function PostDetail({
   );
 
   const onSubmit = (data: CommentFormData) => {
-    createComment.mutate({ postId: id, content: data.content });
-    reset();
+    createComment.mutate(
+      { postId: id, content: data.content },
+      {
+        onSuccess: () => {
+          reset();
+          // 刷新评论列表
+          queryClient.invalidateQueries({ queryKey: ['comments', id] });
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -645,15 +658,15 @@ export default function PostDetail({
           {/* Comments */}
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Comments</h3>
-            {post.comments.map((comment) => (
+            {commentsData?.comments.map((comment) => (
               <Card key={comment.id} className="p-4">
                 <div
                   className="flex items-start cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => router.push(`/user/${comment.author.id}`)}
+                  onClick={() => router.push(`/user/${comment.user.walletAddress}`)}
                 >
                   <Avatar className="h-8 w-8 mr-3">
-                    {comment.author.avatar ? (
-                      <AvatarImage src={comment.author.avatar} />
+                    {comment.user.profile?.avatar ? (
+                      <AvatarImage src={comment.user.profile.avatar} />
                     ) : (
                       <AvatarFallback>
                         <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
@@ -665,10 +678,10 @@ export default function PostDetail({
                   <div>
                     <div className="flex items-center mb-1">
                       <h4 className="font-semibold mr-2 text-foreground">
-                        {comment.author.name}
+                        {comment.user.profile?.name || 'Anonymous'}
                       </h4>
                       <span className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(comment.timestamp), {
+                        {formatDistanceToNow(new Date(comment.createdAt), {
                           addSuffix: true,
                         })}
                       </span>
@@ -678,6 +691,34 @@ export default function PostDetail({
                 </div>
               </Card>
             ))}
+            {commentsData?.pagination && commentsData.pagination.totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t gap-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCommentPage(commentPage - 1)}
+                    disabled={commentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {commentPage} of {commentsData.pagination.totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCommentPage(commentPage + 1)}
+                    disabled={commentPage === commentsData.pagination.totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Total {commentsData.pagination.total} comments
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>

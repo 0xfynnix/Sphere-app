@@ -33,8 +33,12 @@ export const API_ENDPOINTS = {
   // Post endpoints
   POSTS: {
     GET: (id: string) => `/api/posts/${id}`,
-    COMMENT: (id: string) => `/api/posts/${id}/comments`,
+    COMMENT: (id: string) => `/api/posts/${id}/comment`,
     LIKE: (id: string) => `/api/posts/${id}/like`,
+    POPULAR: `/api/posts/popular`,
+    RECOMMEND: `/api/posts/recommend`,
+    COMMENTS: (id: string, page?: number, pageSize?: number) => 
+      `/api/posts/${id}/comment?${page ? `page=${page}` : ''}${pageSize ? `&pageSize=${pageSize}` : ''}`,
   },
   // Bids endpoints
   BIDS: {
