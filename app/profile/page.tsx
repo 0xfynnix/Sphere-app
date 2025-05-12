@@ -14,7 +14,6 @@ import {
   User,
   Pencil,
   Coins,
-  Loader2,
   ArrowUpRight,
   ArrowDownLeft,
   Clock,
@@ -46,13 +45,13 @@ import {
   useUnclaimedRewards,
   useUnclaimedBids,
   useUnclaimedLotteryPools,
-  useClaimLotteryPool,
 } from "@/lib/api/hooks";
 import { useTransactions } from "@/lib/api/hooks";
 import { StartAuctionButton } from "@/components/auction/StartAuctionButton";
 import { CompleteAuctionDialog } from "@/components/dialog/CompleteAuctionDialog";
 import { ClaimContentDialog } from "@/components/dialog/ClaimContentDialog";
 import { ClaimRewardDialog } from "@/components/dialog/ClaimRewardDialog";
+import { ClaimLotteryPoolDialog } from "@/components/dialog/ClaimLotteryPoolDialog";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -62,13 +61,13 @@ export default function ProfilePage() {
   // const createBid = useCreateBid();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<{id: string, auctionId: string, auctionCapId: string} | null>(null);
-  const [isLotteryClaiming, setIsLotteryClaiming] = useState(false);
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
   const [selectedClaimPost, setSelectedClaimPost] = useState<{id: string, auctionId: string} | null>(null);
   const [isRecipientClaimDialogOpen, setIsRecipientClaimDialogOpen] = useState(false);
   const [isReferrerClaimDialogOpen, setIsReferrerClaimDialogOpen] = useState(false);
   const [isCreatorBidClaimDialogOpen, setIsCreatorBidClaimDialogOpen] = useState(false);
   const [isReferrerBidClaimDialogOpen, setIsReferrerBidClaimDialogOpen] = useState(false);
+  const [isLotteryPoolDialogOpen, setIsLotteryPoolDialogOpen] = useState(false);
 
   const {
     data: userData,
@@ -83,7 +82,6 @@ export default function ProfilePage() {
   const { data: unclaimedRewardsData } = useUnclaimedRewards();
   const { data: unclaimedBidsData } = useUnclaimedBids();
   const { data: unclaimedLotteryPoolsData } = useUnclaimedLotteryPools();
-  const claimLotteryPool = useClaimLotteryPool();
 
   const { data: transactionsData, isLoading: isTransactionsLoading } =
     useTransactions({
@@ -111,19 +109,6 @@ export default function ProfilePage() {
   const handleUpdateSuccess = () => {
     setIsDialogOpen(false);
     router.refresh();
-  };
-
-  const handleClaimLotteryPool = async (postId: string) => {
-    try {
-      setIsLotteryClaiming(true);
-      await claimLotteryPool.mutateAsync(postId);
-      toast.success("Lottery pool claimed successfully");
-    } catch (error) {
-      console.error("Failed to claim lottery pool:", error);
-      toast.error("Failed to claim lottery pool");
-    } finally {
-      setIsLotteryClaiming(false);
-    }
   };
 
   return (
@@ -740,7 +725,6 @@ export default function ProfilePage() {
                       isOpen={isRecipientClaimDialogOpen}
                       onOpenChange={setIsRecipientClaimDialogOpen}
                       type="recipient"
-                      creatorTipPoolId={process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_TIP_POOL}
                       trigger={
                         <Button
                           disabled={!unclaimedRewardsData?.recipientRewards?.length}
@@ -797,7 +781,6 @@ export default function ProfilePage() {
                       isOpen={isReferrerClaimDialogOpen}
                       onOpenChange={setIsReferrerClaimDialogOpen}
                       type="referrer"
-                      referenceTipPoolId={process.env.NEXT_PUBLIC_COPY_RIGHT_REFERENCE_TIP_POOL}
                       trigger={
                         <Button
                           disabled={!unclaimedRewardsData?.referrerRewards?.length}
@@ -1004,29 +987,19 @@ export default function ProfilePage() {
                     <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
                     Lottery Pools
                   </h3>
-                  <Button
-                    onClick={() => {
-                      const pools =
-                        unclaimedLotteryPoolsData?.lotteryPools || [];
-                      pools.forEach((pool) =>
-                        handleClaimLotteryPool(pool.postId)
-                      );
-                    }}
-                    disabled={
-                      !unclaimedLotteryPoolsData?.lotteryPools?.length ||
-                      isLotteryClaiming
+                  <ClaimLotteryPoolDialog
+                    isOpen={isLotteryPoolDialogOpen}
+                    onOpenChange={setIsLotteryPoolDialogOpen}
+                    lotteryPools={unclaimedLotteryPoolsData?.lotteryPools || []}
+                    trigger={
+                      <Button
+                        disabled={!unclaimedLotteryPoolsData?.lotteryPools?.length}
+                        className="bg-indigo-500 hover:bg-indigo-600"
+                      >
+                        Claim All
+                      </Button>
                     }
-                    className="bg-indigo-500 hover:bg-indigo-600"
-                  >
-                    {isLotteryClaiming ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Claiming...
-                      </div>
-                    ) : (
-                      "Claim All"
-                    )}
-                  </Button>
+                  />
                 </div>
                 {!unclaimedLotteryPoolsData?.lotteryPools?.length ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -1056,18 +1029,6 @@ export default function ProfilePage() {
                             </span>
                           </div>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleClaimLotteryPool(pool.postId)}
-                          disabled={isLotteryClaiming}
-                        >
-                          {isLotteryClaiming ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            "Claim"
-                          )}
-                        </Button>
                       </div>
                     ))}
                   </div>

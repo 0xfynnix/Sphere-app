@@ -5,10 +5,10 @@ import type {
 } from './types';
 
 // 领取奖池奖励
-export const claimLotteryPool = async (postId: string) => {
+export const claimLotteryPool = async (postId: string, digest: string) => {
   const response = await request<ClaimLotteryPoolResponse>('/api/lottery-pool/claim', {
     method: 'POST',
-    body: JSON.stringify({ postId }),
+    body: JSON.stringify({ postId, digest }),
   });
   return response;
 };

@@ -159,7 +159,7 @@ export default function Home() {
                     </Card>
                   ))}
                   {recommendedData.posts.length < 20 && (
-                    <div className="flex-none w-[300px] h-[00px] flex flex-col items-center justify-center text-muted-foreground border border-dashed rounded-lg p-6">
+                    <div className="flex-none w-[300px] h-[300px] flex flex-col items-center justify-center text-muted-foreground rounded-lg p-6">
                       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                         <Sparkles className="h-8 w-8 text-primary" />
                       </div>

@@ -103,8 +103,6 @@ export default function CreatePage() {
 
         // 调用合约 mint 函数
         const result = await mintCopyrightNFT(
-          process.env.NEXT_PUBLIC_COPY_RIGHT_MINT_RECORD || "",
-          process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD || "",
           title,
           text,
           imageInfo.url,

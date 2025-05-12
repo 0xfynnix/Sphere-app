@@ -638,7 +638,7 @@ export default function PostDetail({
               </Button>
               <Button
                 variant="ghost"
-                className="text-purple3-400 hover:text-purple-500 hover:bg-purple-50"
+                className="text-purple-400 hover:text-purple-500 hover:bg-purple-50"
                 onClick={() => setIsRewardDialogOpen(true)}
               >
                 <Gift className="mr-2 h-4 w-4" />

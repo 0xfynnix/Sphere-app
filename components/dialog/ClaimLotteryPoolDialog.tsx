@@ -13,31 +13,36 @@ import {
 } from "@/components/ui/dialog";
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useSphereContract } from "@/hooks/useSphereContract";
-import { useClaimReward, useClaimBid } from "@/lib/api/hooks";
+import { useClaimLotteryPool } from "@/lib/api/hooks";
 
-interface ClaimRewardDialogProps {
+interface ClaimLotteryPoolDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  type: 'recipient' | 'referrer' | 'creator' | 'referrer_bid';
   trigger?: React.ReactNode;
-  auctionId?: string;
+  lotteryPools: Array<{
+    id: string;
+    postId: string;
+    amount: number;
+    post?: {
+      title: string;
+    };
+    round: number;
+  }>;
 }
 
-export function ClaimRewardDialog({
+export function ClaimLotteryPoolDialog({
   isOpen,
   onOpenChange,
-  type,
   trigger,
-  auctionId,
-}: ClaimRewardDialogProps) {
+  lotteryPools,
+}: ClaimLotteryPoolDialogProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [claimProgress, setClaimProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<'confirm' | 'claiming'>('confirm');
   const account = useCurrentAccount();
   const client = useSuiClient();
-  const { claimCreatorTip, claimReferenceTip, claimReward } = useSphereContract();
-  const claimRewardApi = useClaimReward();
-  const claimBidApi = useClaimBid();
+  const { claimPrize } = useSphereContract();
+  const claimLotteryPoolMutation = useClaimLotteryPool();
 
   // 当弹窗打开时重置状态
   useEffect(() => {
@@ -76,23 +81,8 @@ export function ClaimRewardDialog({
         });
       }, 100);
 
-      let result;
-      // 根据不同类型调用不同的合约方法
-      switch (type) {
-        case 'recipient':
-          result = await claimCreatorTip();
-          break;
-        case 'referrer':
-          result = await claimReferenceTip();
-          break;
-        case 'creator':
-        case 'referrer_bid':
-          if (!auctionId) throw new Error('Auction ID is required');
-          result = await claimReward(auctionId);
-          break;
-        default:
-          throw new Error('Invalid claim type');
-      }
+      // 调用合约领取奖励
+      const result = await claimPrize();
 
       // 等待交易确认
       await client.waitForTransaction({
@@ -118,41 +108,31 @@ export function ClaimRewardDialog({
         });
       }, 100);
 
-      // 根据不同类型调用不同的 API
-      if (type === 'recipient' || type === 'referrer') {
-        await claimRewardApi.mutateAsync({ type, digest: result.digest });
-      } else {
-        await claimBidApi.mutateAsync({ type: type === 'creator' ? 'creator' : 'referrer', digest: result.digest });
-      }
+      // 为每个奖池调用后端 API
+      await Promise.all(
+        lotteryPools.map(pool => 
+          claimLotteryPoolMutation.mutateAsync({
+            postId: pool.postId,
+            digest: result.digest
+          })
+        )
+      );
 
       clearInterval(apiProgressInterval);
       setClaimProgress(100);
       setShowConfetti(true);
       onOpenChange(false);
-      toast.success("Reward claimed successfully!");
+      toast.success("Lottery pool rewards claimed successfully!");
     } catch (error) {
-      console.error("Failed to claim reward:", error);
-      toast.error("Failed to claim reward");
+      console.error("Failed to claim lottery pool rewards:", error);
+      toast.error("Failed to claim lottery pool rewards");
     } finally {
       setClaimProgress(0);
       setCurrentStep('confirm');
     }
   };
 
-  const getDialogTitle = () => {
-    switch (type) {
-      case 'recipient':
-        return "Claim Creator Reward";
-      case 'referrer':
-        return "Claim Referrer Reward";
-      case 'creator':
-        return "Claim Creator Bid Reward";
-      case 'referrer_bid':
-        return "Claim Referrer Bid Reward";
-      default:
-        return "Claim Reward";
-    }
-  };
+  const totalAmount = lotteryPools.reduce((sum, pool) => sum + pool.amount, 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -161,20 +141,33 @@ export function ClaimRewardDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-yellow-500" />
-            {getDialogTitle()}
+            Claim Lottery Pool Rewards
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {currentStep === 'confirm' && (
             <div className="space-y-4">
-              <p className="text-muted-foreground">
-                You are about to claim your rewards. This action will process all your unclaimed rewards at once.
-              </p>
+              <div className="space-y-2">
+                <p className="text-muted-foreground">
+                  You are about to claim rewards from {lotteryPools.length} lottery pool{lotteryPools.length > 1 ? 's' : ''}.
+                </p>
+                <p className="font-medium">
+                  Total amount: {totalAmount} SUI
+                </p>
+              </div>
+              <div className="space-y-2">
+                {lotteryPools.map((pool) => (
+                  <div key={pool.id} className="flex justify-between items-center p-2 rounded bg-muted/50">
+                    <span className="text-sm">{pool.post?.title || 'Untitled'} (Round {pool.round})</span>
+                    <span className="font-medium">{pool.amount} SUI</span>
+                  </div>
+                ))}
+              </div>
               <Button 
                 className="w-full relative overflow-hidden" 
                 onClick={handleClaim}
               >
-                Claim Rewards
+                Claim All Rewards
               </Button>
             </div>
           )}

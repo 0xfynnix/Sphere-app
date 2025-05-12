@@ -214,7 +214,12 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
           <Button
             onClick={() => setShowLoginDialog(true)}
             disabled={isLoginLoading}
-            className={isMobile ? "h-8 px-3" : "w-full"}
+            className={cn(
+              "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600",
+              "dark:from-indigo-600 dark:to-purple-600 dark:hover:from-indigo-500 dark:hover:to-purple-500",
+              "text-white transition-all duration-200",
+              isMobile ? "h-8 px-3" : "w-full"
+            )}
             size={isMobile ? "sm" : "default"}
           >
             {isLoginLoading ? (
@@ -224,7 +229,14 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
           </Button>
         </div>
       ) : (
-        <ConnectButton className={isMobile ? "h-8" : "w-full"} />
+        <ConnectButton 
+          className={cn(
+            "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600",
+            "dark:from-indigo-600 dark:to-purple-600 dark:hover:from-indigo-500 dark:hover:to-purple-500",
+            "!text-white transition-all duration-200",
+            isMobile ? "h-8" : "w-full"
+          )}
+        />
       )}
       {showLoginDialog && (
         <LoginFlowDialog

@@ -109,6 +109,7 @@ export function useSphereContract() {
     bidTx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::place_bid`,
       arguments: [
+        bidTx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_LOTTERY_POOL!),
         bidTx.object(auctionId),
         bidTx.object.clock(),
         bidTx.object(bidCoinId),
@@ -125,10 +126,6 @@ export function useSphereContract() {
    * 用于结束拍卖
    * @param auctionId - 拍卖对象 ID
    * @param auctionCapId - 拍卖权限对象 ID
-   * @param revenueShare - 收入分成比例
-   * @param revenueCapId - 收入分成权限对象 ID
-   * @param achievementRecordId - 成就记录对象 ID
-   * 使用 Clock 对象检查时间
    */
   const endAuction = async (auctionId: string, auctionCapId: string) => {
     if (!account) throw new Error('No account connected');
@@ -137,8 +134,9 @@ export function useSphereContract() {
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::end_auction`,
       arguments: [
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_LOTTERY_POOL!),
+        tx.object.random(),
         tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_ACHIEVEMENT_RECORD!),
-        tx.pure.u64(10),
         tx.object(auctionCapId),
         tx.object(auctionId),
         tx.object.clock(),
@@ -171,8 +169,6 @@ export function useSphereContract() {
 
   // Copyright NFT functions
   const mintCopyrightNFT = async (
-    mintRecord: string,
-    creatorRecord: string,
     name: string,
     description: string,
     link: string,
@@ -184,12 +180,13 @@ export function useSphereContract() {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
-    console.log(mintRecord, creatorRecord, name, description, link, imageUrl, thumbnailUrl, projectUrl, creator);
+    // console.log(mintRecord, creatorRecord, name, description, link, imageUrl, thumbnailUrl, projectUrl, creator);
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::mint`,
       arguments: [
-        tx.object(mintRecord),
-        tx.object(creatorRecord),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_LOTTERY_POOL!),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_MINT_RECORD!),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD!),
         tx.pure.string(name),
         tx.pure.string(description),
         tx.pure.string(link),
@@ -207,26 +204,14 @@ export function useSphereContract() {
 
   /**
    * 用于给 NFT 打赏
-   * @param achievementRecord - 成就记录对象 ID
-   * @param creatorRecord - 创作者记录对象 ID
    * @param nftAddress - NFT 地址
-   * @param revenueTipPool - 收入分成池对象 ID
-   * @param referenceTipPool - 推荐分成池对象 ID
-   * @param creatorTipPool - 创作者分成池对象 ID
    * @param tipAmount - 打赏金额（SUI）
-   * @param revenueAddress - 收入地址
    * @param referenceAddress - 推荐地址
    * 使用 splitCoins 从 gas 中分割出打赏金额
    */
   const tipNFT = async (
-    achievementRecord: string,
-    creatorRecord: string,
     nftAddress: string,
-    revenueTipPool: string,
-    referenceTipPool: string,
-    creatorTipPool: string,
     tipAmount: number,
-    revenueAddress: string,
     referenceAddress: string
   ) => {
     if (!account) throw new Error('No account connected');
@@ -238,14 +223,15 @@ export function useSphereContract() {
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::tip_nft`,
       arguments: [
-        tx.object(achievementRecord),
-        tx.object(creatorRecord),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_LOTTERY_POOL!),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_ACHIEVEMENT_RECORD!),
+        // tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_CREATOR_RECORD!),
         tx.pure.address(nftAddress),
-        tx.object(revenueTipPool),
-        tx.object(referenceTipPool),
-        tx.object(creatorTipPool),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_REVENUE_TIP_POOL!),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_REFERENCE_TIP_POOL!),
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_NFT_TIP_POOL!),
         tipCoin,
-        tx.pure.address(revenueAddress),
+        tx.pure.address(process.env.NEXT_PUBLIC_REVENUE_ADDRESS!),
         tx.pure.address(referenceAddress),
       ],
     });
@@ -254,36 +240,17 @@ export function useSphereContract() {
       transaction: tx,
     });
   };
-
-  /**
-   * 用于领取收入分成
-   * @param revenueTipPool - 收入分成池对象 ID
-   */
-  const claimRevenueTip = async (revenueTipPool: string) => {
-    if (!account) throw new Error('No account connected');
-    
-    const tx = new Transaction();
-    tx.moveCall({
-      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::revenue_claim_tip`,
-      arguments: [tx.object(revenueTipPool)],
-    });
-
-    return signAndExecute({
-      transaction: tx,
-    });
-  };
-
-  /**
-   * 用于推荐者领取打赏推荐分成
-   * @param referenceTipPool - 推荐分成池对象 ID
-   */
-  const claimReferenceTip = async (referenceTipPool: string) => {
+/**
+ * 用于推荐者领取打赏分成
+ * @returns 
+ */
+  const claimReferenceTip = async () => {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::reference_claim_tip`,
-      arguments: [tx.object(referenceTipPool)],
+      arguments: [tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_REFERENCE_TIP_POOL!)],
     });
 
     return signAndExecute({
@@ -291,17 +258,17 @@ export function useSphereContract() {
     });
   };
 
-  /**
-   * 用于创作者领取打赏分成
-   * @param creatorTipPool - 创作者分成池对象 ID
+/**
+   * 用于创作者领取打赏
+   * @returns 
    */
-  const claimCreatorTip = async (creatorTipPool: string) => {
+  const claimCreatorTip = async () => {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
     tx.moveCall({
-      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::creator_claim_tip`,
-      arguments: [tx.object(creatorTipPool)],
+      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::owner_claim_tip`,
+      arguments: [tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_NFT_TIP_POOL!)],
     });
 
     return signAndExecute({
@@ -342,6 +309,26 @@ export function useSphereContract() {
     });
   };
 
+  /**
+   * 用于领取奖池奖励
+   * @returns Promise<TransactionResult>
+   */
+  const claimPrize = async () => {
+    if (!account) throw new Error('No account connected');
+    
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::claim_prize`,
+      arguments: [
+        tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_LOTTERY_POOL!),
+      ],
+    });
+
+    return signAndExecute({
+      transaction: tx,
+    });
+  };
+
   return {
     register,
     createAuction,
@@ -350,10 +337,10 @@ export function useSphereContract() {
     claimNFT,
     mintCopyrightNFT,
     tipNFT,
-    claimRevenueTip,
     claimReferenceTip,
     claimCreatorTip,
     claimReward,
     createRevenueCap,
+    claimPrize,
   };
 } 

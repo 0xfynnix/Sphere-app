@@ -342,7 +342,8 @@ export const useClaimLotteryPool = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: claimLotteryPool,
+    mutationFn: (params: { postId: string; digest: string }) => 
+      claimLotteryPool(params.postId, params.digest),
     onSuccess: () => {
       // 更新未领取奖池列表
       queryClient.invalidateQueries({ queryKey: ['unclaimedLotteryPools'] });

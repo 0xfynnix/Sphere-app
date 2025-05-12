@@ -8,9 +8,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { postId } = await request.json();
+    const { postId, digest } = await request.json();
     if (!postId) {
       return NextResponse.json({ error: "Post ID is required" }, { status: 400 });
+    }
+    if (!digest) {
+      return NextResponse.json({ error: "Transaction digest is required" }, { status: 400 });
     }
 
     // 查找用户
@@ -63,6 +66,17 @@ export async function POST(request: Request) {
         },
       });
 
+      // 创建交易记录
+      const transaction = await tx.suiTransaction.create({
+        data: {
+          digest,
+          type: 'claim lottery pool',
+          status: 'SUCCESS',
+          userId: user.id,
+          postId: postId,
+        },
+      });
+
       return {
         lotteryPool: updatedLotteryPool,
         user: {
@@ -85,6 +99,7 @@ export async function POST(request: Request) {
           sentRewards: updatedUser.sentRewards,
           receivedRewards: updatedUser.receivedRewards,
         },
+        transaction,
       };
     });
 
