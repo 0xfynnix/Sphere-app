@@ -71,25 +71,6 @@ export default function Sidebar() {
                   My Page
                 </Button>
               </Link>
-              <Link href="/notifications" className="block">
-                <Button
-                  variant={pathname === "/notifications" ? "default" : "ghost"}
-                  className={cn(
-                    "w-full justify-start transition-colors relative py-6",
-                    pathname === "/notifications"
-                      ? "bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400"
-                      : "text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/30"
-                  )}
-                >
-                  <Bell className="mr-2 h-4 w-4" />
-                  Notifications
-                  {unreadCount > 0 && (
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-500 dark:bg-red-600 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Button>
-              </Link>
             </>
           )}
         </nav>
