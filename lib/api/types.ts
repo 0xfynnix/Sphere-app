@@ -400,6 +400,7 @@ export interface RecommendedPost {
   title: string;
   content: string;
   totalRewards: number;
+  rewardCount: number;
   audienceCount: number;
   createdAt: string;
   user: {

@@ -145,7 +145,7 @@ export default function Home() {
                           </div>
                           <div className="flex items-center text-amber-500">
                             <Flame className="mr-1 h-4 w-4" />
-                            <span className="font-medium">{post.totalRewards}</span>
+                            <span className="font-medium">{post.rewardCount}</span>
                           </div>
                         </div>
                       </div>
@@ -245,7 +245,7 @@ export default function Home() {
                   <div className="flex items-center text-sm text-muted-foreground">
                     <div className="flex items-center text-amber-500">
                       <Flame className="h-4 w-4 mr-1" />
-                      <span className="font-medium">{post.totalRewards}</span>
+                      <span className="font-medium">{post.rewardCount}</span>
                       <span className="ml-1 text-muted-foreground">rewards</span>
                     </div>
                   </div>

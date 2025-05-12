@@ -130,6 +130,7 @@ model Post {
   nftObjectId   String?  // NFT 对象 ID
   audienceCount Int      @default(0) // 观众数量
   totalRewards  Float    @default(0) // 总打赏金额
+  rewardCount   Int      @default(0) // 打赏数量
   postType      PostType @default(NORMAL) // 帖子类型
   rewards       Reward[] // 打赏记录
   walrusImages  WalrusImage[] // 帖子关联的 Walrus 图片

@@ -124,6 +124,7 @@ export async function GET(
         },
         timestamp: comment.createdAt
       })),
+      rewardCount: post.rewardCount,
       images: [
         ...post.walrusImages.map((img: { url: string }) => ({
           url: img.url,

@@ -129,6 +129,9 @@ export async function POST(req: Request) {
         data: {
           audienceCount: {
             increment: audienceGrowth
+          },
+          rewardCount: {
+            increment: 1
           }
         }
       });

@@ -43,7 +43,7 @@ export async function GET() {
         },
       },
       orderBy: {
-        totalRewards: 'desc',
+        rewardCount: 'desc',
       },
       take: QUERY_PARAMS.POPULAR_COUNT,
     });
@@ -53,7 +53,7 @@ export async function GET() {
       id: post.id,
       title: post.title,
       content: post.content,
-      totalRewards: post.totalRewards,
+      rewardCount: post.rewardCount,
       audienceCount: post.audienceCount,
       createdAt: post.createdAt.toISOString(),
       user: {

@@ -7,6 +7,7 @@ export interface PostListItem {
   title: string;
   content: string;
   totalRewards: number;
+  rewardCount: number;
   comments: {
     id: string;
     content: string;
@@ -56,6 +57,7 @@ export interface PopularPost {
   title: string;
   content: string;
   totalRewards: number;
+  rewardCount: number;
   audienceCount: number;
   createdAt: string;
   user: {

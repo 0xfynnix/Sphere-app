@@ -113,7 +113,7 @@ export default function WeeklyRankings() {
                   </div>
                   <div className="flex items-center text-amber-500">
                     <Flame className="mr-2 h-4 w-4" />
-                    <span className="font-medium">{post.totalRewards}</span>
+                    <span className="font-medium">{post.rewardCount}</span>
                   </div>
                 </div>
 
