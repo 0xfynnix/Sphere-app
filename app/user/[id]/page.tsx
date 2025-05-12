@@ -7,16 +7,46 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MessageCircle, Flame, Settings, Share2, Edit2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
-import { useUserPosts } from '@/lib/api/hooks';
-import { useGetUserByWallet } from '@/lib/api/hooks';
+import { useUserPosts, useGetUserByWallet, useFollowStatus, useFollowUser, useUnfollowUser, useUserBookmarks } from '@/lib/api/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function UserProfile({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  // const searchParams = useSearchParams();
   const { id } = use(params);
   const { data: userData, isLoading: isLoadingUser } = useGetUserByWallet(id);
   const { data: postsData, isLoading: isLoadingPosts } = useUserPosts(id);
+  const { data: followStatus } = useFollowStatus(userData?.data?.user?.id || '');
+  const follow = useFollowUser();
+  const unfollow = useUnfollowUser();
+  const { data: bookmarksData, isLoading: isLoadingBookmarks } = useUserBookmarks(id);
+
+  const handleFollow = async () => {
+    if (!userData?.data?.user?.id) return;
+    
+    try {
+      await follow.mutateAsync(userData.data.user.id);
+      toast.success("Successfully followed user");
+    } catch (error) {
+      toast.error("Failed to follow user", {
+        description: (error as Error).message,
+      });
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!userData?.data?.user?.id) return;
+    
+    try {
+      await unfollow.mutateAsync(userData.data.user.id);
+      toast.success("Successfully unfollowed user");
+    } catch (error) {
+      toast.error("Failed to unfollow user", {
+        description: (error as Error).message,
+      });
+    }
+  };
 
   if (isLoadingUser) {
     return (
@@ -39,6 +69,7 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
 
   const user = userData.data.user;
   const isCurrentUser = user.walletAddress === id;
+  const isFollowing = followStatus?.isFollowing;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -110,21 +141,33 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
               <Button variant="outline" size="icon">
                 <Share2 className="h-4 w-4" />
               </Button>
-              <Button variant="outline">Follow</Button>
+              <Button 
+                variant={isFollowing ? "outline" : "default"}
+                onClick={isFollowing ? handleUnfollow : handleFollow}
+                disabled={follow.isPending || unfollow.isPending}
+              >
+                {follow.isPending || unfollow.isPending ? (
+                  "Loading..."
+                ) : isFollowing ? (
+                  "Unfollow"
+                ) : (
+                  "Follow"
+                )}
+              </Button>
             </>
           )}
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="posts" className="w-full">
+      <Tabs defaultValue="contents" className="w-full">
         <TabsList className="w-full justify-start">
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="nfts">NFTs</TabsTrigger>
+          <TabsTrigger value="contents">Contents</TabsTrigger>
+          <TabsTrigger value="badges">Badges</TabsTrigger>
           <TabsTrigger value="collections">Collections</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="posts" className="space-y-6 pt-6">
+        <TabsContent value="contents" className="space-y-6 pt-6">
           {isLoadingPosts ? (
             Array(3).fill(0).map((_, i) => (
               <Card key={i} className="p-6">
@@ -144,7 +187,7 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-foreground">{post.title}</h3>
                     <span className="text-sm text-muted-foreground">
-                      {new Date(post.createdAt).toLocaleDateString()}
+                      {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                     </span>
                   </div>
                   <p className="text-muted-foreground">{post.content}</p>
@@ -170,21 +213,45 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
             ))
           ) : (
             <div className="text-center py-12 text-muted-foreground">
-              No posts yet
+              No contents yet
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="nfts" className="pt-6">
+        <TabsContent value="badges" className="pt-6">
           <div className="text-center py-12 text-muted-foreground">
-            No NFTs yet
+            No badges yet
           </div>
         </TabsContent>
 
         <TabsContent value="collections" className="pt-6">
-          <div className="text-center py-12 text-muted-foreground">
-            No collections yet
-          </div>
+          {isLoadingBookmarks ? (
+            <div className="text-center py-12 text-muted-foreground">Loading bookmarks...</div>
+          ) : bookmarksData?.data?.posts.length ? (
+            bookmarksData.data.posts.map((post) => (
+              <Card 
+                key={post.id} 
+                className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => router.push(`/post/${post.id}`)}
+              >
+                <div className="flex items-center gap-4">
+                  {post.thumbnails?.[0] && (
+                    <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden">
+                      <img src={post.thumbnails[0].thumbnailUrl} alt={post.title} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground truncate">{post.title}</h3>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">No bookmarks yet</div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -8,6 +8,24 @@ export interface PostListItem {
   content: string;
   totalRewards: number;
   rewardCount: number;
+  audienceCount: number;
+  createdAt: string;
+  user: {
+    id: string;
+    walletAddress: string;
+    profile: {
+      name: string | null;
+      avatar: string | null;
+    } | null;
+  };
+  category: {
+    id: string;
+    name: string;
+  } | null;
+  _count: {
+    comments: number;
+    bookmarks: number;
+  };
   comments: {
     id: string;
     content: string;
@@ -18,7 +36,6 @@ export interface PostListItem {
     };
     timestamp: string;
   }[];
-  createdAt: string;
   status: string;
   allowBidding: boolean;
   biddingDueDate: string | null;
@@ -232,5 +249,16 @@ export const postsApi = {
     return request<PopularPostsResponse>(API_ENDPOINTS.POSTS.POPULAR, {
       method: "GET",
     });
+  },
+
+  // 获取用户关注的所有用户的帖子
+  getFollowedUsersPosts: async (params: { page?: number; pageSize?: number; address: string; }) => {
+    const { page = 1, pageSize = 10, address } = params;
+    return request<GetUserPostsResponse>(
+      `/api/follow/user/posts?page=${page}&pageSize=${pageSize}&userAddress=${address}`,
+      {
+        method: "GET",
+      }
+    );
   },
 };

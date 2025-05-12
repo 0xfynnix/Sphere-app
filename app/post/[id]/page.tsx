@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Share,
   Network,
+  Bookmark,
+  BookmarkMinus,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { use, useMemo } from "react";
@@ -21,7 +23,7 @@ import { RewardDialog } from "@/components/dialog/RewardDialog";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
-import { usePost, useCreateComment, useBids, useComments } from "@/lib/api/hooks";
+import { usePost, useCreateComment, useBids, useComments, useBookmarkPost, useUnbookmarkPost, useBookmarkStatus } from "@/lib/api/hooks";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { PhotoProvider, PhotoView } from "react-photo-view";
@@ -244,6 +246,9 @@ export default function PostDetail({
   const commentPageSize = 10;
   const { data: commentsData } = useComments(id, commentPage, commentPageSize);
   const queryClient = useQueryClient();
+  const bookmark = useBookmarkPost();
+  const unbookmark = useUnbookmarkPost();
+  const { data: bookmarkStatus } = useBookmarkStatus(id);
 
   // 处理弹窗状态重置
   const handleBidDialogOpenChange = (open: boolean) => {
@@ -309,6 +314,22 @@ export default function PostDetail({
         },
       }
     );
+  };
+
+  const handleBookmarkToggle = () => {
+    if (bookmarkStatus?.isBookmarked) {
+      unbookmark.mutate(id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['bookmark-status', id] });
+        },
+      });
+    } else {
+      bookmark.mutate(id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['bookmark-status', id] });
+        },
+      });
+    }
   };
 
   if (isLoading) {
@@ -610,14 +631,14 @@ export default function PostDetail({
             <div className="flex space-x-4">
               <Button
                 variant="ghost"
-                className="text-violet-400 hover:text-violet-500 hover:bg-violet-50"
+                className="text-purple-400 hover:text-purple-500 hover:bg-purple-50"
               >
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {post.comments.length}
               </Button>
               <Button
                 variant="ghost"
-                className="text-violet-400 hover:text-violet-500 hover:bg-violet-50"
+                className="text-purple3-400 hover:text-purple-500 hover:bg-purple-50"
                 onClick={() => setIsRewardDialogOpen(true)}
               >
                 <Gift className="mr-2 h-4 w-4" />
@@ -629,13 +650,24 @@ export default function PostDetail({
                 trigger={
                   <Button
                     variant="ghost"
-                    className="text-violet-400 hover:text-violet-500 hover:bg-violet-50"
+                    className="text-purple-400 hover:text-purple-500 hover:bg-purple-50"
                   >
                     <Share className="mr-2 h-4 w-4" />
                     Share
                   </Button>
                 }
               />
+              <Button
+                variant="ghost"
+                className="text-purple-400 hover:text-purple-650 hover:bg-purple-50"
+                onClick={handleBookmarkToggle}
+              >
+                {bookmarkStatus?.isBookmarked ? (
+                  <><BookmarkMinus className="mr-2 h-4 w-4" /> Uncollect</>
+                ) : (
+                  <><Bookmark className="mr-2 h-4 w-4" /> Collect</>
+                )}
+              </Button>
             </div>
           </div>
 

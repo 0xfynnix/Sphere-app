@@ -479,3 +479,119 @@ export interface ClaimAuctionResponse {
     };
   };
 }
+
+export interface FollowResponse {
+  id: string;
+  followerId: string;
+  followingId: string;
+  following: {
+    id: string;
+    walletAddress: string;
+    profile?: {
+      id: string;
+      name?: string;
+      bio?: string;
+      avatar?: string;
+    } | null;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookmarkResponse {
+  success: boolean;
+  bookmark: {
+    id: string;
+    postId: string;
+    userId: string;
+    post: {
+      id: string;
+      title: string;
+      content: string;
+      createdAt: string;
+    };
+  };
+}
+
+export interface BookmarkStatusResponse {
+  isBookmarked: boolean;
+}
+
+export interface PaginatedPostsResponse {
+  success: boolean;
+  data: {
+    posts: Array<{
+      id: string;
+      title: string;
+      content: string;
+      totalRewards: number;
+      audienceCount: number;
+      createdAt: string;
+      user: {
+        id: string;
+        walletAddress: string;
+        profile: {
+          name: string | null;
+          avatar: string | null;
+        } | null;
+      };
+      category: {
+        id: string;
+        name: string;
+      } | null;
+      _count: {
+        comments: number;
+        bookmarks: number;
+      };
+      images: Array<{
+        id: string;
+        url: string;
+      }>;
+      thumbnails: Array<{
+        id: string;
+        thumbnailUrl: string;
+      }>;
+      bookmarkedAt: string;
+    }>;
+    pagination: {
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    };
+  };
+}
+
+export interface PostListItem {
+  id: string;
+  title: string;
+  content: string;
+  totalRewards: number;
+  audienceCount: number;
+  createdAt: string;
+  user: {
+    id: string;
+    walletAddress: string;
+    profile: {
+      name: string | null;
+      avatar: string | null;
+    } | null;
+  };
+  category: {
+    id: string;
+    name: string;
+  } | null;
+  _count: {
+    comments: number;
+    bookmarks: number;
+  };
+  images: Array<{
+    id: string;
+    url: string;
+  }>;
+  thumbnails: Array<{
+    id: string;
+    thumbnailUrl: string;
+  }>;
+  bookmarkedAt: string;
+}

@@ -22,6 +22,9 @@ import { getTransactions } from './transactions';
 import { GetTransactionsParams, GetTransactionsResponse } from './types';
 import { getUnclaimedLotteryPools, claimLotteryPool } from './lottery';
 import { RecommendedPost } from './types';
+import { followUser, unfollowUser, checkFollowStatus } from './follow';
+import { bookmarkPost, unbookmarkPost, getUserBookmarks, checkBookmarkStatus } from './bookmarks';
+import { PaginatedPostsResponse } from './types';
 
 // User hooks
 export const useUser = () => {
@@ -412,3 +415,80 @@ export function usePopularPosts() {
     queryFn: () => postsApi.getPopularPosts(),
   });
 } 
+
+export const useFollowUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: followUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['follow-status'] });
+    },
+  });
+};
+
+export const useUnfollowUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: unfollowUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['follow-status'] });
+    },
+  });
+};
+
+export const useFollowStatus = (followingId: string) => {
+  return useQuery({
+    queryKey: ['follow-status', followingId],
+    queryFn: () => checkFollowStatus(followingId),
+    enabled: !!followingId,
+  });
+};
+
+export const useBookmarkPost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: bookmarkPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+    },
+  });
+};
+
+export const useUnbookmarkPost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: unbookmarkPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+    },
+  });
+};
+
+export const useUserBookmarks = (userAddress: string, page: number = 1, pageSize: number = 10) => {
+  return useQuery<PaginatedPostsResponse>({
+    queryKey: ['bookmarks', userAddress, page, pageSize],
+    queryFn: () => getUserBookmarks(userAddress, page, pageSize),
+    enabled: !!userAddress,
+  });
+};
+
+export const useBookmarkStatus = (postId: string) => {
+  return useQuery({
+    queryKey: ['bookmark-status', postId],
+    queryFn: () => checkBookmarkStatus(postId),
+    enabled: !!postId,
+  });
+};
+
+// Hook to get posts from users followed by a specific user
+export const useFollowedUsersPosts = (address: string, page: number = 1, pageSize: number = 10) => {
+  return useQuery<GetUserPostsResponse>({
+    queryKey: ['followed-users-posts', address, page, pageSize],
+    queryFn: () => postsApi.getFollowedUsersPosts({ address, page, pageSize }),
+    enabled: !!address,
+  });
+}; 
