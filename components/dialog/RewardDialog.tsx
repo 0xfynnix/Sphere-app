@@ -29,10 +29,10 @@ interface RewardDialogProps {
 }
 
 const rewardOptions = [
-  { amount: 1, label: "1 SUI" },
-  { amount: 3, label: "3 SUI" },
-  { amount: 10, label: "10 SUI" },
-  { amount: 30, label: "30 SUI" },
+  { amount: 1, label: "1 SUI", content: "1-120 audiences" },
+  { amount: 3, label: "3 SUI", content: "120-360 audiences" },
+  { amount: 10, label: "10 SUI", content: "360 - 1200 audiences" },
+  { amount: 30, label: "30 SUI", content: "1200 - 3600 audiences" },
 ];
 
 export function RewardDialog({
@@ -171,6 +171,9 @@ export function RewardDialog({
                 {rewardOptions[currentIndex].label}
               </motion.div>
             </AnimatePresence>
+          </div>
+          <div className="text-sm text-muted-foreground text-center">
+            {rewardOptions[currentIndex].content}
           </div>
           <Button
             variant="outline"
