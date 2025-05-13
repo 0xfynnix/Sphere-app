@@ -20,7 +20,7 @@ import { claimReward, getUnclaimedRewards } from './rewards';
 import { RewardClaimRequest, BidClaimRequest } from './types';
 import { getTransactions } from './transactions';
 import { GetTransactionsParams, GetTransactionsResponse } from './types';
-import { getUnclaimedLotteryPools, claimLotteryPool } from './lottery';
+import { getUnclaimedLotteryPools, claimLotteryPool, getLotteryPool } from './lottery';
 import { RecommendedPost } from './types';
 import { followUser, unfollowUser, checkFollowStatus } from './follow';
 import { bookmarkPost, unbookmarkPost, getUserBookmarks, checkBookmarkStatus } from './bookmarks';
@@ -217,6 +217,7 @@ export const useCreateReward = () => {
     mutationFn: createReward,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['lotteryPool'] });
     },
   });
 };
@@ -282,8 +283,12 @@ export const useUpdatePostAuction = () => {
 
 // 领取打赏奖励
 export const useClaimReward = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: RewardClaimRequest) => claimReward(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unclaimedRewards'] });
+    },
   });
 };
 
@@ -297,8 +302,12 @@ export const useUnclaimedRewards = () => {
 
 // 领取竞拍奖励
 export const useClaimBid = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: BidClaimRequest) => bidsApi.claimBid(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unclaimedBids'] });
+    },
   });
 };
 
@@ -342,14 +351,23 @@ export const useClaimLotteryPool = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: { postId: string; digest: string }) => 
-      claimLotteryPool(params.postId, params.digest),
+    mutationFn: (params: { digest: string }) => 
+      claimLotteryPool(params.digest),
     onSuccess: () => {
       // 更新未领取奖池列表
       queryClient.invalidateQueries({ queryKey: ['unclaimedLotteryPools'] });
       // 更新用户信息
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
+  });
+};
+
+// 获取指定帖子的奖池信息
+export const useLotteryPool = (postId: string) => {
+  return useQuery({
+    queryKey: ['lotteryPool', postId],
+    queryFn: () => getLotteryPool(postId),
+    enabled: !!postId,
   });
 };
 
@@ -374,12 +392,13 @@ export const useCompleteAuction = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: { postId: string; digest: string }) => bidsApi.completeAuction(params),
+    mutationFn: (params: { postId: string; digest: string, lotteryPoolWinnerAddress?: string }) => bidsApi.completeAuction(params),
     onSuccess: () => {
       // 使相关查询失效，触发重新获取
       queryClient.invalidateQueries({ queryKey: ['post'] });
       queryClient.invalidateQueries({ queryKey: ['bids'] });
       queryClient.invalidateQueries({ queryKey: ['auctionHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['lotteryPool'] });
     },
   });
 }; 
@@ -491,7 +510,7 @@ export const useBookmarkStatus = (postId: string) => {
 export const useFollowedUsersPosts = (address: string, page: number = 1, pageSize: number = 10) => {
   return useQuery<GetUserPostsResponse>({
     queryKey: ['followed-users-posts', address, page, pageSize],
-    queryFn: () => postsApi.getFollowedUsersPosts({ address, page, pageSize }),
+    queryFn: () => postsApi.getFollowedUsersPosts({ page, pageSize }),
     enabled: !!address,
   });
 };

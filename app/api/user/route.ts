@@ -61,6 +61,7 @@ export async function GET(request: Request) {
           rewardEarnings: user.rewardEarnings,
           rewardSpent: user.rewardSpent,
           nftCount: user.nftCount,
+          userType: user.userType as UserType,
           sentRewards: user.sentRewards,
           receivedRewards: user.receivedRewards,
         },

@@ -44,7 +44,7 @@ export const bidsApi = {
   },
 
   // 完成竞拍
-  completeAuction: async (params: { postId: string; digest: string }): Promise<{ success: boolean; message: string }> => {
+  completeAuction: async (params: { postId: string; digest: string, lotteryPoolWinnerAddress?: string }): Promise<{ success: boolean; message: string }> => {
     return request('/api/auction/process-expired', {
       method: 'POST',
       body: JSON.stringify(params),

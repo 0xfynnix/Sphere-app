@@ -138,7 +138,7 @@ export default function Home() {
                           </div>
                         )}
                         <h2 className="font-semibold mb-2 text-foreground line-clamp-2">{post.title}</h2>
-                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.content}</p>
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2 h-[2.5rem]">{post.content}</p>
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex space-x-3">
                             <Button variant="ghost" size="sm" className="flex items-center px-2">
@@ -261,7 +261,7 @@ export default function Home() {
                         </div>
                       )}
                       <h2 className="font-semibold mb-2 text-foreground line-clamp-2">{post.title}</h2>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.content}</p>
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2 h-[2.5rem]">{post.content}</p>
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex space-x-3">
                           <Button variant="ghost" size="sm" className="flex items-center px-2">
@@ -321,7 +321,7 @@ export default function Home() {
                 </div>
               ))}
             </>
-          ) : popularData?.posts.slice(0, 9).map((post) => (
+          ) : popularData?.posts.slice(0, 9).map((post, index) => (
             <Card 
               key={post.id} 
               className="p-4 cursor-pointer hover:shadow-md transition-shadow"
@@ -329,7 +329,7 @@ export default function Home() {
             >
               <div className="flex items-start">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold mr-4">
-                  {post.rank}
+                  {index + 1}
                 </div>
                 <div className="flex-1">
                   <div 
@@ -343,7 +343,7 @@ export default function Home() {
                     <Badge variant="outline" className="text-xs">Trending</Badge>
                   </div>
                   <h4 className="font-medium mb-1 text-foreground line-clamp-2">{post.title}</h4>
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{post.content}</p>
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2 h-[2.5rem]">{post.content}</p>
                   <div className="flex items-center text-sm text-muted-foreground">
                     <div className="flex items-center text-amber-500">
                       <Flame className="h-4 w-4 mr-1" />

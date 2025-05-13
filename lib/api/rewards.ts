@@ -1,5 +1,5 @@
 import { request } from './requests';
-import { RewardClaimRequest, RewardClaimResponse, UnclaimedRewardsResponse } from './types';
+import { RewardClaimRequest, RewardClaimResponse } from './types';
 
 export interface CreateRewardParams {
   ref: string;
@@ -14,6 +14,42 @@ export interface Reward {
   amount: number;
   referrerId?: string;
   createdAt: string;
+}
+
+export interface PostReward {
+  post: {
+    id: string;
+    title: string;
+    shareCode: string;
+    nftObjectId: string;
+    content: string;
+    createdAt: string;
+    user: {
+      walletAddress: string;
+      profile: {
+        name: string | null;
+        avatar: string | null;
+      } | null;
+    };
+  };
+  totalAmount: number;
+  rewards: Array<{
+    id: string;
+    amount: number;
+    sender: {
+      walletAddress: string;
+      profile: {
+        name: string | null;
+        avatar: string | null;
+      } | null;
+    };
+    createdAt: string;
+  }>;
+}
+
+export interface UnclaimedRewardsResponse {
+  recipientPosts: PostReward[];
+  referrerPosts: PostReward[];
 }
 
 export const createReward = async (params: CreateRewardParams) => {

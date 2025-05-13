@@ -73,6 +73,9 @@ export async function POST(request: Request) {
       where: {
         walletAddress,
       },
+      include: {
+        profile: true,
+      },
       create: {
         walletAddress,
         shareCode: nanoid(), // 创建用户时生成分享码

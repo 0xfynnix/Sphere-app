@@ -23,7 +23,7 @@ import { RewardDialog } from "@/components/dialog/RewardDialog";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
-import { usePost, useCreateComment, useBids, useComments, useBookmarkPost, useUnbookmarkPost, useBookmarkStatus } from "@/lib/api/hooks";
+import { usePost, useCreateComment, useBids, useComments, useBookmarkPost, useUnbookmarkPost, useBookmarkStatus, useLotteryPool } from "@/lib/api/hooks";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { PhotoProvider, PhotoView } from "react-photo-view";
@@ -96,10 +96,6 @@ const CountdownDisplay = ({
               auctionId={post.currentAuction.auctionObjectId}
               auctionCapId={post.currentAuction.auctionCapObjectId}
               currentHighestBid={post.currentAuction.finalPrice || undefined}
-              highestBidder={post.currentAuction.winner ? {
-                name: post.currentAuction.winner.name,
-                avatar: post.currentAuction.winner.avatar
-              } : undefined}
             />
           </>
         ) : null}
@@ -249,6 +245,7 @@ export default function PostDetail({
   const bookmark = useBookmarkPost();
   const unbookmark = useUnbookmarkPost();
   const { data: bookmarkStatus } = useBookmarkStatus(id);
+  const { data: lotteryPoolData } = useLotteryPool(id);
 
   // 处理弹窗状态重置
   const handleBidDialogOpenChange = (open: boolean) => {
@@ -350,6 +347,82 @@ export default function PostDetail({
     post.allowBidding &&
     post.biddingDueDate &&
     new Date(post.biddingDueDate) > new Date();
+
+  // 如果帖子状态不是published，只显示基本信息
+  if (post.status !== 'PUBLISHED') {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Card className="p-6">
+          <div className="space-y-6">
+            {/* Author Info */}
+            <div
+              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => router.push(`/user/${post.author.walletAddress}`)}
+            >
+              <Avatar className="h-10 w-10 mr-3">
+                {post.author.avatar ? (
+                  <AvatarImage src={post.author.avatar} />
+                ) : (
+                  <AvatarFallback>
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-foreground">
+                  {post.author.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Posted{" "}
+                  {formatDistanceToNow(new Date(post.createdAt), {
+                    addSuffix: true,
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {/* Post Content */}
+            <div>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">
+                {post.title}
+              </h2>
+              <p className="text-muted-foreground mb-6">{post.content}</p>
+              {post.images.length > 0 && (
+                <PhotoProvider>
+                  <div className="bg-muted rounded-lg mb-6 overflow-hidden flex justify-center items-center">
+                    <PhotoView src={post.images[0].url}>
+                      <img
+                        src={post.images[0].url}
+                        alt={post.title}
+                        className="max-w-full h-auto cursor-pointer"
+                      />
+                    </PhotoView>
+                  </div>
+                </PhotoProvider>
+              )}
+            </div>
+
+            {/* Status Badge */}
+            <div className="flex items-center gap-2">
+              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                post.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-800' :
+                post.status === 'PENDING' ? 'bg-blue-100 text-blue-800' :
+                post.status === 'FAILED' ? 'bg-red-100 text-red-800' :
+                post.status === 'ARCHIVED' ? 'bg-gray-100 text-gray-800' :
+                post.status === 'DELETED' ? 'bg-red-100 text-red-800' :
+                post.status === 'WAITING_CLAIM' ? 'bg-purple-100 text-purple-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {post.status.charAt(0) + post.status.slice(1).toLowerCase().replace('_', ' ')}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -474,6 +547,7 @@ export default function PostDetail({
                       )}
                     <AuctionHistoryDialog
                       postId={id}
+                      currentRound={post.currentAuction?.round}
                       trigger={
                         <Button
                           variant="outline"
@@ -608,7 +682,7 @@ export default function PostDetail({
                   <div>
                     <h3 className="font-semibold text-foreground">Auction</h3>
                     <p className="text-sm text-muted-foreground">
-                      Start an auction for this Post
+                      Start an auction for this Content
                     </p>
                   </div>
                   <StartAuctionButton
@@ -625,6 +699,105 @@ export default function PostDetail({
               </div>
             )
           )}
+
+          {/* Lottery Pool Section */}
+          <div className="border rounded-lg p-4 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">
+                  Lottery Pool
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Current round: {lotteryPoolData?.data.post.currentRound || 0}
+                </p>
+              </div>
+            </div>
+
+            {/* Current Lottery Pool */}
+            {lotteryPoolData?.data.currentLotteryPool && (
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Gift className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Current Pool</span>
+                  </div>
+                  <span className="text-sm font-medium">
+                    {lotteryPoolData.data.currentLotteryPool.amount} SUI
+                  </span>
+                </div>
+                {lotteryPoolData.data.currentLotteryPool.winner && (
+                  <div className="flex items-center gap-2 pl-6">
+                    <Avatar className="h-6 w-6">
+                      {lotteryPoolData.data.currentLotteryPool.winner.avatar ? (
+                        <AvatarImage src={lotteryPoolData.data.currentLotteryPool.winner.avatar} />
+                      ) : (
+                        <AvatarFallback>
+                          <User className="h-3 w-3" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span className="text-sm truncate">
+                      {lotteryPoolData.data.currentLotteryPool.winner.walletAddress.slice(0, 5)}...{lotteryPoolData.data.currentLotteryPool.winner.walletAddress.slice(-5)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Historical Lottery Pools */}
+            {(lotteryPoolData?.data?.historicalLotteryPools ?? []).length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Historical Pools</h4>
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Round</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Winner</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(lotteryPoolData?.data?.historicalLotteryPools ?? []).map((pool) => (
+                        <TableRow key={pool.id}>
+                          <TableCell className="font-medium">
+                            Round {pool.round}
+                          </TableCell>
+                          <TableCell>{pool.amount} SUI</TableCell>
+                          <TableCell>
+                            {pool.winner ? (
+                              <div className="flex items-center space-x-2">
+                                <Avatar className="h-6 w-6">
+                                  {pool.winner.avatar ? (
+                                    <AvatarImage src={pool.winner.avatar} />
+                                  ) : (
+                                    <AvatarFallback>
+                                      <User className="h-3 w-3" />
+                                    </AvatarFallback>
+                                  )}
+                                </Avatar>
+                                <span className="truncate max-w-[120px] sm:max-w-none">
+                                  {pool.winner.walletAddress.slice(0, 5)}...{pool.winner.walletAddress.slice(-5)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">No winner</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground whitespace-nowrap">
+                            {formatDistanceToNow(new Date(pool.updatedAt), {
+                              addSuffix: true,
+                            })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="flex items-center justify-between">

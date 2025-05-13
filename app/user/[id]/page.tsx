@@ -205,7 +205,7 @@ export default function UserProfile({ params }: { params: Promise<{ id: string }
                     </div>
                     <div className="flex items-center text-amber-500">
                       <Flame className="mr-2 h-4 w-4" />
-                      <span className="font-medium">{post.totalRewards || 0}</span>
+                      <span className="font-medium">{post.rewardCount || 0}</span>
                     </div>
                   </div>
                 </div>

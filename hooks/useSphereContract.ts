@@ -262,13 +262,13 @@ export function useSphereContract() {
    * 用于创作者领取打赏
    * @returns 
    */
-  const claimCreatorTip = async () => {
+  const claimCreatorTip = async (nftObjectId: string) => {
     if (!account) throw new Error('No account connected');
     
     const tx = new Transaction();
     tx.moveCall({
       target: `${CONTRACT_ADDRESS}::${MODULE_NAMES.COPYRIGHT_NFT}::owner_claim_tip`,
-      arguments: [tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_NFT_TIP_POOL!)],
+      arguments: [tx.object(process.env.NEXT_PUBLIC_COPY_RIGHT_NFT_TIP_POOL!), tx.object(nftObjectId)],
     });
 
     return signAndExecute({

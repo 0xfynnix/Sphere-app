@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const currentLotteryPool = await prisma.lotteryPool.findFirst({
       where: {
         postId: post.id,
-        round: post.auctionRound
+        round: post.lotteryRound
       }
     });
 

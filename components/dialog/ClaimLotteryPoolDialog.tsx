@@ -38,7 +38,9 @@ export function ClaimLotteryPoolDialog({
 }: ClaimLotteryPoolDialogProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [claimProgress, setClaimProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState<'confirm' | 'claiming'>('confirm');
+  const [currentStep, setCurrentStep] = useState<"confirm" | "claiming">(
+    "confirm"
+  );
   const account = useCurrentAccount();
   const client = useSuiClient();
   const { claimPrize } = useSphereContract();
@@ -49,7 +51,7 @@ export function ClaimLotteryPoolDialog({
     if (isOpen) {
       setShowConfetti(false);
       setClaimProgress(0);
-      setCurrentStep('confirm');
+      setCurrentStep("confirm");
     }
   }, [isOpen]);
 
@@ -67,7 +69,7 @@ export function ClaimLotteryPoolDialog({
     }
 
     try {
-      setCurrentStep('claiming');
+      setCurrentStep("claiming");
       setClaimProgress(0);
 
       // 第一阶段：调用合约
@@ -108,15 +110,9 @@ export function ClaimLotteryPoolDialog({
         });
       }, 100);
 
-      // 为每个奖池调用后端 API
-      await Promise.all(
-        lotteryPools.map(pool => 
-          claimLotteryPoolMutation.mutateAsync({
-            postId: pool.postId,
-            digest: result.digest
-          })
-        )
-      );
+      await claimLotteryPoolMutation.mutateAsync({
+        digest: result.digest,
+      });
 
       clearInterval(apiProgressInterval);
       setClaimProgress(100);
@@ -128,7 +124,7 @@ export function ClaimLotteryPoolDialog({
       toast.error("Failed to claim lottery pool rewards");
     } finally {
       setClaimProgress(0);
-      setCurrentStep('confirm');
+      setCurrentStep("confirm");
     }
   };
 
@@ -145,26 +141,34 @@ export function ClaimLotteryPoolDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {currentStep === 'confirm' && (
+          {currentStep === "confirm" && (
             <div className="space-y-4">
               <div className="space-y-2">
                 <p className="text-muted-foreground">
-                  You are about to claim rewards from {lotteryPools.length} lottery pool{lotteryPools.length > 1 ? 's' : ''}.
+                  You are about to claim rewards from {lotteryPools.length}{" "}
+                  lottery pool{lotteryPools.length > 1 ? "s" : ""}.
                 </p>
                 <p className="font-medium">
-                  Total amount: {totalAmount} SUI
+                  Total amount: {totalAmount.toFixed(4)} SUI
                 </p>
               </div>
               <div className="space-y-2">
                 {lotteryPools.map((pool) => (
-                  <div key={pool.id} className="flex justify-between items-center p-2 rounded bg-muted/50">
-                    <span className="text-sm">{pool.post?.title || 'Untitled'} (Round {pool.round})</span>
-                    <span className="font-medium">{pool.amount} SUI</span>
+                  <div
+                    key={pool.id}
+                    className="flex justify-between items-center p-2 rounded bg-muted/50"
+                  >
+                    <span className="text-sm">
+                      {pool.post?.title || "Untitled"} (Round {pool.round})
+                    </span>
+                    <span className="font-medium">
+                      {pool.amount.toFixed(4)} SUI
+                    </span>
                   </div>
                 ))}
               </div>
-              <Button 
-                className="w-full relative overflow-hidden" 
+              <Button
+                className="w-full relative overflow-hidden"
                 onClick={handleClaim}
               >
                 Claim All Rewards
@@ -172,11 +176,13 @@ export function ClaimLotteryPoolDialog({
             </div>
           )}
 
-          {currentStep === 'claiming' && (
+          {currentStep === "claiming" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  {claimProgress <= 50 ? 'Calling contract...' : 'Updating records...'}
+                  {claimProgress <= 50
+                    ? "Calling contract..."
+                    : "Updating records..."}
                 </span>
                 <span className="font-medium">{claimProgress}%</span>
               </div>
@@ -200,4 +206,4 @@ export function ClaimLotteryPoolDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

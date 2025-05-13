@@ -67,9 +67,6 @@ export async function POST(req: Request) {
         };
 
         if (type === 'creator') {
-          if (bid.post?.user.id !== user.id) {
-            continue; // Skip if not authorized
-          }
           if (bid.creatorClaimed) {
             continue; // Skip if already claimed
           }

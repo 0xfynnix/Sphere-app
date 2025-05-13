@@ -31,7 +31,7 @@ export interface UserProfile {
   id: string;
   walletAddress: string;
   email?: string;
-  userType?: string;
+  userType?: UserType;
   shareCode: string;
   profile: UserProfileData | null;
   createdAt: string;
@@ -342,8 +342,10 @@ export interface UnclaimedBid {
   user: {
     walletAddress: string;
   };
-  auctionHistoryId?: string;
-  auctionObjectId?: string;
+  auctionHistory:{
+    id: string;
+    auctionObjectId: string;
+  }
 }
 
 // 未领取奖励响应
@@ -594,4 +596,39 @@ export interface PostListItem {
     thumbnailUrl: string;
   }>;
   bookmarkedAt: string;
+}
+
+export interface LotteryPoolResponse {
+  success: boolean;
+  data: {
+    post: {
+      id: string;
+      title: string;
+      currentRound: number;
+    };
+    currentLotteryPool: {
+      id: string;
+      round: number;
+      amount: number;
+      winner: {
+        id: string;
+        walletAddress: string;
+        avatar: string | null;
+      } | null;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
+    historicalLotteryPools: Array<{
+      id: string;
+      round: number;
+      amount: number;
+      winner: {
+        id: string;
+        walletAddress: string;
+        avatar: string | null;
+      } | null;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+  };
 }

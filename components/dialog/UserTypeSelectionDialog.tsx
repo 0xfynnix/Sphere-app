@@ -9,7 +9,7 @@ interface UserTypeSelectionDialogProps {
   onSelect: (type: UserType) => void;
 }
 
-const userTypes = [
+export const userTypes = [
   {
     type: UserType.ARTIST,
     name: "Artist",

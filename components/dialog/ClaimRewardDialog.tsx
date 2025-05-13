@@ -21,6 +21,7 @@ interface ClaimRewardDialogProps {
   type: 'recipient' | 'referrer' | 'creator' | 'referrer_bid';
   trigger?: React.ReactNode;
   auctionId?: string;
+  contentNFTObjectId?: string;
 }
 
 export function ClaimRewardDialog({
@@ -29,6 +30,7 @@ export function ClaimRewardDialog({
   type,
   trigger,
   auctionId,
+  contentNFTObjectId,
 }: ClaimRewardDialogProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [claimProgress, setClaimProgress] = useState(0);
@@ -80,7 +82,8 @@ export function ClaimRewardDialog({
       // 根据不同类型调用不同的合约方法
       switch (type) {
         case 'recipient':
-          result = await claimCreatorTip();
+          if (!contentNFTObjectId) throw new Error('Content NFT Object ID is required');
+          result = await claimCreatorTip(contentNFTObjectId);
           break;
         case 'referrer':
           result = await claimReferenceTip();

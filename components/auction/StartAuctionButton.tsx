@@ -104,8 +104,8 @@ export function StartAuctionButton({
       },
     },
     {
-      title: "Update Post",
-      description: "Updating post auction status...",
+      title: "Update Content",
+      description: "Updating Content auction status...",
       action: async (data) => {
         const { digest, auctionId, startPrice, durationHours, durationMinutes, auctionCapId } = data as {
           digest: string;

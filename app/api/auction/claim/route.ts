@@ -80,19 +80,18 @@ export async function POST(request: Request) {
         where: { id: post.id },
         data: {
           status: PostStatus.PUBLISHED,
-          lotteryRound: post.lotteryRound + 1, // 增加奖池轮次
         },
       });
 
-      // 创建新的奖池轮次
-      const newLotteryPool = await tx.lotteryPool.create({
-        data: {
-          postId: post.id,
-          amount: 0, // 初始金额为0
-          round: post.lotteryRound + 1, // 新的轮次
-          claimed: false, // 初始状态为未领取
-        },
-      });
+      // // 创建新的奖池轮次
+      // const newLotteryPool = await tx.lotteryPool.create({
+      //   data: {
+      //     postId: post.id,
+      //     amount: 0, // 初始金额为0
+      //     round: post.lotteryRound + 1, // 新的轮次
+      //     claimed: false, // 初始状态为未领取
+      //   },
+      // });
 
       // 创建交易记录
       const transaction = await tx.suiTransaction.create({
@@ -107,7 +106,6 @@ export async function POST(request: Request) {
 
       return {
         post: updatedPost,
-        lotteryPool: newLotteryPool,
         transaction,
       };
     });

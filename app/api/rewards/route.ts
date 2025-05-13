@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     const currentLotteryPool = await prisma.lotteryPool.findFirst({
       where: {
         postId: post.id,
-        round: post.auctionRound
+        round: post.lotteryRound
       }
     });
 
@@ -171,13 +171,7 @@ export async function POST(req: Request) {
           }
         });
       } else {
-        await tx.lotteryPool.create({
-          data: {
-            postId: post.id,
-            amount: lotteryAmount,
-            round: post.auctionRound
-          }
-        });
+        throw new Error('Lottery pool not found');
       }
 
       return reward;

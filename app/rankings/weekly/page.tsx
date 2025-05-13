@@ -68,7 +68,7 @@ export default function WeeklyRankings() {
       </div>
 
       <div className="grid gap-6">
-        {popularPosts?.posts.map((post) => (
+        {popularPosts?.posts.map((post, index) => (
           <Card 
             key={post.id} 
             className="overflow-hidden py-0 cursor-pointer hover:shadow-md transition-shadow"
@@ -91,7 +91,7 @@ export default function WeeklyRankings() {
                     </div>
                   )}
                   <div className="absolute top-2 left-2 flex items-center justify-center w-8 h-8 rounded-full bg-primary/90 text-primary-foreground font-bold">
-                    {post.rank}
+                    {index + 1}
                   </div>
                 </div>
               </div>

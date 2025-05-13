@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     // 获取请求体中的竞拍ID和交易digest
-    const { postId, digest } = await request.json();
+    const { postId, digest, lotteryPoolWinnerAddress } = await request.json();
     if (!postId) {
       return NextResponse.json(
         { error: "Post ID is required" },
@@ -56,9 +56,20 @@ export async function POST(request: Request) {
     const currentLotteryPool = await prisma.lotteryPool.findFirst({
       where: {
         postId: post.id,
-        round: post.auctionRound
+        round: post.lotteryRound
       }
     });
+
+    // 如果提供了lotteryPoolWinnerAddress，查找对应的用户
+    let lotteryPoolWinnerId = post.userId; // 默认使用帖子创作者
+    if (lotteryPoolWinnerAddress) {
+      const winnerUser = await prisma.user.findUnique({
+        where: { walletAddress: lotteryPoolWinnerAddress }
+      });
+      if (winnerUser) {
+        lotteryPoolWinnerId = winnerUser.id;
+      }
+    }
 
     // 验证帖子是否属于当前用户
     if (post.userId !== user.id) {
@@ -136,7 +147,7 @@ export async function POST(request: Request) {
           amount: {
             increment: winningBid.amount * 0.05,
           },
-          winnerId: post.userId, // 设置奖池winner为帖子创作者
+          winnerId: lotteryPoolWinnerId,
         },
       });
     }
@@ -151,6 +162,17 @@ export async function POST(request: Request) {
         startPrice: null,
         currentHighestBid: null,
         status: PostStatus.WAITING_CLAIM,
+        lotteryRound: post.lotteryRound + 1,
+      },
+    });
+
+    // 创建新的奖池轮次
+    await prisma.lotteryPool.create({
+      data: {
+        postId: post.id,
+        amount: 0, // 初始金额为0
+        round: post.lotteryRound + 1, // 新的轮次
+        claimed: false, // 初始状态为未领取
       },
     });
 

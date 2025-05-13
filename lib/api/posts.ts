@@ -39,7 +39,7 @@ export interface PostListItem {
   status: string;
   allowBidding: boolean;
   biddingDueDate: string | null;
-  nftObjectId: string | null;
+  nftObjectId?: string | null;
   auctionRound: number;
   auctionHistory: {
     id: string;
@@ -252,10 +252,10 @@ export const postsApi = {
   },
 
   // 获取用户关注的所有用户的帖子
-  getFollowedUsersPosts: async (params: { page?: number; pageSize?: number; address: string; }) => {
-    const { page = 1, pageSize = 10, address } = params;
+  getFollowedUsersPosts: async (params: { page?: number; pageSize?: number}) => {
+    const { page = 1, pageSize = 10 } = params;
     return request<GetUserPostsResponse>(
-      `/api/follow/user/posts?page=${page}&pageSize=${pageSize}&userAddress=${address}`,
+      `/api/follow/user?page=${page}&pageSize=${pageSize}`,
       {
         method: "GET",
       }

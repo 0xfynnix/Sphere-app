@@ -14,7 +14,6 @@ import {
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useCompleteAuction } from "@/lib/api/hooks";
 import { useSphereContract } from "@/hooks/useSphereContract";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CompleteAuctionDialogProps {
   isOpen: boolean;
@@ -24,10 +23,6 @@ interface CompleteAuctionDialogProps {
   auctionCapId: string;
   trigger?: React.ReactNode;
   currentHighestBid?: number;
-  highestBidder?: {
-    name: string;
-    avatar?: string;
-  };
 }
 
 export function CompleteAuctionDialog({
@@ -38,7 +33,6 @@ export function CompleteAuctionDialog({
   auctionCapId,
   trigger,
   currentHighestBid,
-  highestBidder,
 }: CompleteAuctionDialogProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [completeProgress, setCompleteProgress] = useState(0);
@@ -83,13 +77,26 @@ export function CompleteAuctionDialog({
       const result = await endAuction(auctionId, auctionCapId);
       
       // 等待交易上链
-      await client.waitForTransaction({
+      const txResult = await client.waitForTransaction({
         digest: result.digest,
         options: {
           showEffects: true,
           showEvents: true,
         },
       });
+
+      // 从交易事件中获取winner地址
+      let lotteryPoolWinnerAddress = undefined;
+      const events = txResult.events || [];
+      for (const event of events) {
+        if (event.type.includes('::copyright_nft::AuctionEnded')) {
+          const parsedJson = event.parsedJson as any;
+          if (parsedJson.winner) {
+            lotteryPoolWinnerAddress = parsedJson.winner;
+            break;
+          }
+        }
+      }
       
       clearInterval(contractProgressInterval);
       setCompleteProgress(50);
@@ -105,10 +112,11 @@ export function CompleteAuctionDialog({
         });
       }, 100);
 
-      // 调用后端接口完成竞拍，传入交易 digest
+      // 调用后端接口完成竞拍，传入交易 digest 和 winner 地址
       await completeAuction.mutateAsync({
         postId,
         digest: result.digest,
+        lotteryPoolWinnerAddress,
       });
 
       clearInterval(apiProgressInterval);
@@ -140,27 +148,11 @@ export function CompleteAuctionDialog({
               <p className="text-muted-foreground">
                 Are you sure you want to complete this auction?
               </p>
-              {highestBidder && currentHighestBid ? (
+              {currentHighestBid ? (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Current Highest Bidder:</span>
-                  </div>
-                  <div className="flex items-center gap-2 pl-6">
-                    <Avatar className="h-6 w-6">
-                      {highestBidder.avatar ? (
-                        <AvatarImage src={highestBidder.avatar} />
-                      ) : (
-                        <AvatarFallback>
-                          <User className="h-3 w-3" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <span className="text-sm">{highestBidder.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 pl-6">
                     <Coins className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{currentHighestBid} SUI</span>
+                    <span className="text-sm font-medium">Current Highest Bid: {currentHighestBid} SUI</span>
                   </div>
                 </div>
               ) : (
@@ -189,27 +181,11 @@ export function CompleteAuctionDialog({
                 <Progress value={completeProgress} className="h-2" />
               </div>
 
-              {highestBidder && currentHighestBid ? (
+              {currentHighestBid ? (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Current Highest Bidder:</span>
-                  </div>
-                  <div className="flex items-center gap-2 pl-6">
-                    <Avatar className="h-6 w-6">
-                      {highestBidder.avatar ? (
-                        <AvatarImage src={highestBidder.avatar} />
-                      ) : (
-                        <AvatarFallback>
-                          <User className="h-3 w-3" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <span className="text-sm">{highestBidder.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 pl-6">
                     <Coins className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{currentHighestBid} SUI</span>
+                    <span className="text-sm font-medium">Current Highest Bid: {currentHighestBid} SUI</span>
                   </div>
                 </div>
               ) : (
@@ -239,21 +215,8 @@ export function CompleteAuctionDialog({
               </div>
               <div className="text-center space-y-2">
                 <h3 className="font-semibold text-lg">Auction Completed Successfully!</h3>
-                {highestBidder && currentHighestBid ? (
+                {currentHighestBid ? (
                   <div className="space-y-2">
-                    <p className="text-muted-foreground">Winner:</p>
-                    <div className="flex items-center justify-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        {highestBidder.avatar ? (
-                          <AvatarImage src={highestBidder.avatar} />
-                        ) : (
-                          <AvatarFallback>
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <span className="font-medium">{highestBidder.name}</span>
-                    </div>
                     <p className="text-sm text-muted-foreground">
                       Final Price: {currentHighestBid} SUI
                     </p>
@@ -287,27 +250,11 @@ export function CompleteAuctionDialog({
                   Please try again or contact support if the problem persists.
                 </p>
               </div>
-              {highestBidder && currentHighestBid ? (
+              {currentHighestBid ? (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Current Highest Bidder:</span>
-                  </div>
-                  <div className="flex items-center gap-2 pl-6">
-                    <Avatar className="h-6 w-6">
-                      {highestBidder.avatar ? (
-                        <AvatarImage src={highestBidder.avatar} />
-                      ) : (
-                        <AvatarFallback>
-                          <User className="h-3 w-3" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <span className="text-sm">{highestBidder.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 pl-6">
                     <Coins className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{currentHighestBid} SUI</span>
+                    <span className="text-sm font-medium">Current Highest Bid: {currentHighestBid} SUI</span>
                   </div>
                 </div>
               ) : (

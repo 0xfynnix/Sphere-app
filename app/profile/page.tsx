@@ -232,7 +232,7 @@ export default function ProfilePage() {
             value="nfts"
             className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-500/5 data-[state=active]:text-green-600 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-green-500/20"
           >
-            NFTs
+            Badges
           </TabsTrigger>
           <TabsTrigger
             value="claim"
@@ -422,10 +422,27 @@ export default function ProfilePage() {
                                 ? "bg-green-100 text-green-700"
                                 : post.status === "DRAFT"
                                   ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-gray-100 text-gray-700"
+                                  : post.status === "PENDING"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : post.status === "FAILED"
+                                      ? "bg-red-100 text-red-700"
+                                      : post.status === "ARCHIVED"
+                                        ? "bg-gray-100 text-gray-700"
+                                        : post.status === "DELETED"
+                                          ? "bg-red-100 text-red-700"
+                                          : post.status === "WAITING_CLAIM"
+                                            ? "bg-purple-100 text-purple-700"
+                                            : "bg-gray-100 text-gray-700"
                             }`}
                           >
-                            {post.status}
+                            {post.status === "PUBLISHED" ? "Published" :
+                             post.status === "DRAFT" ? "Draft" :
+                             post.status === "PENDING" ? "Pending" :
+                             post.status === "FAILED" ? "Failed" :
+                             post.status === "ARCHIVED" ? "Archived" :
+                             post.status === "DELETED" ? "Deleted" :
+                             post.status === "WAITING_CLAIM" ? "Waiting Claim" :
+                             post.status}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -465,10 +482,6 @@ export default function ProfilePage() {
                                 auctionId={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.auctionObjectId || ""}
                                 auctionCapId={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.auctionCapObjectId || ""}
                                 currentHighestBid={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.finalPrice || undefined}
-                                highestBidder={post.auctionHistory.find(auction => auction.round === post.auctionRound)?.winner ? {
-                                  name: post.auctionHistory.find(auction => auction.round === post.auctionRound)?.winner?.name || "",
-                                  avatar: post.auctionHistory.find(auction => auction.round === post.auctionRound)?.winner?.avatar || undefined
-                                } : undefined}
                                 trigger={
                                   <Button
                                     variant="outline"
@@ -571,60 +584,104 @@ export default function ProfilePage() {
         <TabsContent value="nfts" className="mt-6">
           <div className="space-y-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-foreground">My NFTs</h2>
+              <h2 className="text-2xl font-bold text-foreground">Platform Badges</h2>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Total: 2</span>
+                <span className="text-sm text-muted-foreground">Total: 0</span>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <Card className="p-4 hover:shadow-lg transition-shadow">
-                <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                  <Image
-                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
-                    alt="NFT"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
+                <div className="aspect-square relative rounded-lg overflow-hidden mb-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span className="text-white font-semibold">Coming Soon</span>
+                  </div>
+                  <Coins className="h-16 w-16 text-purple-500" />
                 </div>
                 <h3 className="font-semibold text-foreground">
-                  Sphere Creator #1
+                  Bidder NFT
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Minted on 2024-03-20
+                  Successfully bid &gt; 3 Artworks
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Future redeem $SUI/NFTs, a proof of Top Bidder
                 </p>
                 <div className="mt-2">
-                  <Button variant="outline" size="sm">
-                    View Details
+                  <Button variant="outline" size="sm" disabled>
+                    Coming Soon
                   </Button>
                 </div>
               </Card>
               <Card className="p-4 hover:shadow-lg transition-shadow">
-                <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                  <Image
-                    src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
-                    alt="NFT"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
+                <div className="aspect-square relative rounded-lg overflow-hidden mb-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span className="text-white font-semibold">Coming Soon</span>
+                  </div>
+                  <Coins className="h-16 w-16 text-blue-500" />
                 </div>
                 <h3 className="font-semibold text-foreground">
-                  Sphere Creator #2
+                  Badge NFT
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Minted on 2024-03-21
+                  Awarded to creator who earned total &gt; 29.9 $SUI
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Showcase reputation & unlock premium features
                 </p>
                 <div className="mt-2">
-                  <Button variant="outline" size="sm">
-                    View Details
+                  <Button variant="outline" size="sm" disabled>
+                    Coming Soon
+                  </Button>
+                </div>
+              </Card>
+              <Card className="p-4 hover:shadow-lg transition-shadow">
+                <div className="aspect-square relative rounded-lg overflow-hidden mb-4 bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span className="text-white font-semibold">Coming Soon</span>
+                  </div>
+                  <Coins className="h-16 w-16 text-green-500" />
+                </div>
+                <h3 className="font-semibold text-foreground">
+                  Influencer NFT
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Successfully refer &gt; 10 Artworks
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Future redeem $SUI/NFTs, a proof of Top Influencer
+                </p>
+                <div className="mt-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Coming Soon
+                  </Button>
+                </div>
+              </Card>
+              <Card className="p-4 hover:shadow-lg transition-shadow">
+                <div className="aspect-square relative rounded-lg overflow-hidden mb-4 bg-gradient-to-br from-pink-500/10 to-pink-500/5 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span className="text-white font-semibold">Coming Soon</span>
+                  </div>
+                  <Coins className="h-16 w-16 text-pink-500" />
+                </div>
+                <h3 className="font-semibold text-foreground">
+                  Tipper NFT
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Successfully Tip &gt;= 5 Creators
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Future redeem $SUI/NFTs, a proof of Top Tipper
+                </p>
+                <div className="mt-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Coming Soon
                   </Button>
                 </div>
               </Card>
             </div>
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing 1-2 of 2 items
+                Showing 0-0 of 0 items
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" disabled>
@@ -633,74 +690,6 @@ export default function ProfilePage() {
                 <Button variant="outline" size="sm" disabled>
                   Next
                 </Button>
-              </div>
-            </div>
-
-            <div className="pt-8 border-t">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">
-                  Mintable NFTs
-                </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Available: 2
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <Card className="p-4 hover:shadow-lg transition-shadow">
-                  <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                    <Image
-                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
-                      alt="NFT"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-foreground">
-                    Sphere Creator #3
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Limited Edition
-                  </p>
-                  <div className="mt-2">
-                    <Button size="sm">Mint Now</Button>
-                  </div>
-                </Card>
-                <Card className="p-4 hover:shadow-lg transition-shadow">
-                  <div className="aspect-square relative rounded-lg overflow-hidden mb-4">
-                    <Image
-                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60"
-                      alt="NFT"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-foreground">
-                    Sphere Creator #4
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Limited Edition
-                  </p>
-                  <div className="mt-2">
-                    <Button size="sm">Mint Now</Button>
-                  </div>
-                </Card>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing 1-2 of 2 items
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" disabled>
-                    Next
-                  </Button>
-                </div>
               </div>
             </div>
           </div>
@@ -721,21 +710,8 @@ export default function ProfilePage() {
                       <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                       As Recipient
                     </h3>
-                    <ClaimRewardDialog
-                      isOpen={isRecipientClaimDialogOpen}
-                      onOpenChange={setIsRecipientClaimDialogOpen}
-                      type="recipient"
-                      trigger={
-                        <Button
-                          disabled={!unclaimedRewardsData?.recipientRewards?.length}
-                          className="bg-purple-500 hover:bg-purple-600"
-                        >
-                          Claim All
-                        </Button>
-                      }
-                    />
                   </div>
-                  {!unclaimedRewardsData?.recipientRewards?.length ? (
+                  {!unclaimedRewardsData?.recipientPosts?.length ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <div className="rounded-full bg-purple-500/10 p-3 mb-3">
                         <Coins className="h-6 w-6 text-purple-500" />
@@ -746,24 +722,58 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {unclaimedRewardsData.recipientRewards.map((reward) => (
+                      {unclaimedRewardsData.recipientPosts.map((postReward) => (
                         <div
-                          key={reward.id}
+                          key={postReward.post.id}
                           className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                         >
-                          <div className="space-y-1">
-                            <p className="font-medium">{reward.post.title}</p>
+                          <div className="space-y-1 flex-1">
+                            <p className="font-medium">{postReward.post.title}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>
-                                From: {reward.sender.walletAddress.slice(0, 6)}
-                                ...{reward.sender.walletAddress.slice(-4)}
-                              </span>
+                              <span>Total: {postReward.totalAmount} SUI</span>
                               <span>•</span>
-                              <span className="text-purple-500 font-medium">
-                                {reward.recipientAmount} SUI
-                              </span>
+                              <span>{postReward.rewards.length} rewards</span>
                             </div>
+                            {/* <div className="mt-2 space-y-2">
+                              {postReward.rewards.map((reward) => (
+                                <div key={reward.id} className="text-sm text-muted-foreground">
+                                  <span>
+                                    From: {reward.sender.walletAddress.slice(0, 6)}...
+                                    {reward.sender.walletAddress.slice(-4)}
+                                  </span>
+                                  <span className="ml-2 text-purple-500 font-medium">
+                                    {reward.amount} SUI
+                                  </span>
+                                </div>
+                              ))}
+                            </div> */}
                           </div>
+                          <ClaimRewardDialog
+                            isOpen={isRecipientClaimDialogOpen && selectedClaimPost?.id === postReward.post.id}
+                            onOpenChange={(open) => {
+                              setIsRecipientClaimDialogOpen(open);
+                              if (!open) {
+                                setSelectedClaimPost(null);
+                              }
+                            }}
+                            type="recipient"
+                            contentNFTObjectId={postReward.post.nftObjectId}
+                            trigger={
+                              <Button
+                                size="sm"
+                                className="bg-purple-500 hover:bg-purple-600"
+                                onClick={() => {
+                                  setSelectedClaimPost({
+                                    id: postReward.post.id,
+                                    auctionId: ""
+                                  });
+                                  setIsRecipientClaimDialogOpen(true);
+                                }}
+                              >
+                                Claim
+                              </Button>
+                            }
+                          />
                         </div>
                       ))}
                     </div>
@@ -783,7 +793,7 @@ export default function ProfilePage() {
                       type="referrer"
                       trigger={
                         <Button
-                          disabled={!unclaimedRewardsData?.referrerRewards?.length}
+                          disabled={!unclaimedRewardsData?.referrerPosts?.length}
                           className="bg-blue-500 hover:bg-blue-600"
                         >
                           Claim All
@@ -791,7 +801,7 @@ export default function ProfilePage() {
                       }
                     />
                   </div>
-                  {!unclaimedRewardsData?.referrerRewards?.length ? (
+                  {!unclaimedRewardsData?.referrerPosts?.length ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <div className="rounded-full bg-blue-500/10 p-3 mb-3">
                         <Coins className="h-6 w-6 text-blue-500" />
@@ -802,22 +812,30 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {unclaimedRewardsData.referrerRewards.map((reward) => (
+                      {unclaimedRewardsData.referrerPosts.map((postReward) => (
                         <div
-                          key={reward.id}
+                          key={postReward.post.id}
                           className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                         >
                           <div className="space-y-1">
-                            <p className="font-medium">{reward.post.title}</p>
+                            <p className="font-medium">{postReward.post.title}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>
-                                From: {reward.sender.walletAddress.slice(0, 6)}
-                                ...{reward.sender.walletAddress.slice(-4)}
-                              </span>
+                              <span>Total: {postReward.totalAmount} SUI</span>
                               <span>•</span>
-                              <span className="text-blue-500 font-medium">
-                                {reward.referrerAmount} SUI
-                              </span>
+                              <span>{postReward.rewards.length} rewards</span>
+                            </div>
+                            <div className="mt-2 space-y-2">
+                              {postReward.rewards.map((reward) => (
+                                <div key={reward.id} className="text-sm text-muted-foreground">
+                                  <span>
+                                    From: {reward.sender.walletAddress.slice(0, 6)}...
+                                    {reward.sender.walletAddress.slice(-4)}
+                                  </span>
+                                  <span className="ml-2 text-blue-500 font-medium">
+                                    {reward.amount} SUI
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -881,7 +899,7 @@ export default function ProfilePage() {
                               }
                             }}
                             type="creator"
-                            auctionId={bid.auctionObjectId}
+                            auctionId={bid.auctionHistory.auctionObjectId}
                             trigger={
                               <Button
                                 size="sm"
@@ -889,7 +907,7 @@ export default function ProfilePage() {
                                 onClick={() => {
                                   setSelectedClaimPost({
                                     id: bid.id,
-                                    auctionId: bid.auctionObjectId || ""
+                                    auctionId: bid.auctionHistory.auctionObjectId || ""
                                   });
                                   setIsCreatorBidClaimDialogOpen(true);
                                 }}
@@ -950,7 +968,7 @@ export default function ProfilePage() {
                               }
                             }}
                             type="referrer"
-                            auctionId={bid.auctionObjectId}
+                            auctionId={bid.auctionHistory.auctionObjectId}
                             trigger={
                               <Button
                                 size="sm"
@@ -958,7 +976,7 @@ export default function ProfilePage() {
                                 onClick={() => {
                                   setSelectedClaimPost({
                                     id: bid.id,
-                                    auctionId: bid.auctionObjectId || ""
+                                    auctionId: bid.auctionHistory.auctionObjectId || ""
                                   });
                                   setIsReferrerBidClaimDialogOpen(true);
                                 }}

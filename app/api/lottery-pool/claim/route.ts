@@ -8,10 +8,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { postId, digest } = await request.json();
-    if (!postId) {
-      return NextResponse.json({ error: "Post ID is required" }, { status: 400 });
-    }
+    const { digest } = await request.json();
     if (!digest) {
       return NextResponse.json({ error: "Transaction digest is required" }, { status: 400 });
     }
@@ -25,38 +22,47 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 查找奖池
-    const lotteryPool = await prisma.lotteryPool.findFirst({
+    // 查找所有未领取的奖池
+    const unclaimedLotteryPools = await prisma.lotteryPool.findMany({
       where: {
-        postId: postId,
         winnerId: user.id,
         claimed: false,
+        amount: {
+          gt: 0
+        }
       },
     });
 
-    if (!lotteryPool) {
+    if (unclaimedLotteryPools.length === 0) {
       return NextResponse.json(
-        { error: "No unclaimed lottery pool found for this user" },
+        { error: "No unclaimed lottery pools found for this user" },
         { status: 404 }
       );
     }
 
     // 开始事务
     const result = await prisma.$transaction(async (tx) => {
-      // 更新奖池状态为已领取
-      const updatedLotteryPool = await tx.lotteryPool.update({
-        where: { id: lotteryPool.id },
-        data: {
-          claimed: true,
-        },
-      });
+      // 更新所有奖池状态为已领取
+      const updatedLotteryPools = await Promise.all(
+        unclaimedLotteryPools.map(pool =>
+          tx.lotteryPool.update({
+            where: { id: pool.id },
+            data: {
+              claimed: true,
+            },
+          })
+        )
+      );
+
+      // 计算总金额
+      const totalAmount = unclaimedLotteryPools.reduce((sum, pool) => sum + pool.amount, 0);
 
       // 更新用户的奖池收益
       const updatedUser = await tx.user.update({
         where: { id: user.id },
         data: {
           lotteryEarnings: {
-            increment: lotteryPool.amount,
+            increment: totalAmount,
           },
         },
         include: {
@@ -73,12 +79,21 @@ export async function POST(request: Request) {
           type: 'claim lottery pool',
           status: 'SUCCESS',
           userId: user.id,
-          postId: postId,
+          data: {
+            totalAmount,
+            processedCount: unclaimedLotteryPools.length,
+            pools: unclaimedLotteryPools.map(pool => ({
+              id: pool.id,
+              postId: pool.postId,
+              amount: pool.amount,
+              round: pool.round
+            }))
+          }
         },
       });
 
       return {
-        lotteryPool: updatedLotteryPool,
+        lotteryPools: updatedLotteryPools,
         user: {
           id: updatedUser.id,
           walletAddress: updatedUser.walletAddress,
@@ -108,9 +123,9 @@ export async function POST(request: Request) {
       data: result,
     });
   } catch (error) {
-    console.error("Error claiming lottery pool:", error);
+    console.error("Error claiming lottery pools:", error);
     return NextResponse.json(
-      { error: "Failed to claim lottery pool" },
+      { error: "Failed to claim lottery pools" },
       { status: 500 }
     );
   }

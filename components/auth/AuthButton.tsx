@@ -17,7 +17,7 @@ import { useNotificationStore } from "@/store/notificationStore";
 import { cn } from "@/lib/utils";
 import { LoginFlowDialog } from "../dialog/LoginFlowDialog";
 import { UserTypeDialog } from "../dialog/UserTypeDialog";
-import { UserTypeSelectionDialog } from "@/components/dialog/UserTypeSelectionDialog";
+import { userTypes, UserTypeSelectionDialog } from "@/components/dialog/UserTypeSelectionDialog";
 import { UserProfile, UserType } from "@/lib/api/types";
 import { toast } from "sonner";
 
@@ -149,9 +149,22 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
             </Avatar>
             {!isMobile && (
               <div>
-                <h3 className="font-semibold">
-                  {user.profile?.name || "Anonymous"}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold">
+                    {user.profile?.name || "Anonymous"}
+                  </h3>
+                  {user.userType && (
+                    <span 
+                      className="px-2 py-0.5 text-xs rounded-full"
+                      style={{ 
+                        backgroundColor: userTypes.find(t => t.type === user.userType)?.color,
+                        color: user.userType === UserType.MEME_LORD ? "#000" : "#fff"
+                      }}
+                    >
+                      {userTypes.find(t => t.type === user.userType)?.name}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500">
                   {user.walletAddress?.slice(0, 6)}...
                   {user.walletAddress?.slice(-4)}

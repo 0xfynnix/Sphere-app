@@ -36,6 +36,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if(request.nextUrl.pathname.startsWith("/api/lottery-pool/") && request.nextUrl.pathname !== "/api/lottery-pool/claim" && request.method == "GET") {
+    return NextResponse.next();
+  }
+
   // 获取 Authorization header
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {

@@ -1,6 +1,35 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
+interface PostReward {
+  post: {
+    id: string;
+    title: string;
+    shareCode: string;
+    content: string;
+    createdAt: Date;
+    nftObjectId: string | null;
+    user: {
+      walletAddress: string;
+      profile: {
+        name: string | null;
+        avatar: string | null;
+      } | null;
+    };
+  };
+  totalAmount: number;
+  rewards: Array<{
+    id: string;
+    amount: number;
+    sender: {
+      walletAddress: string;
+      profile: {
+        name: string | null;
+        avatar: string | null;
+      } | null;
+    };
+    createdAt: Date;
+  }>;
+}
 // 领取打赏奖励
 export async function POST(req: Request) {
   try {
@@ -166,13 +195,34 @@ export async function GET(req: Request) {
       include: {
         post: {
           select: {
+            id: true,
             title: true,
-            shareCode: true
+            shareCode: true,
+            content: true,
+            createdAt: true,
+            nftObjectId: true,
+            user: {
+              select: {
+                walletAddress: true,
+                profile: {
+                  select: {
+                    name: true,
+                    avatar: true
+                  }
+                }
+              }
+            }
           }
         },
         sender: {
           select: {
-            walletAddress: true
+            walletAddress: true,
+            profile: {
+              select: {
+                name: true,
+                avatar: true
+              }
+            }
           }
         }
       }
@@ -190,21 +240,84 @@ export async function GET(req: Request) {
       include: {
         post: {
           select: {
+            id: true,
             title: true,
-            shareCode: true
+            shareCode: true,
+            content: true,
+            createdAt: true,
+            nftObjectId: true,
+            user: {
+              select: {
+                walletAddress: true,
+                profile: {
+                  select: {
+                    name: true,
+                    avatar: true
+                  }
+                }
+              }
+            }
           }
         },
         sender: {
           select: {
-            walletAddress: true
+            walletAddress: true,
+            profile: {
+              select: {
+                name: true,
+                avatar: true
+              }
+            }
           }
         }
       }
     });
 
+    // Group recipient rewards by post
+    const recipientPosts = unclaimedRecipientRewards.reduce<Record<string, PostReward>>((acc, reward) => {
+      const postId = reward.post.id;
+      if (!acc[postId]) {
+        acc[postId] = {
+          post: reward.post,
+          totalAmount: 0,
+          rewards: []
+        };
+      }
+      acc[postId].totalAmount += reward.recipientAmount;
+      acc[postId].rewards.push({
+        id: reward.id,
+        amount: reward.recipientAmount,
+        sender: reward.sender,
+        createdAt: reward.createdAt
+      });
+      return acc;
+    }, {});
+
+    // Group referrer rewards by post
+    const referrerPosts = unclaimedReferrerRewards.reduce<Record<string, PostReward>>((acc, reward) => {
+      const postId = reward.post.id;
+      if (!acc[postId]) {
+        acc[postId] = {
+          post: reward.post,
+          totalAmount: 0,
+          rewards: []
+        };
+      }
+      if (reward.referrerAmount) {
+        acc[postId].totalAmount += reward.referrerAmount;
+        acc[postId].rewards.push({
+          id: reward.id,
+          amount: reward.referrerAmount,
+          sender: reward.sender,
+          createdAt: reward.createdAt
+        });
+      }
+      return acc;
+    }, {});
+
     return NextResponse.json({
-      recipientRewards: unclaimedRecipientRewards,
-      referrerRewards: unclaimedReferrerRewards
+      recipientPosts: Object.values(recipientPosts),
+      referrerPosts: Object.values(referrerPosts)
     });
   } catch (error) {
     console.error('Error fetching unclaimed rewards:', error);
