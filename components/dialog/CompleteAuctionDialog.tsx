@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Trophy, CheckCircle, XCircle, User, Coins } from "lucide-react";
+import { Trophy, CheckCircle, XCircle, Coins } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -90,7 +90,7 @@ export function CompleteAuctionDialog({
       const events = txResult.events || [];
       for (const event of events) {
         if (event.type.includes('::copyright_nft::AuctionEnded')) {
-          const parsedJson = event.parsedJson as any;
+          const parsedJson = event.parsedJson as unknown as { winner: string };
           if (parsedJson.winner) {
             lotteryPoolWinnerAddress = parsedJson.winner;
             break;

@@ -21,7 +21,6 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
-import Image from "next/image";
 import { useUser, useUserAllPosts } from "@/lib/api/hooks";
 import { PostListItem } from "@/lib/api/posts";
 import {
