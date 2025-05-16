@@ -496,39 +496,30 @@ export default function PostDetail({
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={() => router.back()}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button> */}
-
-      <Card className="p-6">
-        <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6">
+      <Card className="p-4 sm:p-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Author Info */}
           <div
             className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => router.push(`/user/${post.author.walletAddress}`)}
           >
-            <Avatar className="h-10 w-10 mr-3">
+            <Avatar className="h-8 w-8 sm:h-10 sm:w-10 mr-2 sm:mr-3">
               {post.author.avatar ? (
                 <AvatarImage src={post.author.avatar} />
               ) : (
                 <AvatarFallback>
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                    <User className="h-5 w-5 text-muted-foreground" />
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </div>
                 </AvatarFallback>
               )}
             </Avatar>
             <div>
-              <h3 className="font-semibold text-foreground">
+              <h3 className="font-semibold text-sm sm:text-base text-foreground">
                 {post.author.name}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Posted{" "}
                 {formatDistanceToNow(new Date(post.createdAt), {
                   addSuffix: true,
@@ -539,26 +530,26 @@ export default function PostDetail({
 
           {/* Post Content */}
           <div>
-            <h2 className="text-2xl font-bold mb-2 text-foreground">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-foreground">
               {post.title}
             </h2>
             {post.nftObjectId && (
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <a
                   href={getExplorerUrl(post.nftObjectId)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-fuchsia-500 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-fuchsia-500 transition-colors"
                 >
-                  <Network className="h-4 w-4" />
+                  <Network className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>View on Explorer</span>
                 </a>
               </div>
             )}
-            <p className="text-muted-foreground mb-6">{post.content}</p>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">{post.content}</p>
             {post.images.length > 0 && (
               <PhotoProvider>
-                <div className="bg-muted rounded-lg mb-6 overflow-hidden flex justify-center items-center">
+                <div className="bg-muted rounded-lg mb-4 sm:mb-6 overflow-hidden flex justify-center items-center">
                   <PhotoView src={post.images[0].url}>
                     <img
                       src={post.images[0].url}
@@ -573,13 +564,13 @@ export default function PostDetail({
 
           {/* Bidding Section */}
           {post?.allowBidding ? (
-            <div className="border rounded-lg p-4 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="border rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div>
-                  <h3 className="font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">
+                  <h3 className="font-semibold text-sm sm:text-base bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">
                     {isBiddingActive ? "Bidding" : "Bidding ended"}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {isBiddingActive
                       ? `Start Price: ${post.startPrice} SUI`
                       : isAuthor
@@ -587,8 +578,8 @@ export default function PostDetail({
                         : "Waiting for creator to complete the auction"}
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="flex items-center text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                     <Countdown
                       date={new Date(post.biddingDueDate || "")}
                       renderer={(props) => (
@@ -609,8 +600,8 @@ export default function PostDetail({
                           currentHighestBid={post.currentHighestBid}
                           auctionId={post.currentAuction?.auctionObjectId}
                           trigger={
-                            <Button className="w-full sm:w-auto bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none">
-                              <Gavel className="mr-2 h-4 w-4" />
+                            <Button className="w-full sm:w-auto bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none text-sm">
+                              <Gavel className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                               Place Bid
                             </Button>
                           }
@@ -622,9 +613,9 @@ export default function PostDetail({
                       trigger={
                         <Button
                           variant="outline"
-                          className="w-full sm:w-auto border-violet-200 text-violet-400 hover:bg-violet-50 hover:text-violet-500"
+                          className="w-full sm:w-auto border-violet-200 text-violet-400 hover:bg-violet-50 hover:text-violet-500 text-sm"
                         >
-                          <History className="mr-2 h-4 w-4" />
+                          <History className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                           View History
                         </Button>
                       }
@@ -635,14 +626,14 @@ export default function PostDetail({
 
               {/* Bidding History */}
               <div className="space-y-2">
-                <h4 className="font-medium">Bidding History</h4>
+                <h4 className="font-medium text-sm sm:text-base">Bidding History</h4>
                 <div className="border rounded-lg overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Bidder</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Time</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Bidder</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Amount</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Time</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -651,24 +642,24 @@ export default function PostDetail({
                           <TableRow key={bid.id}>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Avatar className="h-6 w-6">
+                                <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
                                   {bid.user.avatar ? (
                                     <AvatarImage src={bid.user.avatar} />
                                   ) : (
                                     <AvatarFallback>
-                                      <User className="h-3 w-3" />
+                                      <User className="h-2 w-2 sm:h-3 sm:w-3" />
                                     </AvatarFallback>
                                   )}
                                 </Avatar>
-                                <span className="truncate max-w-[120px] sm:max-w-none">
+                                <span className="truncate max-w-[100px] sm:max-w-[120px] text-xs sm:text-sm">
                                   {bid.user.name}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="font-medium">
+                            <TableCell className="font-medium text-xs sm:text-sm">
                               {bid.amount} SUI
                             </TableCell>
-                            <TableCell className="text-muted-foreground whitespace-nowrap">
+                            <TableCell className="text-muted-foreground whitespace-nowrap text-xs sm:text-sm">
                               {formatDistanceToNow(new Date(bid.createdAt), {
                                 addSuffix: true,
                               })}
@@ -679,7 +670,7 @@ export default function PostDetail({
                         <TableRow>
                           <TableCell
                             colSpan={3}
-                            className="text-center text-muted-foreground"
+                            className="text-center text-muted-foreground text-xs sm:text-sm"
                           >
                             No bids yet
                           </TableCell>
@@ -689,17 +680,18 @@ export default function PostDetail({
                   </Table>
                   {bidsData?.pagination &&
                     bidsData.pagination.totalPages > 1 && (
-                      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t gap-2">
+                      <div className="flex flex-col sm:flex-row items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-t gap-2">
                         <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setPage(page - 1)}
                             disabled={page === 1}
+                            className="h-7 sm:h-9"
                           >
-                            <ChevronLeft className="h-4 w-4" />
+                            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-xs sm:text-sm text-muted-foreground">
                             Page {page} of {bidsData.pagination.totalPages}
                           </span>
                           <Button
@@ -707,11 +699,12 @@ export default function PostDetail({
                             size="sm"
                             onClick={() => setPage(page + 1)}
                             disabled={page === bidsData.pagination.totalPages}
+                            className="h-7 sm:h-9"
                           >
-                            <ChevronRight className="h-4 w-4" />
+                            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-xs sm:text-sm text-muted-foreground">
                           Total {bidsData.pagination.total} bids
                         </div>
                       </div>
@@ -721,14 +714,14 @@ export default function PostDetail({
 
               {/* Auction Explorer Links */}
               {post.currentAuction?.auctionObjectId && (
-                <div className="flex justify-end gap-4 pt-2 border-t">
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 pt-2 border-t">
                   <a
                     href={getExplorerUrl(post.currentAuction.auctionObjectId)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-violet-500 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-violet-500 transition-colors"
                   >
-                    <Network className="h-4 w-4" />
+                    <Network className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>View Auction on Explorer</span>
                   </a>
                   {post.currentAuction.auctionCapObjectId && (
@@ -736,9 +729,9 @@ export default function PostDetail({
                       href={getExplorerUrl(post.currentAuction.auctionCapObjectId)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-indigo-500 transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-indigo-500 transition-colors"
                     >
-                      <Network className="h-4 w-4" />
+                      <Network className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>View Auction Cap on Explorer</span>
                     </a>
                   )}
@@ -748,11 +741,11 @@ export default function PostDetail({
           ) : (
             isAuthor &&
             !post.allowBidding && (
-              <div className="border rounded-lg p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="border rounded-lg p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   <div>
-                    <h3 className="font-semibold text-foreground">Auction</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="font-semibold text-sm sm:text-base text-foreground">Auction</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Start an auction for this Content
                     </p>
                   </div>
@@ -760,9 +753,7 @@ export default function PostDetail({
                     nftObjectId={post.nftObjectId}
                     postId={id}
                     onSuccess={() => {
-                      // 刷新帖子数据
                       refetchPost();
-                      // 刷新路由数据
                       router.refresh();
                     }}
                   />
@@ -772,13 +763,13 @@ export default function PostDetail({
           )}
 
           {/* Lottery Pool Section */}
-          <div className="border rounded-lg p-4 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="border rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div>
-                <h3 className="font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">
+                <h3 className="font-semibold text-sm sm:text-base bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">
                   Lottery Pool
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Current round: {lotteryPoolData?.data.post.currentRound || 0}
                 </p>
               </div>
@@ -786,28 +777,28 @@ export default function PostDetail({
 
             {/* Current Lottery Pool */}
             {lotteryPoolData?.data.currentLotteryPool && (
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="bg-muted/50 rounded-lg p-3 sm:p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Gift className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Current Pool</span>
+                    <Gift className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                    <span className="text-xs sm:text-sm font-medium">Current Pool</span>
                   </div>
-                  <span className="text-sm font-medium">
+                  <span className="text-xs sm:text-sm font-medium">
                     {lotteryPoolData.data.currentLotteryPool.amount} SUI
                   </span>
                 </div>
                 {lotteryPoolData.data.currentLotteryPool.winner && (
                   <div className="flex items-center gap-2 pl-6">
-                    <Avatar className="h-6 w-6">
+                    <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
                       {lotteryPoolData.data.currentLotteryPool.winner.avatar ? (
                         <AvatarImage src={lotteryPoolData.data.currentLotteryPool.winner.avatar} />
                       ) : (
                         <AvatarFallback>
-                          <User className="h-3 w-3" />
+                          <User className="h-2 w-2 sm:h-3 sm:w-3" />
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <span className="text-sm truncate">
+                    <span className="text-xs sm:text-sm truncate">
                       {lotteryPoolData.data.currentLotteryPool.winner.walletAddress.slice(0, 5)}...{lotteryPoolData.data.currentLotteryPool.winner.walletAddress.slice(-5)}
                     </span>
                   </div>
@@ -818,45 +809,45 @@ export default function PostDetail({
             {/* Historical Lottery Pools */}
             {(lotteryPoolData?.data?.historicalLotteryPools ?? []).length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium">Historical Pools</h4>
+                <h4 className="font-medium text-sm sm:text-base">Historical Pools</h4>
                 <div className="border rounded-lg overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Round</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Winner</TableHead>
-                        <TableHead>Date</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Round</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Amount</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Winner</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Date</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {(lotteryPoolData?.data?.historicalLotteryPools ?? []).map((pool) => (
                         <TableRow key={pool.id}>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium text-xs sm:text-sm">
                             Round {pool.round}
                           </TableCell>
-                          <TableCell>{pool.amount} SUI</TableCell>
+                          <TableCell className="text-xs sm:text-sm">{pool.amount} SUI</TableCell>
                           <TableCell>
                             {pool.winner ? (
                               <div className="flex items-center space-x-2">
-                                <Avatar className="h-6 w-6">
+                                <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
                                   {pool.winner.avatar ? (
                                     <AvatarImage src={pool.winner.avatar} />
                                   ) : (
                                     <AvatarFallback>
-                                      <User className="h-3 w-3" />
+                                      <User className="h-2 w-2 sm:h-3 sm:w-3" />
                                     </AvatarFallback>
                                   )}
                                 </Avatar>
-                                <span className="truncate max-w-[120px] sm:max-w-none">
+                                <span className="truncate max-w-[100px] sm:max-w-[120px] text-xs sm:text-sm">
                                   {pool.winner.walletAddress.slice(0, 5)}...{pool.winner.walletAddress.slice(-5)}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-muted-foreground">No winner</span>
+                              <span className="text-muted-foreground text-xs sm:text-sm">No winner</span>
                             )}
                           </TableCell>
-                          <TableCell className="text-muted-foreground whitespace-nowrap">
+                          <TableCell className="text-muted-foreground whitespace-nowrap text-xs sm:text-sm">
                             {formatDistanceToNow(new Date(pool.updatedAt), {
                               addSuffix: true,
                             })}
@@ -871,114 +862,117 @@ export default function PostDetail({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-4">
-              <Button
-                variant="ghost"
-                className="text-purple-400 hover:text-purple-500 hover:bg-purple-50"
-              >
-                <MessageCircle className="mr-2 h-4 w-4" />
-                {post.comments.length}
-              </Button>
-              <Button
-                variant="ghost"
-                className="text-purple-400 hover:text-purple-500 hover:bg-purple-50"
-                onClick={() => setIsRewardDialogOpen(true)}
-              >
-                <Gift className="mr-2 h-4 w-4" />
-                Reward
-              </Button>
-              <ShareDialog
-                postId={id}
-                postShareCode={post.shareCode}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    className="text-purple-400 hover:text-purple-500 hover:bg-purple-50"
-                  >
-                    <Share className="mr-2 h-4 w-4" />
-                    Share
-                  </Button>
-                }
-              />
-              <Button
-                variant="ghost"
-                className="text-purple-400 hover:text-purple-650 hover:bg-purple-50"
-                onClick={handleBookmarkToggle}
-              >
-                {bookmarkStatus?.isBookmarked ? (
-                  <><BookmarkMinus className="mr-2 h-4 w-4" /> Uncollect</>
-                ) : (
-                  <><Bookmark className="mr-2 h-4 w-4" /> Collect</>
-                )}
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-purple-400 hover:text-purple-500 hover:bg-purple-50 h-8 sm:h-9"
+            >
+              <MessageCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm">{post.comments.length}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-purple-400 hover:text-purple-500 hover:bg-purple-50 h-8 sm:h-9"
+              onClick={() => setIsRewardDialogOpen(true)}
+            >
+              <Gift className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm">Reward</span>
+            </Button>
+            <ShareDialog
+              postId={id}
+              postShareCode={post.shareCode}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-purple-400 hover:text-purple-500 hover:bg-purple-50 h-8 sm:h-9"
+                >
+                  <Share className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">Share</span>
+                </Button>
+              }
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-purple-400 hover:text-purple-650 hover:bg-purple-50 h-8 sm:h-9"
+              onClick={handleBookmarkToggle}
+            >
+              {bookmarkStatus?.isBookmarked ? (
+                <><BookmarkMinus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> <span className="text-xs sm:text-sm">Uncollect</span></>
+              ) : (
+                <><Bookmark className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> <span className="text-xs sm:text-sm">Collect</span></>
+              )}
+            </Button>
           </div>
 
           {/* Comment Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
             <Textarea
               {...register("content", { required: true })}
               placeholder="Write a comment..."
-              className="min-h-[100px]"
+              className="min-h-[80px] sm:min-h-[100px] text-sm"
             />
             <Button
               type="submit"
               disabled={createComment.isPending}
-              className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none"
+              className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-none text-sm h-8 sm:h-9"
             >
               {createComment.isPending ? "Posting..." : "Post Comment"}
             </Button>
           </form>
 
           {/* Comments */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Comments</h3>
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="font-semibold text-sm sm:text-base text-foreground">Comments</h3>
             {commentsData?.comments.map((comment) => (
-              <Card key={comment.id} className="p-4">
+              <Card key={comment.id} className="p-3 sm:p-4">
                 <div
                   className="flex items-start cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => router.push(`/user/${comment.user.walletAddress}`)}
                 >
-                  <Avatar className="h-8 w-8 mr-3">
+                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3">
                     {comment.user.profile?.avatar ? (
                       <AvatarImage src={comment.user.profile.avatar} />
                     ) : (
                       <AvatarFallback>
                         <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                          <User className="h-4 w-4 text-muted-foreground" />
+                          <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                         </div>
                       </AvatarFallback>
                     )}
                   </Avatar>
                   <div>
                     <div className="flex items-center mb-1">
-                      <h4 className="font-semibold mr-2 text-foreground">
+                      <h4 className="font-semibold mr-2 text-sm sm:text-base text-foreground">
                         {comment.user.profile?.name || 'Anonymous'}
                       </h4>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(comment.createdAt), {
                           addSuffix: true,
                         })}
                       </span>
                     </div>
-                    <p className="text-muted-foreground">{comment.content}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{comment.content}</p>
                   </div>
                 </div>
               </Card>
             ))}
             {commentsData?.pagination && commentsData.pagination.totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t gap-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-t gap-2">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCommentPage(commentPage - 1)}
                     disabled={commentPage === 1}
+                    className="h-7 sm:h-9"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     Page {commentPage} of {commentsData.pagination.totalPages}
                   </span>
                   <Button
@@ -986,11 +980,12 @@ export default function PostDetail({
                     size="sm"
                     onClick={() => setCommentPage(commentPage + 1)}
                     disabled={commentPage === commentsData.pagination.totalPages}
+                    className="h-7 sm:h-9"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   Total {commentsData.pagination.total} comments
                 </div>
               </div>
