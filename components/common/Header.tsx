@@ -52,7 +52,6 @@ export default function Header() {
 
         <div className="flex items-center space-x-2">
           <ThemeToggle />
-          {isMobile && <AuthButton isMobile />}
           <Button
             variant="ghost"
             size="icon"
@@ -162,6 +161,12 @@ export default function Header() {
               </>
             )}
           </nav>
+
+          {isMobile && (
+            <div className="p-4 border-t border-sidebar-border">
+              <AuthButton isMobile />
+            </div>
+          )}
         </div>
       </div>
     </header>

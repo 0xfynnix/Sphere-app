@@ -45,6 +45,7 @@ import Countdown from "react-countdown";
 import { motion } from "framer-motion";
 import { CompleteAuctionDialog } from "@/components/dialog/CompleteAuctionDialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // 获取区块链浏览器 URL
 const getExplorerUrl = (objectId: string) => {
@@ -330,7 +331,77 @@ export default function PostDetail({
   };
 
   if (isLoading) {
-    return <div className="max-w-4xl mx-auto p-6">Loading...</div>;
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Card className="p-6">
+          <div className="space-y-6">
+            {/* Author Info Skeleton */}
+            <div className="flex items-center">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="ml-3 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+
+            {/* Post Content Skeleton */}
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-4/6" />
+              <Skeleton className="h-64 w-full rounded-lg" />
+            </div>
+
+            {/* Bidding Section Skeleton */}
+            <div className="border rounded-lg p-4 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 w-24" />
+                  <Skeleton className="h-9 w-32" />
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Skeleton */}
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
+            </div>
+
+            {/* Comment Form Skeleton */}
+            <div className="space-y-4">
+              <Skeleton className="h-[100px] w-full" />
+              <Skeleton className="h-9 w-32" />
+            </div>
+
+            {/* Comments Skeleton */}
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-24" />
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="p-4">
+                    <div className="flex items-start">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="ml-3 space-y-2 flex-1">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   if (error) {

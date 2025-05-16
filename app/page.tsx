@@ -304,7 +304,7 @@ export default function Home() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-flow-col md:grid-rows-2 lg:grid-rows-3 gap-4 md:auto-cols-fr">
           {isPopularLoading ? (
             <>
               {[...Array(9)].map((_, index) => (
